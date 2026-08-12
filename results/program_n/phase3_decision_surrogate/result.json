@@ -1,0 +1,830 @@
+{
+ "argmax_calls": {
+  "gaussian_process": 5,
+  "gbdt": 5,
+  "kernel_ridge": 5,
+  "linear_interactions": 5,
+  "mlp_decision": 5,
+  "mlp_mse": 5,
+  "random_forest": 5,
+  "random_surrogate": 5,
+  "spline_buffer": 5
+ },
+ "best_classical": "random_forest",
+ "best_neural": "mlp_decision",
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "chosen_buffers_per_fold": {
+  "gaussian_process": [
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ]
+  ],
+  "gbdt": [
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1176.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1260.0,
+    1344.0,
+    1344.0,
+    1176.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0
+   ]
+  ],
+  "kernel_ridge": [
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1260.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1260.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1344.0,
+    1344.0,
+    1092.0,
+    1260.0,
+    1344.0
+   ]
+  ],
+  "linear_interactions": [
+   [
+    1344.0,
+    1260.0,
+    1344.0,
+    1344.0,
+    1260.0,
+    1344.0,
+    1092.0,
+    1008.0,
+    1260.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1176.0,
+    1008.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1260.0,
+    1092.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1176.0,
+    1008.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1176.0,
+    1008.0,
+    1344.0
+   ]
+  ],
+  "mlp_decision": [
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ]
+  ],
+  "mlp_mse": [
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ]
+  ],
+  "random_forest": [
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1260.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1176.0,
+    1344.0,
+    1344.0,
+    924.0,
+    1344.0,
+    1344.0,
+    1008.0,
+    1344.0,
+    1344.0
+   ]
+  ],
+  "random_surrogate": [
+   [
+    252.0,
+    840.0,
+    504.0,
+    756.0,
+    0.0,
+    168.0,
+    588.0,
+    504.0,
+    0.0
+   ],
+   [
+    588.0,
+    1092.0,
+    1092.0,
+    1176.0,
+    504.0,
+    840.0,
+    168.0,
+    336.0,
+    672.0
+   ],
+   [
+    672.0,
+    1344.0,
+    252.0,
+    588.0,
+    840.0,
+    84.0,
+    420.0,
+    1344.0,
+    252.0
+   ],
+   [
+    336.0,
+    756.0,
+    1260.0,
+    0.0,
+    1176.0,
+    1176.0,
+    420.0,
+    84.0,
+    1092.0
+   ],
+   [
+    1008.0,
+    924.0,
+    588.0,
+    168.0,
+    336.0,
+    1008.0,
+    84.0,
+    0.0,
+    1344.0
+   ]
+  ],
+  "spline_buffer": [
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0
+   ],
+   [
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0,
+    1344.0
+   ]
+  ]
+ },
+ "claim_status": "NO_DECISION_PREMIUM",
+ "comparisons": {
+  "best_classical_vs_floor": {
+   "ci95_high": 0.00785491733638027,
+   "ci95_low": 0.003877631754551191,
+   "lcb_positive": true,
+   "mean": 0.00586627454546573,
+   "n_folds": 5
+  },
+  "best_neural_vs_floor": {
+   "ci95_high": 0.007863995868734375,
+   "ci95_low": 0.0038516442551631883,
+   "lcb_positive": true,
+   "mean": 0.005857820061948782,
+   "n_folds": 5
+  },
+  "decision_loss_vs_mse": {
+   "ci95_high": 1.2697314089006747e-05,
+   "ci95_low": -1.7658198276312633e-06,
+   "lcb_positive": false,
+   "mean": 5.465747130687742e-06,
+   "n_folds": 5
+  },
+  "neural_vs_best_classical": {
+   "ci95_high": 1.9909159803760267e-05,
+   "ci95_low": -3.6818126837654636e-05,
+   "lcb_positive": false,
+   "mean": -8.454483516947183e-06,
+   "n_folds": 5
+  }
+ },
+ "contract_path": "docs/PREREGISTRO_FASE_3_SURROGATE_ORIENTADO_A_DECISION_2026-08-12.md",
+ "contract_sha256": "697b8300cbb9c77f97138347287ca01a2246ac0ab1c812d4d1ead34bbc9ee408",
+ "created_at": "2026-08-12T05:00:21.602098+00:00",
+ "distinct_optima_by_fold": [
+  5,
+  3,
+  4,
+  5,
+  3
+ ],
+ "elapsed_seconds": 434.2622664169976,
+ "endpoint": "mean_decision_regret_on_R_cobb_douglas__lower_is_better",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [],
+  "failed": [
+   "k3_the_decision_loss_helps_over_mse",
+   "k4_the_network_beats_the_best_classical"
+  ],
+  "n_computed": 5,
+  "n_disclosures": 0,
+  "n_failed": 2,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 8,
+    "n_seeds": 8,
+    "note": "deliberate re-execution of registry block 'program_n_gate_b_confirmation_v3'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "program_n_gate_b_confirmation_v3",
+      "n_overlapping": 8,
+      "range": [
+       9600001,
+       9600008
+      ],
+      "source": null,
+      "status": "BURNED_CONFIRMATION_COMPLETE"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "program_n_gate_b_confirmation_v3",
+    "sealed_artifact_overlap": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "seeds": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'program_n_gate_b_confirmation_v3', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "k1_the_decision_is_live": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "max_distinct_optima_in_a_fold": 5,
+     "n_cells": 9
+    },
+    "distinct_optima_by_fold": [
+     5,
+     3,
+     4,
+     5,
+     3
+    ],
+    "why_it_can_fail": "if one buffer level is optimal in all nine cells the argmax is trivial, every arm picks the same and there is nothing a surrogate could do better -- the degeneracy this project has already met as 'the optimum does not move'"
+   },
+   "passed": true
+  },
+  "k2_the_optimizer_is_identical": {
+   "computed": true,
+   "evidence": {
+    "calls": {
+     "gaussian_process": 5,
+     "gbdt": 5,
+     "kernel_ridge": 5,
+     "linear_interactions": 5,
+     "mlp_decision": 5,
+     "mlp_mse": 5,
+     "random_forest": 5,
+     "random_surrogate": 5,
+     "spline_buffer": 5
+    },
+    "computed_from": {
+     "distinct_call_counts": 1,
+     "n_arms": 9
+    },
+    "why_it_can_fail": "an arm that called the shared argmax more often than another would be searching more, not scoring better, and the whole ablation would be void"
+   },
+   "passed": true
+  },
+  "k3_the_decision_loss_helps_over_mse": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "ci95_low": -1.7658198276312633e-06,
+     "mean": 5.465747130687742e-06
+    },
+    "why_it_can_fail": "same architecture, same budget, same features: if the decision-focused loss adds nothing over squared error, the idea is wrong and not merely insufficient"
+   },
+   "passed": false
+  },
+  "k4_the_network_beats_the_best_classical": {
+   "computed": true,
+   "evidence": {
+    "best_classical": "random_forest",
+    "best_neural": "mlp_decision",
+    "computed_from": {
+     "ci95_low": -3.6818126837654636e-05,
+     "mean": -8.454483516947183e-06
+    },
+    "why_it_can_fail": "the headline, and it is expected to fail: gbdt_lagged already beats the recurrent arm at prediction on this same surface"
+   },
+   "passed": false
+  },
+  "k5_a_control_must_be_worse": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "classical_lcb": 0.003877631754551191,
+     "neural_lcb": 0.0038516442551631883
+    },
+    "why_it_can_fail": "if an unfitted random surrogate matches the fitted ones, the decision problem has no resolution and no comparison here means anything"
+   },
+   "passed": true
+  }
+ },
+ "mean_regret_by_arm": {
+  "gaussian_process": 3.0273037967424675e-05,
+  "gbdt": 6.919881621761567e-05,
+  "kernel_ridge": 5.1798512455588267e-05,
+  "linear_interactions": 0.00023097129090835132,
+  "mlp_decision": 3.0273037967424675e-05,
+  "mlp_mse": 3.5738785098112426e-05,
+  "random_forest": 2.1818554450477497e-05,
+  "random_surrogate": 0.005888093099916208,
+  "spline_buffer": 9.072823109312654e-05
+ },
+ "n_actions": 17,
+ "n_cells": 9,
+ "reference_path": "results/program_n/gate_b_confirmation_v3/result.json",
+ "reference_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5",
+ "regret_per_fold": {
+  "gaussian_process": [
+   4.3346164434638406e-05,
+   6.872896402216395e-05,
+   8.018842323413248e-06,
+   2.3192620521404904e-05,
+   8.078598535502893e-06
+  ],
+  "gbdt": [
+   8.349213640173541e-05,
+   5.2617768776938886e-05,
+   6.44683495962559e-05,
+   7.574101150542578e-05,
+   6.967481480772235e-05
+  ],
+  "kernel_ridge": [
+   5.985680494645528e-05,
+   3.3054349946863106e-05,
+   6.68034204246067e-05,
+   3.610591395575291e-05,
+   6.317207300426336e-05
+  ],
+  "linear_interactions": [
+   0.0002587441228312226,
+   0.00022197009106133473,
+   0.00025961193040237155,
+   0.0001425525894164966,
+   0.00027197772083033104
+  ],
+  "mlp_decision": [
+   4.3346164434638406e-05,
+   6.872896402216395e-05,
+   8.018842323413248e-06,
+   2.3192620521404904e-05,
+   8.078598535502893e-06
+  ],
+  "mlp_mse": [
+   4.299308017330361e-05,
+   7.020002567867698e-05,
+   1.4737963503375084e-05,
+   2.8054870475376543e-05,
+   2.2707985659829886e-05
+  ],
+  "random_forest": [
+   4.3346164434638406e-05,
+   1.9737425257466195e-05,
+   1.4737963503375084e-05,
+   2.3192620521404904e-05,
+   8.078598535502893e-06
+  ],
+  "random_surrogate": [
+   0.00787987761066495,
+   0.004251354522306652,
+   0.007333787799972156,
+   0.004995894171630155,
+   0.004979551395007127
+  ],
+  "spline_buffer": [
+   9.925468849147911e-05,
+   7.495955811346693e-05,
+   8.854132961683753e-05,
+   9.848487385853854e-05,
+   9.240070538531054e-05
+  ]
+ },
+ "run_role": "DECLARED_REPLAY",
+ "schema_version": "program_n_phase3_decision_surrogate_v1",
+ "scope": "DECLARED_REPLAY_OF_CONSUMED_TAPES_NO_NEW_SEEDS_OUTER_LOOP_DECISION_ONLY",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9600008,
+  "n": 8,
+  "start": 9600001
+ },
+ "seeds": [
+  9600001,
+  9600002,
+  9600003,
+  9600004,
+  9600005,
+  9600006,
+  9600007,
+  9600008
+ ],
+ "self_sha256": "9b60c171b122bdd5253e3687c782053f4c053411a688457db55d5b472dc6a3f6",
+ "tau": 0.02
+}

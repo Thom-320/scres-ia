@@ -1,0 +1,222 @@
+{
+ "best_buffer_per_cell": {
+  "R1r+R2r|base": 1176.0,
+  "R1r+R2r|freq_x3": 1344.0,
+  "R1r+R2r|freq_x5": 1344.0,
+  "R1r|base": 924.0,
+  "R1r|freq_x3": 1344.0,
+  "R1r|freq_x5": 1344.0,
+  "R2r|base": 1008.0,
+  "R2r|freq_x3": 1344.0,
+  "R2r|freq_x5": 1344.0
+ },
+ "best_single_buffer": 1344.0,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "DECISION_HEADROOM_IS_JENSEN_BIAS",
+ "contract_path": "docs/PREREGISTRO_FASE_3_SURROGATE_ORIENTADO_A_DECISION_2026-08-12.md",
+ "contract_sha256": "697b8300cbb9c77f97138347287ca01a2246ac0ab1c812d4d1ead34bbc9ee408",
+ "created_at": "2026-08-12T05:02:52.648511+00:00",
+ "elapsed_seconds": 128.0582236669943,
+ "endpoint": "H_decision_on_R_cobb_douglas__context_conditioning_over_one_fixed_buffer",
+ "falsifier_summary": {
+  "all_passed": false,
+  "disclosures": [],
+  "failed": [
+   "j1_the_headroom_is_material",
+   "j2_it_survives_its_own_jensen_null"
+  ],
+  "n_computed": 4,
+  "n_disclosures": 0,
+  "n_failed": 2,
+  "n_not_applicable": 1,
+  "not_applicable": [
+   "custody"
+  ]
+ },
+ "falsifiers": {
+  "custody": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 8,
+    "n_seeds": 8,
+    "note": "deliberate re-execution of registry block 'program_n_gate_b_confirmation_v3'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "program_n_gate_b_confirmation_v3",
+      "n_overlapping": 8,
+      "range": [
+       9600001,
+       9600008
+      ],
+      "source": null,
+      "status": "BURNED_CONFIRMATION_COMPLETE"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "program_n_gate_b_confirmation_v3",
+    "sealed_artifact_overlap": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "seeds": [
+     9600001,
+     9600002,
+     9600003,
+     9600004,
+     9600005,
+     9600006,
+     9600007,
+     9600008
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'program_n_gate_b_confirmation_v3', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "j1_the_headroom_is_material": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "bar": 0.01,
+     "observed": 6.498828284973168e-05
+    },
+    "why_it_can_fail": "an oracle that is HANDED the best buffer for every context must still buy something worth having; below the bar, no surrogate can matter and Phase 3 is a race for a prize that does not exist"
+   },
+   "passed": false
+  },
+  "j2_it_survives_its_own_jensen_null": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "null_mean": 0.003977886172123899,
+     "null_p95": 0.004467317109579483,
+     "observed": 6.498828284973168e-05,
+     "p_value": 1.0
+    },
+    "why_it_can_fail": "mean-of-maxima minus max-of-means is positive under pure noise by Jensen alone. A clairvoyant ceiling in this tree already died to exactly this null, so it can fail"
+   },
+   "passed": false
+  },
+  "j3_the_optimum_actually_moves": {
+   "computed": true,
+   "evidence": {
+    "best_per_cell": {
+     "R1r+R2r|base": 1176.0,
+     "R1r+R2r|freq_x3": 1344.0,
+     "R1r+R2r|freq_x5": 1344.0,
+     "R1r|base": 924.0,
+     "R1r|freq_x3": 1344.0,
+     "R1r|freq_x5": 1344.0,
+     "R2r|base": 1008.0,
+     "R2r|freq_x3": 1344.0,
+     "R2r|freq_x5": 1344.0
+    },
+    "best_single_buffer": 1344.0,
+    "computed_from": {
+     "n_cells": 9,
+     "n_distinct_optima": 4
+    },
+    "why_it_can_fail": "if one buffer is optimal in every cell there is no context-conditioning to buy, whatever the arithmetic says"
+   },
+   "passed": true
+  },
+  "j4_the_surface_is_not_flat": {
+   "computed": true,
+   "evidence": {
+    "computed_from": {
+     "bar": 0.01,
+     "max_within_cell_spread": 0.02937521680386268
+    },
+    "spread_by_cell": {
+     "R1r+R2r|base": 0.011444011143496469,
+     "R1r+R2r|freq_x3": 0.013332437537068254,
+     "R1r+R2r|freq_x5": 0.02937521680386268,
+     "R1r|base": 0.012260906642957092,
+     "R1r|freq_x3": 0.015376599167320038,
+     "R1r|freq_x5": 0.023267722781788347,
+     "R2r|base": 0.00981285663376652,
+     "R2r|freq_x3": 0.008019085967897688,
+     "R2r|freq_x5": 0.007357342515347143
+    },
+    "why_it_can_fail": "a cell whose seventeen buffers all score the same offers no decision at all; this separates 'the optimum does not move' from 'nothing moves'"
+   },
+   "passed": true
+  }
+ },
+ "h_decision": 6.498828284973168e-05,
+ "h_decision_lcb95": 7.922625613410452e-05,
+ "h_decision_per_seed": [
+  9.367098819501596e-05,
+  7.396176858609493e-05,
+  7.889374193814636e-05,
+  9.420182849584346e-05,
+  8.84199706979727e-05,
+  0.00010203444133549677,
+  7.760376337018204e-05,
+  8.973500551778812e-05
+ ],
+ "jensen_null": {
+  "mean": 0.003977886172123899,
+  "n_draws": 20000,
+  "p95": 0.004467317109579483,
+  "p_value": 1.0
+ },
+ "material_bar": 0.01,
+ "reference_path": "results/program_n/gate_b_confirmation_v3/result.json",
+ "reference_sha256": "d800c3dd82c333913a962a76293f046be0cdbcaf2f98305504b86fecb44374f5",
+ "run_role": "DECLARED_REPLAY",
+ "schema_version": "program_n_phase3_decision_headroom_v1",
+ "scope": "ORACLE_UPPER_BOUND_ON_THE_CONFIGURATION_DECISION_NO_SEEDS_NO_LEARNER",
+ "seed_block": {
+  "derived_from": "seeds",
+  "end": 9600008,
+  "n": 8,
+  "start": 9600001
+ },
+ "seeds": [
+  9600001,
+  9600002,
+  9600003,
+  9600004,
+  9600005,
+  9600006,
+  9600007,
+  9600008
+ ],
+ "self_sha256": "5f1423f343be58cdec7e0872d0e588877d229aa0186ce27860d937765ab0d9f1",
+ "within_cell_spread": {
+  "R1r+R2r|base": 0.011444011143496469,
+  "R1r+R2r|freq_x3": 0.013332437537068254,
+  "R1r+R2r|freq_x5": 0.02937521680386268,
+  "R1r|base": 0.012260906642957092,
+  "R1r|freq_x3": 0.015376599167320038,
+  "R1r|freq_x5": 0.023267722781788347,
+  "R2r|base": 0.00981285663376652,
+  "R2r|freq_x3": 0.008019085967897688,
+  "R2r|freq_x5": 0.007357342515347143
+ }
+}
