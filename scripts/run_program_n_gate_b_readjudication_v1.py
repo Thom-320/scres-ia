@@ -161,11 +161,20 @@ def main() -> int:
                      "n_episodes_run": 0, "artifacts_read": [r["artifact"] for r in runs.values()]}}
     summary = F.summarise(checks)
 
+    # The status must be governed by the WIDEST class that was actually fitted, not by the run
+    # that happens to be confirmatory. `gate_b_confirmation_v3` only ever had the narrow class in
+    # its per_fold, so judging on it alone would keep printing SURVIVES while a Gaussian process
+    # sitting in another artifact beats every neural arm. That is the naming defect this project
+    # documented on 2026-08-12, and shipping it here would be the fifth instance.
+    widest = "gate_b_widened_class" if "gate_b_widened_class" in runs else "gate_b_confirmation_v3"
+    governing = runs[widest]
     confirmatory = runs["gate_b_confirmation_v3"]
     if not checks["g1_the_partition_is_by_information_set"]["passed"]:
         status = "BLOCKED_INSTRUMENT"
-    elif confirmatory["readjudicated_premium"]:
+    elif governing["readjudicated_premium"]:
         status = "SURFACE_PREMIUM_SURVIVES_THE_BEST_NONNEURAL_COMPARATOR"
+    elif confirmatory["readjudicated_premium"]:
+        status = "SURFACE_PREMIUM_SURVIVES_THE_NARROW_CLASS_ONLY_NOT_THE_WIDENED_ONE"
     else:
         status = "SURFACE_PREMIUM_DOES_NOT_SURVIVE_THE_BEST_NONNEURAL_COMPARATOR"
 
@@ -180,6 +189,7 @@ def main() -> int:
                       "class_b_neural": list(CLASS_B_NEURAL),
                       "class_b_classical": list(CLASS_B_CLASSICAL),
                       "excluded_from_both": EXCLUDED},
+        "governing_run": widest,
         "runs": runs, "falsifiers": checks, "falsifier_summary": summary,
         "contract_path": str(CONTRACT),
     }
