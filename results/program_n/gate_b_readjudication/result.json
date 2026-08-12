@@ -20,7 +20,7 @@
  "claim_status": "SURFACE_PREMIUM_SURVIVES_THE_BEST_NONNEURAL_COMPARATOR",
  "contract_path": "docs/ENMIENDA_PUERTA_B_MEJOR_NO_NEURONAL_2026-08-09.md",
  "contract_sha256": "376f6182b598aee61044e9d9e69e17e6a9b27b441c1865eeab962a90a078e8a9",
- "created_at": "2026-08-10T03:44:36.977551+00:00",
+ "created_at": "2026-08-12T04:44:53.233352+00:00",
  "falsifier_summary": {
   "all_passed": true,
   "disclosures": [],
@@ -40,7 +40,8 @@
      "results/program_n/gate_b_cd_surface/result.json",
      "results/program_n/gate_b_confirmation_v2/result.json",
      "results/program_n/gate_b_confirmation_v3/result.json",
-     "results/program_n/gate_b_sensitivity_ret_excel/result.json"
+     "results/program_n/gate_b_sensitivity_ret_excel/result.json",
+     "results/program_n/gate_b_widened_class/result.json"
     ],
     "n_episodes_run": 0,
     "why_it_can_fail": "it cannot: no seed is opened and no episode is run. Every quantity is read from per_fold arrays already sealed in the four cited artifacts."
@@ -52,8 +53,8 @@
    "computed": true,
    "evidence": {
     "computed_from": {
-     "n_class_a_classical": 5,
-     "n_class_b_classical": 1
+     "n_class_a_classical": 9,
+     "n_class_b_classical": 5
     },
     "excluded_arm": "train_cell_mean_comparator",
     "why_it_can_fail": "a class-B comparator judging a class-A arm, or the cell-mean comparator appearing at all, is exactly the substitution that makes a network win by construction"
@@ -64,8 +65,8 @@
    "computed": true,
    "evidence": {
     "computed_from": {
-     "n_distinct_fold_arrays": 4,
-     "n_runs": 4
+     "n_distinct_fold_arrays": 5,
+     "n_runs": 5
     },
     "why_it_can_fail": "two identical per_fold arrays would mean I read one artifact twice and reported it as two independent runs"
    },
@@ -86,11 +87,12 @@
    "computed": true,
    "evidence": {
     "computed_from": {
-     "n_runs": 4,
-     "n_verdicts_changed": 1
+     "n_runs": 5,
+     "n_verdicts_changed": 2
     },
     "runs_whose_verdict_changed": [
-     "gate_b_sensitivity_ret_excel"
+     "gate_b_sensitivity_ret_excel",
+     "gate_b_widened_class"
     ],
     "why_it_can_fail": "the same adjudication under the ORIGINAL primary-only comparator must differ somewhere; if it never does, this amendment measures nothing and the defect it claims to repair was not a defect"
    },
@@ -103,14 +105,22 @@
    "linear_additive",
    "linear_interactions",
    "spline_buffer",
-   "tree"
+   "tree",
+   "gbdt",
+   "random_forest",
+   "gaussian_process",
+   "kernel_ridge"
   ],
   "class_a_neural": [
    "mlp_tuned",
    "kan_tuned"
   ],
   "class_b_classical": [
-   "linear_lagged"
+   "linear_lagged",
+   "gbdt_lagged",
+   "random_forest_lagged",
+   "gaussian_process_lagged",
+   "kernel_ridge_lagged"
   ],
   "class_b_neural": [
    "recurrent"
@@ -476,10 +486,104 @@
      "sesoi": 0.05
     }
    }
+  },
+  "gate_b_widened_class": {
+   "arms_that_pass_vs_best_nonneural": [],
+   "artifact": "results/program_n/gate_b_widened_class/result.json",
+   "best_nonneural_comparator": {
+    "kan_tuned": "gaussian_process",
+    "mlp_tuned": "gaussian_process",
+    "recurrent": "gbdt_lagged"
+   },
+   "ceiling_is_not_a_ceiling": [
+    "gaussian_process",
+    "gaussian_process_lagged",
+    "gbdt",
+    "gbdt_lagged",
+    "kan_tuned",
+    "kernel_ridge_lagged",
+    "mlp_tuned",
+    "random_forest",
+    "random_forest_lagged",
+    "recurrent"
+   ],
+   "claim_status_as_sealed": "BLOCKED_INSTRUMENT",
+   "endpoint": "held_out_r2_on_R_cobb_douglas",
+   "grade": "DECLARED_REPLAY_WIDENED_CLASS",
+   "premium_under_primary_only": true,
+   "readjudicated_premium": false,
+   "seeds": [
+    9600001,
+    9600002,
+    9600003,
+    9600004,
+    9600005,
+    9600006,
+    9600007,
+    9600008
+   ],
+   "vs_best_nonneural": {
+    "kan_tuned": {
+     "baseline": "gaussian_process",
+     "ci95_high": 0.2127643317239173,
+     "ci95_low": -0.17830997504228335,
+     "mean_difference": 0.017227178340816975,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "gaussian_process",
+     "ci95_high": 0.17153360056019232,
+     "ci95_low": -0.10303944338768464,
+     "mean_difference": 0.034247078586253844,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "gbdt_lagged",
+     "ci95_high": 0.05128582256462512,
+     "ci95_low": -0.11126685310263788,
+     "mean_difference": -0.02999051526900638,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    }
+   },
+   "vs_primary_control": {
+    "kan_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.19042022015627952,
+     "ci95_low": -0.008229607878547651,
+     "mean_difference": 0.09109530613886593,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": false,
+     "sesoi": 0.05
+    },
+    "mlp_tuned": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.15608259391002616,
+     "ci95_low": 0.060147818858579435,
+     "mean_difference": 0.1081152063843028,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    },
+    "recurrent": {
+     "baseline": "linear_interactions",
+     "ci95_high": 0.2933443081842534,
+     "ci95_low": 0.12911384814689814,
+     "mean_difference": 0.21122907816557576,
+     "n_folds": 5,
+     "passes_sesoi_and_ci": true,
+     "sesoi": 0.05
+    }
+   }
   }
  },
  "schema_version": "program_n_gate_b_readjudication_v1",
  "scope": "READJUDICATION_OF_SEALED_PER_FOLD_NO_SEEDS_OPENED_NO_EPISODES_RUN",
- "self_sha256": "735b351ee3db07a5260ef939411b47a83ff5a1c338ba8925765b94c376413d25",
+ "self_sha256": "07a4852d37207e6eead2b1b8dac193c48bebbc25ff4b9d360579b5bcbfb12f9f",
  "sesoi": 0.05
 }
