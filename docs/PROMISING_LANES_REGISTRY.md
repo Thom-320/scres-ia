@@ -1474,3 +1474,48 @@ conocido el posterior es suficiente— no por la enmienda que retiro.
 el único sitio donde la evidencia deja hueco: la red gana en **predicción** (+0,1081 y +0,1487) y
 **nadie ha medido si eso elige mejor configuración**. `grep` de pérdida orientada a decisión en el
 árbol: **0 resultados**.
+
+---
+
+## 2026-08-12 — el primer positivo con custodia completa, y no es neuronal
+
+**Lane de contención no fungible: REABIERTA Y CERRADA EN POSITIVO.**
+`results/program_o/powered_replication_v1/result.json` →
+`OBSERVABLE_CONVERSION_SURVIVES_AT_ADEQUATE_POWER`, 7/7 falsadores, 288 tapas vírgenes por celda
+(bloque 7500001–7500288, excepción PI, apertura única).
+
+```
+celda              cola punto   cola LCB sim   primario punto   primario LCB
+rho75_share90       +0.038786      +0.021591        +0.091016      +0.077131
+rho90_share75       +0.024439      +0.010936        +0.076211      +0.064356
+rho90_share90       +0.127313      +0.103989        +0.117207      +0.099978
+critico simultaneo 2.8770  (el que cerro Program O fue 2.8357)
+```
+
+**Por qué se reabrió y qué la cerró en positivo.** R1
+(`results/program_o/r1_tail_in_the_objective_v1/result.json`) refutó la hipótesis de que la
+selección ignoraba la cola: enumerando las 16 configuraciones de la clase declarada, `S_mean` y
+`S_cvar` eligen la **misma**. El fallo era **potencia**, no especificación — los puntos no cambian
+de signo entre bloques y lo que voltea el veredicto es un crítico simultáneo de 2,8357 frente a un
+t(47) de 1,6779. Con 288 tapas el listón **original** se cruza. Ninguna laxitud se usó.
+
+**Límites duros:** la política es un **belief-MPC clásico**, así que **no es una prima neural**; y
+**no promueve a Program O**, que sigue cerrado e inmutable — es un programa nuevo que hereda su
+física.
+
+**`H_PI` corregido: de 0,1515 a 0,0371.** `results/program_o/hpi_jensen_null_v1/result.json` →
+`H_PI_SURVIVES_ITS_JENSEN_NULL` (p=0,0000), pero el **75,5 %** del titular era sesgo de selección
+sobre 65.536 calendarios. El nulo fungible no podía cotizarlo: la varianza intra-tapa bajo
+fungibilidad es `0.000e+00`, un nulo de física y no de estimador. **Toda cita futura dice 0,0371.**
+
+**Lane de prima de predicción (Gate B): CAE.** Contra una clase completa —GBDT, random forest, GP,
+kernel ridge y sus versiones con lag— `mlp vs gaussian_process +0,0342 [−0,1030, +0,1715]` y
+`recurrent vs gbdt_lagged −0,0300`. El número era real; su interpretación no.
+
+**Lane de decisión (Fase 3): CAE, y por una razón que subsume a las demás.** El headroom de la
+decisión de configuración es **+0,000065** contra una barra de 0,01 y contra un nulo cuya media es
+**+0,003978**. Todos los brazos competían por un premio menor que el ruido.
+
+**Lane del portador neural en el bucle externo: EMPATE, con el clásico delante.** −0,007010
+[−0,024399, +0,013955], `ucb1_transfer` por delante de `neuron_memory`. La **retención** sigue viva
+(+0,0607, 6/6 simultáneo); el **portador** no es la red.

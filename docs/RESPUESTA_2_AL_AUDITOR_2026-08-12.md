@@ -173,3 +173,21 @@ horizonte.
 2. El estimando «portador neural» del bucle externo, ¿es el correcto o hay uno mejor?
 3. ¿Más nombres? Vuestro barrido produjo más que el mío y a mí se me pasaron los cinco de mi
    propia sesión.
+
+> ### ⇒ SUPERSEDIDO EL 2026-08-12 POR LA RÉPLICA CON POTENCIA
+>
+> Estado vigente: `docs/BRIEFING_REVISION_EXTERNA_2026-08-12.md` ·
+> `docs/RESPUESTA_3_AL_AUDITOR_2026-08-12.md`
+>
+> **El proyecto tiene su primer positivo con custodia completa, y no es neuronal:**
+> `results/program_o/powered_replication_v1/result.json` →
+> `OBSERVABLE_CONVERSION_SURVIVES_AT_ADEQUATE_POWER`, 288 tapas vírgenes por celda, 7/7 falsadores,
+> con la cola `ret_visible_cvar10` cruzando cero en las tres celdas (+0,021591 / +0,010936 /
+> +0,103989) a un crítico simultáneo de 2,8770 — más exigente que el 2,8357 que cerró Program O.
+> La política es un **belief-MPC clásico**.
+>
+> **Y la prima neural de predicción cayó:** contra una clase comparadora completa,
+> `mlp vs gaussian_process +0,0342 [−0,1030, +0,1715]` y `recurrent vs gbdt_lagged −0,0300`.
+>
+> **`H_PI` se corrige de 0,1515 a 0,0371:** sobrevive su nulo de Jensen con p=0,0000, pero el 75,5 %
+> del titular era sesgo de selección.
