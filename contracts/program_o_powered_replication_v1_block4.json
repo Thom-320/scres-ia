@@ -1,0 +1,135 @@
+{
+  "claim_boundary": {
+    "h_obs_confirmed": false,
+    "learner_authorized": false,
+    "paper2_confirmed": false,
+    "paper3_authorized": false
+  },
+  "connected_cells": [
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "derived_from": "contracts/program_o_fixed_clock_hobs_corrective_validation_v1.json",
+  "derived_from_sha256": "8cb665df8fad6bdfe9172d6c224c4b50da4ff14e77f4fbe3c04ff58616b4e278",
+  "only_field_changed": "validation_tapes.range",
+  "open_loop_comparator": {
+    "calendars": 65536,
+    "complete_frontier_matrices_retained": true,
+    "definition": "all base-4 length-eight calendars under centered_minority_v1",
+    "frozen_source": {
+      "path": "results/program_o/state_rich_comparator_fit_v1/result.json",
+      "seed_range": [
+        7420001,
+        7420048
+      ],
+      "sha256": "d67ac97a359a307ca632b6a13493e3ff5940a97e9440a6bc4b7d77c08a147875"
+    },
+    "frozen_static_indices": {
+      "rho75_share90": 39599,
+      "rho90_share75": 39599,
+      "rho90_share90": 31743
+    },
+    "point_estimand": "policy minus the strongest calendar selected on burned development tapes and frozen before validation",
+    "validation_reselection": "forbidden for the point comparator and bootstrap"
+  },
+  "physics": {
+    "bom_and_processing_times_equal": true,
+    "downstream_freight_physics_mode": "fixed_clock_physical_v1",
+    "gross_production_quantity": 120000,
+    "risks_enabled": false,
+    "scheduled_crew_hours": 5376,
+    "scheduled_missions": 112,
+    "scheduled_payload_capacity": 291200,
+    "scheduled_vehicle_hours": 5376,
+    "setup_hours": 0,
+    "substitution_fraction": 0
+  },
+  "placebos": {
+    "belief_given_current_operational_state": [
+      "operational_only",
+      "current_operational_stale_belief"
+    ],
+    "operational_state_given_current_belief": [
+      "belief_only",
+      "stale_operational_current_belief",
+      "swapped_operational_current_belief"
+    ],
+    "total_information": [
+      "no_state",
+      "stale_t2",
+      "swapped_state",
+      "cross_tape_shift17"
+    ]
+  },
+  "pooling_note": "one of six disjoint 48-tape sub-blocks; the frozen runner is executed byte-identically on each and the per-tape deltas are pooled afterwards",
+  "primary_gate": {
+    "action_certificate": "unchanged from program_o_fixed_clock_physical_hobs_validation_v1",
+    "all_nine_real_minus_placebo_lcb95_strictly_positive": true,
+    "favorable_tapes_minimum": 34,
+    "guardrails_noninferior": [
+      "quantity-weighted full ReT",
+      "lost orders and lost quantity",
+      "omitted and unresolved orders and quantity",
+      "remaining backlog and maximum age",
+      "ReT CVaR10",
+      "worst-product fill",
+      "service-loss AUC"
+    ],
+    "mean_delta_lcb95_minimum": 0.01,
+    "metric": "ret_excel_request_snapshot_v2 via canonical repository aggregator",
+    "paired_bootstrap_resamples": 10000,
+    "required_in_each_connected_cell": true,
+    "resource_equality": [
+      "gross production quantity",
+      "scheduled downstream missions",
+      "scheduled downstream vehicle-hours",
+      "scheduled downstream crew-hours",
+      "scheduled payload capacity",
+      "setup hours"
+    ],
+    "simultaneous_familywise_one_sided_coverage": 0.95,
+    "simultaneous_method": "studentized one-sided max-t over all 69 estimands",
+    "zero_variance_estimands": "exact point bound"
+  },
+  "primary_policy": {
+    "config_id": "belief_mpc__3",
+    "future_tape_information_forbidden": true,
+    "parameters_and_tie_breaks_frozen": true,
+    "source": "supply_chain/program_o_state_rich.py"
+  },
+  "schema_version": "program_o_fixed_clock_hobs_corrective_validation_v1",
+  "scientific_scope": "One corrective validation of frozen belief_mpc__3 after the first adjudicator used validation-selected point comparators and an unstandardized simultaneous critical value. No policy, physics, cell, metric, placebo, threshold, or guardrail changes are permitted.",
+  "status": "FROZEN_BEFORE_FRESH_CORRECTIVE_VALIDATION",
+  "sub_block_index": 4,
+  "technical_invalidation_source": {
+    "path": "results/program_o/fixed_clock_hobs_validation_v1/causal_diagnostic_v1/result.json",
+    "sha256": "05b13ea294dc0d1a0d8c040d2b269a20b18ae85bad80744a46bced1b092006df",
+    "status": "TECHNICAL_INVALIDATION_REQUIRES_CORRECTIVE_REPEAT"
+  },
+  "terminal_rules": {
+    "fail": "STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION",
+    "no_post_failure_changes": [
+      "controller",
+      "hyperparameters",
+      "cells",
+      "comparator",
+      "physics",
+      "metric",
+      "placebos",
+      "thresholds",
+      "guardrails"
+    ],
+    "no_second_rescue": true,
+    "pass": "PASS_PROGRAM_O_CLASSICAL_HOBS_CORRECTIVE_VALIDATION"
+  },
+  "validation_tapes": {
+    "open_once": true,
+    "range": [
+      7500145,
+      7500192
+    ],
+    "role": "corrective classical-H_obs validation; never learner-virgin",
+    "status": "SEALED_NOT_ACCESSED"
+  }
+}

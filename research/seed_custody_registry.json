@@ -697,6 +697,60 @@
       "registered_by": "manual PI exception 2026-08-09",
       "start": 9600001,
       "status": "BURNED_CONFIRMATION_COMPLETE"
+    },
+    {
+      "end": 7500048,
+      "id": "program_o_powered_replication_block1",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500001,
+      "status": "RESERVED_NOT_OPENED"
+    },
+    {
+      "end": 7500096,
+      "id": "program_o_powered_replication_block2",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500049,
+      "status": "RESERVED_NOT_OPENED"
+    },
+    {
+      "end": 7500144,
+      "id": "program_o_powered_replication_block3",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500097,
+      "status": "RESERVED_NOT_OPENED"
+    },
+    {
+      "end": 7500192,
+      "id": "program_o_powered_replication_block4",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500145,
+      "status": "RESERVED_NOT_OPENED"
+    },
+    {
+      "end": 7500240,
+      "id": "program_o_powered_replication_block5",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500193,
+      "status": "RESERVED_NOT_OPENED"
+    },
+    {
+      "end": 7500288,
+      "id": "program_o_powered_replication_block6",
+      "lifecycle": "RESERVED_NOT_OPENED until the run consumes it; one-way door",
+      "purpose": "sub-block of a 288-tape powered replication of Program O's observable conversion; only the sample size differs from the corrective contract",
+      "registered_by": "PI exception 2026-08-12",
+      "start": 7500241,
+      "status": "RESERVED_NOT_OPENED"
     }
   ],
   "inventory_limitations": [
@@ -787,6 +841,13 @@
       "authorisation": "docs/ENMIENDA_F2_SIN_CLAUSULA_DE_ORDEN_2026-08-09.md",
       "block": "9600001-9600008",
       "note": "third block for the same hypothesis. Two predecessors (9400001-8, 9500001-8) were burned by falsifier defects of mine, not by the data. f2's ordering clause is removed; a reversal must now have its own CI excluding zero. If this block is also lost to instrument, Gate B closes."
+    },
+    {
+      "action": "OPEN_VIRGIN_BLOCK",
+      "at": "2026-08-12T06:00:00+00:00",
+      "authorisation": "docs/EXCEPCION_PI_Y_PREREGISTRO_REPLICA_CON_POTENCIA_2026-08-12.md",
+      "block": "7500001-7500288",
+      "note": "288 tapes per cell, six disjoint 48-tape sub-blocks. The ONLY degree of freedom used is sample size, which the corrective contract's no_post_failure_changes list does not contain. Thresholds, guardrails, comparator, cells, physics, metric, placebos and the frozen belief_mpc__3 controller are untouched, and the frozen runner is executed byte-identically six times: sha256 bf8de3674333e9150fbd6e8b3b835754c736d150369d0c4994cfee5ee74a4161. This CANNOT promote Program O, which stays closed and immutable; it is a new programme inheriting its physics. Single opening: if it fails, safe observable conversion closes at adequate power."
     }
   ],
   "reconciled_at": "2026-08-08T15:57:32.987028+00:00",
