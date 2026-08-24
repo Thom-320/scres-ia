@@ -21,6 +21,7 @@ Track A is a benchmark with honest negative results. **No RL configuration beats
 - Root cause: downstream distribution bottleneck (F11), 1% action headroom (F2)
 - Paper framing: "when does RL help?" + mechanistic explanation of structural limitations
 
+<<<<<<< HEAD
 ### Track B (Extended Action Space) — CLOSED NEGATIVE (C30)
 
 Track B adds downstream control (Op10/Op12) to the action space.
@@ -31,6 +32,23 @@ Track B adds downstream control (Op10/Op12) to the action space.
   static `0.005906366` vs PPO `0.005888317`. See
   [TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md).
 - DKANA handoff: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)
+=======
+### Track B (Extended Action Space) — SUPERSEDED
+
+The former “PPO wins / VALIDATED” headline was superseded by the same-contract
+challenge: the optimized constant policy slightly outperformed PPO. Do not use
+the earlier headline as current evidence.
+
+- Corrective verdict:
+  [TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md](https://github.com/Thom-320/scres-ia/blob/1ded8209bd50abffcab353f8b08c503068c91b1e/docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md)
+- Separate current Program Q result:
+  [scientific release `031d0af9`](https://github.com/Thom-320/scres-ia/tree/031d0af9479fcf73e95f34cece9a0ea76a218c97/papers/submission_a_program_q)
+
+Allowed wording: in Program Q, RecurrentPPO beat the complete 65,536-calendar
+open-loop frontier of that contract; it was practically equivalent to the
+strongest tested structured controller and did not establish worst-product
+service non-inferiority.
+>>>>>>> origin/main
 
 ### Key Rules
 
@@ -196,6 +214,7 @@ Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FIN
 - **Root cause**: Downstream distribution bottleneck (F11) + 1% action headroom (F2).
 - **AUDIT WARNING**: Runs named `control_reward_500k_*_stopt` used pre-audit DES with bugs. They are `historical_artifact`, not valid evidence.
 
+<<<<<<< HEAD
 ### Track B (extended downstream control) — RETRACTED, see C30
 
 > **SUPERSEDED BY [TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md) (claim C30).**
@@ -222,3 +241,20 @@ Full findings with evidence sources: [PAPER_FINDINGS_REGISTRY.md](docs/PAPER_FIN
   same-contract structured controller (no neural premium), and fails the frozen worst-product
   fill guardrail. See `docs/PROGRAM_Q_TERMINAL_VERDICT_2026-07-18.md`.
 - DKANA handoff ready for David: [DKANA_CONTRIBUTOR_HANDOFF.md](docs/DKANA_CONTRIBUTOR_HANDOFF.md)
+=======
+### Track B (extended downstream control) — SUPERSEDED
+
+- The 100k smoke and 500k × 5-seed headline are historical evidence, not the
+  current same-contract conclusion.
+- The corrective challenge favored the optimized constant policy:
+  PPO − static = `-0.000018049`, with a wholly negative 95% interval.
+- Program Q is a separate multiproduct contract. Its positive result over the
+  exhaustive open-loop frontier must not be back-projected onto Track B.
+
+### Next steps
+
+- Use the Program Q release pointer and its frozen claims table for paper-facing
+  statements.
+- Treat the Track B headline as superseded; preserve its historical artifacts
+  without presenting them as current authority.
+>>>>>>> origin/main
