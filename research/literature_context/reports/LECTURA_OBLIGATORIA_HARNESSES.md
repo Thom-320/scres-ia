@@ -13,7 +13,7 @@ Antes de proponer diseño, experimentos o claims para SCRES-IA, los harnesses de
 | VPS — checkout científico | `/home/ubuntu/scres-ia-expanded-v2/research/literature_pdfs_core/` (25) y `literature_pdfs_frontier/` (15) |
 | VPS — bundle maestro | `/home/ubuntu/scres-sources/pdfs/`, `pdfs_frontier/`, `attached/` (tesis + 3 Garrido/Ding) |
 | Mac — repositorio | `~/Projects/research/scres-ia/research/literature_pdfs/` (26) y `literature_pdfs_frontier/` (15) |
-| Mac — Downloads | `~/Downloads/scres-papers/` (+ `core-63/` 26, `frontier-2021-2026/` 15) |
+| Mac — Downloads | `<Mac-Downloads>/scres-papers/` (+ `core-63/` 26, `frontier-2021-2026/` 15) |
 
 Nota: `core-63` tiene 26 PDFs porque incluye Gijsbrechts2022 tanto en A como en B por doble clasificación temática.
 

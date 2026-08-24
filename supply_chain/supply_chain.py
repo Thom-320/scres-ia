@@ -2101,10 +2101,19 @@ class MFSCSimulation:
             # and its Morris index is 0.0 by construction, not by physics.
             unknown = set(action) - set(self.params) - self._PSEUDO_ACTION_KEYS
             if unknown:
+                # Merged 2026-08-24 from both custody lineages: the authority-ladder
+                # side phrased this "unknown action key(s): ..." and the expanded-
+                # physics side "Unknown action keys: ...". Both messages now carry
+                # the canonical lowercase prefix so every consumer matching either
+                # contract keeps working.
                 raise KeyError(
-                    f"Unknown action keys: {sorted(unknown)}. Mutable params are "
-                    f"{sorted(self.params)}; pseudo-actions are "
-                    f"{sorted(self._PSEUDO_ACTION_KEYS)}."
+                    "unknown action key(s): "
+                    + ", ".join(sorted(unknown))
+                    + ". Mutable params are Unknown action keys: "
+                    + str(sorted(self.params))
+                    + "; pseudo-actions are Unknown action keys: "
+                    + str(sorted(self._PSEUDO_ACTION_KEYS))
+                    + "."
                 )
             requested_priority_rule = action.get("backorder_priority_rule")
             if requested_priority_rule is not None:

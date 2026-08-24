@@ -9,7 +9,7 @@
 | VPS `/home/ubuntu/scres-sources/` | bundle maestro: attached (4) + pdfs (25) + pdfs_frontier (15) + texts (19 .txt extraídos para lectura barata) |
 | VPS repo `scres-ia-expanded-v2/research/` | symlinks `literature_pdfs_core`, `literature_pdfs_frontier` + LECTURA_OBLIGATORIA + IDEAS_* |
 | Mac repo `~/Projects/research/scres-ia/research/` | literature_pdfs (26), literature_pdfs_frontier (15), literature_texts (19), LECTURA_OBLIGATORIA |
-| Mac Downloads `~/Downloads/scres-papers/` | 29 PDFs sueltos + core-63/ + frontier-2021-2026/ + texts/ (19) + reports-v2 (9 informes) |
+| Mac Downloads `<Mac-Downloads>/scres-papers/` | 29 PDFs sueltos + core-63/ + frontier-2021-2026/ + texts/ (19) + reports-v2 (9 informes) |
 
 ## Ideas de frontera producidas (3 harnesses, 30 ideas totales)
 

@@ -8,7 +8,7 @@ La búsqueda frontera produjo 24 registros académicos verificados (Crossref/arX
 
 ## Hechos verificados
 
-- Frontier PDFs en el VPS: 15; todos pasan `%PDF-` y tamaño mínimo. Los mismos 15 están en el repo del Mac y en `~/Downloads/scres-papers/frontier-2021-2026/`.
+- Frontier PDFs en el VPS: 15; todos pasan `%PDF-` y tamaño mínimo. Los mismos 15 están en el repo del Mac y en `<Mac-Downloads>/scres-papers/frontier-2021-2026/`.
 - Núcleo: 4 PDFs en `attached/`; 25 PDFs de la colección core en `pdfs/`.
 - Textos extraídos: 19 TXT en el bundle común, incluidos tesis, Garrido 2024, Ding 2026 y los 15 frontera.
 - El contexto común contiene 10 informes de navegación y auditoría y está replicado en VPS repo, Mac repo y Mac Downloads; el checksum de `CONTEXTO_COMUN_HARNESSES_2026-08-24.md` coincide en los tres sitios.

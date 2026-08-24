@@ -1,14 +1,11 @@
 # Program O fixed-clock H_obs validation verdict
 
-<<<<<<< HEAD
-=======
 > **Historical adjudication notice (2026-07-17):** this document records the
 > first burned validation block and the defects that invalidated its automatic
 > adjudication. The authorized corrective validation has since completed. The
 > binding current status is `STOP_PROGRAM_O_AFTER_CORRECTIVE_VALIDATION`; see
 > `PROGRAM_O_CORRECTIVE_HOBS_VALIDATION_VERDICT_2026-07-15.md`.
 
->>>>>>> origin/main
 ## Corrective status
 
 **RETRACTED AS A TERMINAL ADJUDICATION.** The causal audit found that the executor selected the point comparator on the sealed validation tapes even though the contract froze the development-selected comparator. It also found an invalid unstandardized simultaneous critical value. See `PROGRAM_O_RHO90_SHARE90_CAUSAL_DIAGNOSTIC_2026-07-15.md`.
