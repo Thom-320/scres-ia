@@ -1,0 +1,592 @@
+             Enhancing the Operationalization
+        of SCRES-Based Simulation Models with AI
+      Algorithms: A Preliminary Exploratory Analysis
+
+        Alexander Garrido1(B)         , Fabián Pongutá2        , and Wilson Adarme3
+     1 Industrial and Systems Engineering, Tecnológico de Monterrey, Monterrey, México
+                               alexander.garrido@tec.mx
+      2 Industrial Engineering, Universidad Cooperativa de Colombia, Bogotá, Colombia
+ 3 Industrial and Systems Engineering, Universidad Nacional de Colombia, Bogotá, Colombia
+
+
+
+
+       Abstract. The increasing complexity of supply chain (SC) networks and the asso-
+       ciated risks have captured global attention, leading to the emergence of the con-
+       cept of supply chain resilience (SCRES). Over the past two decades, SCRES has
+       been a focal point of research, explored through various perspectives, approaches,
+       and tools. Among these, the discrete event simulation (DES) technique stands
+       out for its effectiveness in modeling SCRES. While DES models offer multiple
+       advantages and have been widely used in the literature, they lack the capability
+       to measure a crucial element of SCRES: the cumulative learning of a SC net-
+       work as it experiences risk events over time. The absence of this attribute renders
+       attempts to operationalize SCRES incomplete. This research aims to address this
+       methodological gap by proposing–from a theoretical standpoint–the integration
+       of artificial intelligence (AI) algorithms into DES models. The research delves
+       into several categories of AI algorithms that can learn from successive iterations
+       of DES models. Based on this exploratory analysis, it is suggested that neural
+       networks, particularly backpropagation, Kolmogorov-Arnold, and reinforcement
+       learning algorithms, are the most suitable to address this gap in the literature. Addi-
+       tionally, a novel definition of SCRES is proposed, emphasizing the importance of
+       learning within supply chain networks.
+
+       Keywords: Supply chain resilience · SCRES · Artificial intelligence · Machine
+       learning · Simulation models · Neural networks
+
+
+
+1 Introduction
+A significant feature that characterizes globally operating commercial industries lies in
+their strong emphasis on continuous learning to enhance its manufacturing processes
+and technical procedures [15]. For instance, in the aviation industry, whenever a major
+or minor incident occurs during flight operations, valuable lessons are garnered and
+disseminated across all the nodes of the aircraft supply chain (SC), though with some
+exceptions [11]. This practice stems from the industry’s high-stakes nature, where errors
+
+
+© The Author(s), under exclusive license to Springer Nature Switzerland AG 2024
+A. Garrido et al. (Eds.): ICCL 2024, LNCS 15168, pp. 80–94, 2024.
+https://doi.org/10.1007/978-3-031-71993-6_6
+              Enhancing the Operationalization of SCRES-Based Simulation Models          81
+
+can have serious or even fatal consequences. The progressive accumulation of knowl-
+edge and experiences converge into new updated policies, recommendations, and best
+practices, all aimed at preventing or minimizing the impact of similar future risky events.
+As a result, each new aircraft model launched to market and their operational methods,
+are typically safer and more reliable [57]. This approach of learning from past incidents
+is not unique to the commercial aviation industry. In practice, many other business orga-
+nizations have adopted a similar mindset, making them more resilient to unexpected
+disruptions [20].
+    A classic definition of organizational learning–provided by Levitt and March [31]–
+describes this concept from three essential elements: routines, history-dependent, and
+target-oriented. In other words, SC networks engage in learning by extracting insights
+from their past experiences, which are subsequently transformed into established routines
+that shape and guide their future behavior. In parallel, the paradigm of supply chain
+resilience or SCRES–understood as the adaptive capacity of supply networks to endure
+unforeseen disruptions and recover to a desired state [23]–has tacitly integrated the notion
+of learning since the beginning [13, 42, 48]. Nonetheless, the literature on SCRES has
+overlooked this crucial managerial capability by encapsulating it through other related
+concepts such as adaptability, viability, or flexibility [43, 49, 53]. This oversight has
+been particularly prominent in research works focusing on the operationalizing of the
+notion of SCRES [6, 8].
+    The current article hypothesizes the existence of a methodological gap in the literature
+upon the operationalization of the SCRES concept, primarily due to the complexity
+of incorporating supply chain learning (SCL) attributes into resilience models. This
+proposal highlights the need for more comprehensive frameworks that can effectively
+integrate these learning dynamics to improve the credibility and validity of SCRES
+metrics available in the literature. This gap may be further exacerbated by the lack
+of explicit references to SCL in SCRES conceptualizations [19]. Equally important,
+by addressing this gap, future investigations could enhance their credibility of SCRES
+metrics, leading to more precise and realistic metrics of SCRES. To this end, this study
+explores the most suitable artificial intelligence (AI) algorithms that can be integrated
+in SCRES models. We are only interested in SCRES models based on the utilization of
+discrete-event simulation (DES). In this sense, it is important to note that the purpose of
+the current research should not be confused with studies that examine the advantages of
+implementing AI algorithms to enhance SCRES, or to assist SC networks in navigating
+today’s volatile and uncertain environments [56]. In fact–due to space limitations–, the
+scope of this study is purely exploratory; however, it lays the groundwork for future,
+more in-depth research.
+    With this in mind, the following guiding questions are formulated: (1) What category
+of AI algorithms best mimic the SCL attribute and, (2) how this AI algorithm family can
+be integrated in the internal structure of a DES model for SCRES assessment? Regarding
+these questions, various studies have emphasized the need to couple AI algorithms with
+simulation models. For instance, in a study upon the relationship between medium-
+term decisions in production planning and demand variability, Garrido et al., [24] posed
+the idea of combining robust, learning-based algorithms to improve factory resilience
+through simulation models. Zhang et al. [56] suggested that the use of predictive analytics
+82        A. Garrido et al.
+
+models along with simulation approaches, can effectively describe the dynamic behavior
+of SC under conditions of uncertainty. Von Rueden et al. [54] pointed out that the use of
+simulation models can enrich unsupervised machine learning (ML) algorithms. Greasley
+and Edwards [25] indicated that DES models can generate synthetic data for training
+and testing ML algorithms. Additionally, these authors pointed out that DES models can
+benefit from the capability of ML techniques to capture and simplify complex processes
+for the model. Moreover, da Silva et al. [16] argued that the use of simulation techniques
+combined with ML algorithms can help to verify the accuracy of the models used from
+a dynamic system perspective. Thus, from a theoretical point of view, addressing this
+methodological gap will allow to expand the impact’s understanding of the SCL attribute
+in SCRES metrics, by considering resilience as a dynamic adaptive capability rather than
+a static one [9]. That is, coupling AI algorithms with SCRES-based simulation models
+may correct the characteristic ‘Alzheimer effect’ observed in this type of studies, in
+which the modeled SC network fails to retain information from previous experiences–or
+simulation scenarios.
+    The structure of this research is as follows: Sect. 2 examines the most relevant
+previous works on SCRES using DES models, highlighting their advantages and main
+limitations. Section 3 provides a detailed explanation of the steps required to build a
+DES model for SCRES assessment. Section 4 presents a comprehensive roadmap of
+AI algorithms based on Powell’s classification [38], explores the integration of neural
+network algorithms with DES models for SCRES assessment, and introduces a new
+definition of SCRES based on the notion of Supply Chain Learning (SCL). Finally,
+Sect. 5 presents the main conclusions of this exploratory analysis and offers suggestions
+for future research in the SCRES area.
+
+
+2 Previous Works on SCRES-Based Simulation Models
+
+The existing literature for measurement SCRES falls into two main areas: qualitative
+and quantitative approaches [35]. The first type of studies mainly comprises the use of
+surveys, expert opinion panels, cases of study, and empirical methods [37, 41]. On the
+other hand, SCRES-based quantitative studies employ a varied amalgam of methodolo-
+gies, grounded on the utilization of mathematical/analytical models such as optimiza-
+tion/metaheuristics programming [21], and simulation [51]. Among these two main
+areas, a qualitative approach seems to be the most prevalent method for SCRES analysis
+[32]. However, despite many of its well-known advantages, qualitative approaches have
+been severely criticized due to problems with generalizability and transferability of the
+results derived [23]. As mentioned earlier, this research focuses only on the quantita-
+tive approach. Similarly to previous analysis, quantitative approaches have also been the
+subject of criticism in the literature [7]. The most incisive appraisal is their inherent math-
+ematical complexity, which often makes these models inaccessible or even inapplicable
+to many real SC scenarios [38].
+             Enhancing the Operationalization of SCRES-Based Simulation Models         83
+
+     Of all the models that make up SCRES-based quantitative approach, the current
+research will focus only on simulation-based studies. The choice of simulation models
+stems from their ability to dynamically analyze SC networks under risk conditions [30].
+This relevant characteristic in SC offers a significant leverage over other quantitative
+methodologies for evaluating SCRES, especially when integrated with AI algorithms.
+Thus, depending on the specific research objective set, simulation studies for measuring
+SCRES involve the use of various techniques, including Monte Carlo simulation, agent-
+based simulation, system dynamics, hybrid simulation, and DES models. According to
+Garrido [23] and Saisridhar et al. [44], of the five mentioned simulation techniques, the
+latter model has been consistently the most extended method for measuring SCRES in
+literature. Researchers appear to favor DES models due to four primary reasons. First,
+DES models offer ease and speed to generate large volumes of synthetic data for SC
+networks at very low cost [10]; second, DES models excel in capturing various types
+of SC disruptions and their effects, including transient and rare stochastic events [56];
+third, the utilization of DES models allows to represent SC networks as complex systems,
+based on the flow of materials and information [36]; and lastly, DES models have been
+widely utilized across various SC scenarios to assess SCRES [28, 33, 34]. In this sense,
+it is worth noting that DES models facilitate the relatively straightforward recreation
+of various risk mitigation strategies within SC [17]. This capability enables researchers
+and practitioners to systematically evaluate the effectiveness of different approaches,
+thereby enhancing the resilience and efficiency of SC operations [50].
+     Summarizing the above, although the prior literature review is not comprehensive
+in nature, it adequately represents the state of the art in SCRES-based DES models.
+Notably, in all of these studies, the SCL attribute is an absent element that needs to
+be properly incorporated to enhance the credibility and validity of SCRES metrics.
+The following section outlines the steps to construct a SCRES metric from a DES
+model, while also explaining why this type of SC approach does not incorporate the
+SCL attribute.
+
+
+3 Archetype of a DES-Based Model for SCRES Measurement
+In general, the process of building a DES-based model for SCRES measurement encom-
+passes several stages. Figure 1 illustrates the set of steps required to this end. Step 1
+involves the selection of the SC network under consideration. Ideally, the DES model
+should be based on data from a real SC network. Nevertheless, if the SC information
+needed is unavailable or incomplete, a hypothetical SC may be used as substitute–that
+is, build a model based on information assumptions. Step 2 involves the formulation of
+a guiding question and/or a set of research hypotheses that will guide the development
+of the DES model. Given that the primary objective of the current analysis is to enhance
+the operationalization of the SCRES, much of the theory-driven research in this area is
+based on conceptual blueprints describing moderating effects [1, 3]. This type of the-
+oretical models contains postulates of the form ‘how variable x relates to variable y in
+presence of variable z’, with the SCRES metric represented by the y or z variable. Step
+3 consists of gathering essential data of the selected SC network in step 1, particularly,
+from the material and information flows. This information is usually found in flow-charts
+84        A. Garrido et al.
+
+and value stream maps. In Step 4, the potential risk events that have impacted or could
+directly affect the performance of the SC under analysis are identified and documented
+in detail. In this respect, it can be said that a SC can be affected by three types of
+risk events: inherent risks–or known-knows–, natural disasters and terrorist attacks–or
+known-unknows–, and black swan events–or unknown-unknows [23, 52]. Step 5 defines
+and implements assumptions about key aspects of the DES model. This process typi-
+cally involves imposing simplifying conditions on the material and information flows
+of the SC under analysis. Step 6 consists in determining both the potential impact of
+each SC risk previously considered, and then to assess their probability of occurrence.
+This prospective analysis operates on the premise that the prior identified risk events in
+step 4 will effectively materialize in the future. In Step 7, the initial pilot version of the
+DES model is executed and proved. If everything is as expected, in Step 8, the output
+results of the DES model undergo statistical verification and validation. In this way, in
+the verification phase, the model results are analyzed to ensure that they fall within the
+expected acceptability ranges. If the DES model passes this verification, it proceeds to
+the validation phase, where the output values are statistically compared to the actual SC
+data, by using regularly a non-parametric statistical test [55]. In Step 9, a comprehensive
+simulation experimental design should be developed and followed. In this analysis, the
+number of the SC configurations–or variations–and independent replications are set. The
+experimental simulation design serves to statistically evaluate the research hypotheses
+posited in step 2. The previous three procedures–verification, validation, and simulation
+experimental design–are key for increasing the credibility of the output results of the
+DES model. In Step 10, the warm-up period and total duration for the simulation exper-
+iment are both determined. These two criteria are essential to prevent collecting flawed
+simulation data before the DES model has reached its steady-state condition [4]. This
+procedure is necessary to gather sufficient data for the subsequent statistical analysis [2].
+In Step 11, a quantitative metric for SCRES suitable to be integrated into the DES model
+is developed. This SCRES metric should be constructed based on the output variables
+of the DES model. Lastly, in Step 12, the main findings from the DES model are docu-
+mented and presented to the stakeholders. During this final step, the guiding question is
+either validated or refuted, depending on the outcomes of the DES model.
+    The Fig. 2 summarizes the implementation sequence for the previous simulation
+procedure in a SC network over multiple iterations or runs. Notably, this diagram shows
+the integration of the decision variables, the output variables, and the metric of SCRES.
+Moreover, Fig. 2 also highlights the function of organizational learning L, revealing the
+simulation SC network’s inability to learn from risk events after multiple iterations. In
+this research, we named this phenomenon as the Alzheimer’s effect in simulation models,
+drawing parallels to the medical condition observed in humans. So, why the SC network
+shown in Fig. 2 is unable to learn? Although this question will be addressed in detail in
+the next section, an observant reader may have noticed that steps ➌ and ➑ in Fig. 2 were
+intentionally highlighted. This is because in DES models for SCRES assessment, both
+steps represent the two extremes of an open-loop SC network. To build a DES model
+that can learn from the occurrence of past events and eventually increase SCRES, an AI
+algorithm must be integrated between these two nodes, as a way of bridge to convert
+             Enhancing the Operationalization of SCRES-Based Simulation Models      85
+
+the open-loop SC network into a closed-loop system. In the following section, we will
+thoroughly examine various categories of AI algorithms capable of performing this task.
+
+
+
+
+              Fig. 1. Procedure to build a DES model for SCRES assessment
+86       A. Garrido et al.
+
+
+
+
+            Fig. 2. DES model to assess resilience in an open-loop supply chain
+
+
+4 Integration of AI Algorithms to Emulate Organizational
+  Learning in SCRES-Based DES Models
+
+4.1 Typology of AI Algorithms
+The field of AI algorithms is vast and complex, involving the utilization of sophisticated
+statistical methods, computational architecture, and advanced mathematical techniques.
+AI represents a broad range of technologies that can integrate huge amounts of data,
+sophisticated algorithms, and substantial computing power to carry out tasks typically
+requiring human intellect [5]. In this regard, although several classifications have been
+provided [29], the boundaries between the different AI types/categories remain unclear
+and often overlapped. Figure 3 provides a general framework for the different types of
+AI, based on Powell’s classification [39]. Following this author, the field of AI can be
+divided into two main areas: simple behaviors and machine learning. In Fig. 3, the first
+category comprises AI algorithms based on the use of logic rules. Powell states that this
+subset includes rule engines dedicated to routine tasks. A practical example of this type
+              Enhancing the Operationalization of SCRES-Based Simulation Models           87
+
+of AI algorithm is a chatbot, which is usually used in the logistics field for order tracking
+and updates.
+    The second principal category in Fig. 3 comprises three distinctive levels of AI algo-
+rithms: basic machine learning (ML), pattern recognition, and large language models
+(LLM). Basic-ML is a family of general-purpose AI algorithms. This type of algorithms
+shapes the landscape of business analytics and are known by their notable adaptability
+to diverse scenarios. Basic-ML algorithms can be employed to uncover compelling pat-
+terns from structured datasets–numerical, textual, or a combination thereof–, primarily
+sourced from ERP/CRM systems, websites, and/or social media platforms [14]. Typical
+examples of basic-ML algorithms are the general linear models or GLMs. GLMs encom-
+pass several conventional linear regression models for a continuous response variable,
+given continuous and/or categorical predictors. These include multiple linear regres-
+sion, logistic/Gaussian regression, and ANOVA/ANCOVA models with fixed effects
+only, among others.
+    The subsequent level in Fig. 3 comprises AI algorithms specialized in recognizing
+diverse patterns. The most emblematic AI algorithms in this category are neural networks
+(NNs). These robust algorithms are named for their structural and functional resemblance
+to biological neural networks, as well as their information processing capabilities [22]. A
+key feature of NNs relies on their capacity to learn from diversified datasets. However, the
+learning process in NNs typically involves complex training sequences and vast amounts
+of data, making it costly in terms of both time and financial resources. Since the mid-
+1990s, NNs have been employed to recognize several types of patterns, including images,
+voices, stock market predictions, text generation, language translation, fraud prevention,
+autonomous driving, genetic analysis, disease diagnosis, and even have been used to
+classify coconuts [18]. Within the field of NNs, algorithms specialized in processing
+and extracting complex non-linear patterns from non-numerical datasets, such as voice
+and images, are known as deep neural networks (DNNs). DNNs are the most widely used
+AI models by practitioners for image and voice classification [45]. According to Chakir
+et al. [12], DNNs mirror the functions of the human brain–particularly the temporal
+lobes–and can include hundreds of connections and layers.
+    Lastly, at the uppermost level of Fig. 3, we find large language models (LLMs)–
+aka generative AI algorithms–, which represent the most advanced technology currently
+available. This revolutionary category of AI algorithms enables the generation of diverse
+content forms, including images, music, written text, and intricate outputs like virtual
+environments [27]. Generative AI algorithms–similarly to NNs–, operate by training on
+large datasets to produce new models that mimic the patterns and structures of the input
+data [40]. It is not an exaggeration to state that LLMs significantly enhance computational
+intelligence, potentially surpassing human capabilities.
+88       A. Garrido et al.
+
+
+
+
+                             Fig. 3. Classification of AI algorithms
+
+
+4.2 Coupling AI Algorithms with DES Models for SCRES Assessment
+
+Next we return to the question of interest, which of the four levels of AI algorithms shown
+in Fig. 3 best mimics the learning process of a SC network shaped by a DES model?
+This is undoubtedly a challenging endeavor, as to the best of the authors’ knowledge,
+no previous research has addressed the methodological gap of SCL in DES models for
+SCRES assessment using AI algorithms. In order to provide a plausible answer to this
+question, based on Garrido [23]’s work, Figs. 4a–d describe the archetype drivers of a
+DES model built to evaluate SCRES. In the example illustrated in Fig. 4, the Garrido
+[23]’s analysis selected four specific drivers for the SCRES metric–autotomy period,
+recovery period, disruption period, and fill rate–, though any other set of drivers could
+have been chosen. Furthermore, Fig. 4e denotes a metric of SCRES (ReT ). Several
+interesting features can be derived from the whole analysis shown in Fig. 4. First, to
+avoid scalability problems, most quantitative research approaches to operationalizing
+SCRES have opted to normalize the output range between 0 and 100 [23, 26, 47]. The
+normalization of the SCRES metric greatly simplifies its scrutiny, making it easier to
+understand and interpret, as well as facilitating comparison with other similar studies.
+Second, the SCRES metric shown in Fig. 4e typically determines the output variable for
+a DES model by integrating independent and continuous variables (drivers). However,
+depending on the nature of the problem under examination, this metric can also be
+expressed as a numerical binary output variable [46]. And third, for the research analysis
+described in Fig. 4, inventory buffers and manufacturing capacity were the two decision
+             Enhancing the Operationalization of SCRES-Based Simulation Models         89
+
+variables involved in the SC network under examination, both expressed as numerical
+factors.
+
+
+                       (a)                                        (b)
+
+
+
+
+                     (c)                                           (d)
+
+
+
+
+           (e)
+
+                 Fig. 4. Drivers for a SCRES metric (ReT ) from a DES model
+
+
+    Therefore, by contrasting the drivers and metric of SCRES in Fig. 4 with the four
+levels of AI algorithms depicted in Fig. 3, we can preliminarily conclude that level 3–or
+pattern recognition–best fits the methodological research problem raised in Fig. 2. This
+deduction is based on two main premises. Firstly, the methodological problem of SCL in
+DES models for SCRES assessment is intrinsically related to pattern recognition mecha-
+nisms. While DES techniques have conclusively demonstrated their efficacy in modeling
+SC networks under uncertainty, they fall short in incorporating lessons learned from suc-
+cessive simulations runs. In practice, when simulating a SC network, the engineers must
+design an efficient–though costly–experimental framework. From the collected data,
+they must then identify–or learn–the configuration that optimally enhances the SCRES
+metric. This iterative procedure is both inefficient and imprecise. And secondly, as indi-
+cated in Fig. 3, the quintessence of level 3 are NNs. As mentioned earlier, NNs allow
+completing nearly any learning activity, including activities of classification, numeric
+prediction, and unsupervised pattern recognition. All these tasks are closely related to
+the methodological challenge posed in Fig. 2.
+90       A. Garrido et al.
+
+     The directed network diagram of Fig. 5 shows how possibly a NN model might be
+used to join the two disconnected nodes highlighted in Fig. 2. Thus, in Fig. 5, the rela-
+tionship between the input signals received by the SCRES drivers di –or dendrites–and
+the output axon–or SCRES metric–is made explicit. Drawing an analogy to a biological
+neuron, each SCRES driver signal di is weighted based on the ρ values, according to
+its importance, using a mathematical algorithm or AI approach. The SCRES drivers di
+are summed by the cell body, and the signal is then processed according to an activation
+function f . An example of an activation function f could be, ‘Is the SCRES measure at
+configuration x higher than in the previous configuration (x–1)?’ Thus, the artificial neu-
+ron depicted in Fig. 5 could mimic the organizational learning L and be integrated with
+a DES model for SCRES assessment. This improvement can be considered a method-
+ological game-changer for future investigations in the operationalization of SCRES. As
+a result of the previous analysis, we are compelled to provide a new definition of SCRES
+integrating the notion of SCL:
+     SCRES is the progressive adaptive capacity of a SC network, derived from continuous
+learning based on past experiences. This learning enables a SC to respond effectively to
+disturbances caused by known-known, known-unknown, and unknown-unknown events.
+Furthermore, it allows a SC network to recover from these disruptions and return to its
+original or a desired state.
+
+
+
+
+     Fig. 5. Representation of a neural network integrated into a DES model for SCRES
+
+
+
+
+5 Conclusions
+
+It is a fact that DES models have struggled to effectively integrate organizational learning
+into measures of SCRES. Consequently, metrics for SCRES-based DES models may be
+deemed inadequate or incomplete. Additionally, despite the growing number of publi-
+cations on operationalization of SCRES and the salient methodological gap indicated
+               Enhancing the Operationalization of SCRES-Based Simulation Models                   91
+
+in present research, relatively few studies have explored combined solutions integrat-
+ing AI algorithms into DES models for SCRES measurement. We coined this problem
+‘the Alzheimer’s effect in SCs’, referring the taken assumption of the SC network in
+forgetting the learnt from past events. The analysis developed in this article provides
+an initial exploration aimed at finding solutions to this methodological challenge. As
+a main conclusion, we foresee that if AI algorithms are integrated with DES models
+for measuring SCRES, the validity and credibility of this approach will dramatically
+increase. However, regarding the two posited questions, it is necessary to underline that
+the scope of this research is purely exploratory in nature. This means that this research
+should be considered just as the initial step for future formal and deeper investigations in
+the domain of SCRES measurement models. We demonstrated that the analysis derived
+from DES models for SCRES measurement is not only a time-consuming iterative pro-
+cess, but also prone to yield large systematic errors. In other words, it is a problem
+type where humans deal with a well-structured problem where machines can outper-
+form humans, pointing out to an inefficient process. In this sense we envision three
+possible specific alternatives to the problem raised: back propagation neural networks,
+Kolmogorov-Arnold neural networks, and simulation-optimization approach as a form
+of reinforcement learning. Each of these AI approaches has the potential to effectively
+solve the problem considered.
+
+References
+ 1. Al-Hakimi, M.A., Borade, D.B., Saleh, M.H., Nasr, M.A.A.: The moderating role of supplier
+    relationship on the effect of postponement on supply chain resilience under different levels
+    of environmental uncertainty. Prod. Manuf. Res. 10(1), 383–409 (2022). https://doi.org/10.
+    1080/21693277.2022.2089264
+ 2. Altiok, T., Melamed, B.: Simulation Modeling and Analysis with Arena. Elsevier (2007).
+    https://doi.org/10.1016/B978-012370523-5/50000-6
+ 3. Bag, S., Gupta, S., Foropon, C.: Examining the role of dynamic remanufacturing capability
+    on supply chain resilience in circular economy. Manag. Decis. 57(4), 863–885 (2019). https://
+    doi.org/10.1108/MD-07-2018-0724
+ 4. Banks, J., Carson, J., Nelson, B., Nicol, D.: Discrete-Event System Simulation, 5th edn.
+    Pearson Education, Limited (2014)
+ 5. Borges, A., Laurindo, F., Spínola, M., Gonçalves, R., Mattos, C.: The strategic use of artificial
+    intelligence in the digital era: systematic literature review and future research directions. Int.
+    J. Inf. Manage. 57, 102225 (2021). https://doi.org/10.1016/j.ijinfomgt.2020.102225
+ 6. Badhotiya, G.K., Soni, G., Jain, V., Joshi, R., Mittal, S.: Assessing supply chain resilience to
+    the outbreak of COVID-19 in Indian manufacturing firms. Oper. Manag. Res. 15(3), 1161–
+    1180 (2022). https://doi.org/10.1007/s12063-021-00236-6
+ 7. Borgstede, M., Scholz, M.: Quantitative and qualitative approaches to generalization and
+    Replication–A representationalist view. Front. Psychol. 12, 605191 (2021). https://doi.org/
+    10.3389/fpsyg.2021.605191
+ 8. Bruckler, M., Wietschel, L., Messmann, L., Thorenz, A., Tuma, A.: Review of metrics to
+    assess resilience capacities and actions for supply chain resilience. Comput. Industr. Eng.
+    192 (2024). https://doi.org/10.1016/j.cie.2024.110176
+ 9. Carvalho, H., Barroso, A.P., Machado, V.H., Azevedo, S., Cruz-Machado, V.: Supply chain
+    redesign for resilience using simulation. Comput. Ind. Eng. 62(1), 329–341 (2012). https://
+    doi.org/10.1016/j.cie.2011.10.003
+92        A. Garrido et al.
+
+10. Chan, K.C., Rabaev, M., Pratama, H.: Generation of synthetic manufacturing datasets for
+    machine learning using discrete-event simulation. Prod. Manuf. Res. 10(1), 337–353 (2022).
+    https://doi.org/10.1080/21693277.2022.2086642
+11. Chary, S.: Employee grievance redressal and corporate ethics: lessons from the Boeing 737-
+    MAX crashes. Sci. Eng. Ethics 30, 14 (2024). https://doi.org/10.1007/s11948-024-00475-3
+12. Chakir, A., Andry, J.F., Ullah, A., Bansal, R., Ghazouani, M.: Engineering Applications of
+    Artificial Intelligence. Springer, Cham (2024). https://doi.org/10.1007/978-3-031-50300-9
+13. Christopher, M., Peck, H.: Building the resilient supply chain. Int. J. Logist. Manage. 15(2),
+    1–14 (2004). https://doi.org/10.1108/09574090410700275
+14. Choudhary, A., Fox, G., Hey, T.: Artificial Intelligence for Science. World Scientific,
+    Singapore (2023). https://doi.org/10.1142/9789811265679_fmatter
+15. Clare, J., Kourousis, K.I.: Learning from incidents in aircraft maintenance and continuing
+    airworthiness: regulation, practice and gaps. Aircr. Eng. 93(2), 338–346 (2021). https://doi.
+    org/10.1108/AEAT-06-2020-0114
+16. da Silva, M.R.F., Agostino, I.R.S., Frazzon, E.M.: Integration of machine learning and simu-
+    lation for dynamic rescheduling in truck appointment systems. Simul. Model. Pract. Theory
+    125, 102747 (2023). https://doi.org/10.1016/j.simpat.2023.102747
+17. Dadfar, D., Schwartz, F., Voß, S.: Risk management in global supply chains – hedging for the
+    big bang? In: Mak, H.-Y., Lo, H.K. (eds.) Transportation & Logistics Management. Proceed-
+    ings of the 17th International HKSTS Conference, HKSTS, Hong Kong (2012), 159–166.
+    ISBN 978-988-15814-1-9
+18. Durstewitz, D., Koppe, G., Meyer-Lindenberg, A.: Deep neural networks in psychiatry. Mol.
+    Psychiatr. 24(11), 1583–1598 (2019). https://doi.org/10.1038/s41380-019-0365-9
+19. Eryarsoy, E., Özer Torgalöz, A., Acar, M.F., Zaim, S.: A resource-based perspective of the
+    interplay between organizational learning and supply chain resilience. Int. J. Phys. Distrib.
+    Logist. Manag. 52(8), 614–637 (2022). https://doi.org/10.1108/IJPDLM-07-2021-0299
+20. Evenseth, L.L., Sydnes, M., Gausdal, A.H.: Building organizational resilience through orga-
+    nizational learning: A systematic review. Front. Commun. (2022). https://doi.org/10.3389/
+    fcomm.2022.837386
+21. Fattahi, M., Govindan, K.: & Maihami, R: Stochastic optimization of disruption-driven supply
+    chain network design with a new resilience metric. Int. J. Prod. Econ. 230, 107755 (2020).
+    https://doi.org/10.1016/j.ijpe.2020.107755
+22. Filipovic, N.: Applied Artificial Intelligence: Medicine, Biology, Chemistry, Financial,
+    Games, Engineering. 1st edn. Springer International Publishing (2023). https://doi.org/10.
+    1007/978-3-031-29717-5
+23. Garrido, A.: A Mixed-Method Study on the Effectiveness of a Buffering Strategy in the Rela-
+    tionship between Risks and Resilience. Doctoral thesis, Coventry, England. (2017). https://
+    wrap.warwick.ac.uk/106605/1/WRAP_Theses_Garrido_Rios_2017.pdf
+24. Garrido, A., Pongutaì, F., Garciìa-Reyes, H.: Zero-inventory plans, constant workforce or
+    hybrid approach? Analyzing pure production strategies for enhancing factory resilience for
+    demand variability. Manuscript submitted for publication to Int. J. Prod. Res. (2024)
+25. Greasley, A., Edwards, J.S.: Enhancing discrete-event simulation with big data analytics: a
+    review. J. Oper. Res. Soc. 72(2), 247–267 (2021). https://doi.org/10.1080/01605682.2019.
+    1678406
+26. Habibi, F., Chakrabortty, R.K., Abbasi, A.: Evaluating supply chain network resilience con-
+    sidering disruption propagation. Comput. Ind. Eng. 183, 109531 (2023). https://doi.org/10.
+    1016/j.cie.2023.109531
+27. Huang, K., Wang, Y., Goertzel, B., Li, Y., Wright, S., Ponnapalli, J.: Generative AI Security,
+    1st edn. Springer, Cham (2024). https://doi.org/10.1007/978-3-031-54252-7
+               Enhancing the Operationalization of SCRES-Based Simulation Models                 93
+
+28. Ivanov, D.: Disruption tails and revival policies: a simulation analysis of supply chain design
+    and production-ordering systems in the recovery and post-disruption periods. Comput. Ind.
+    Eng. 127, 558–570 (2019). https://doi.org/10.1016/j.cie.2018.10.043
+29. Janiesch, C., Zschech, P., Heinrich, K.: Machine learning and deep learning. Electr. Mark.
+    31, 685–695 (2021). https://doi.org/10.1007/s12525-021-00475-2
+30. Law, A.M.: Simulation Modeling and Analysis, 6th edn. McGraw-Hill (2024)
+31. Levitt, B., March, J.G.: Organizational learning. Ann. Rev. Sociol. 14(1), 319–338 (1988).
+    https://doi.org/10.1146/annurev.so.14.080188.001535
+32. Maharjan, R., Kato, H.: Resilient supply chain network design: a systematic literature review.
+    Transp. Rev. 42(6), 739–761 (2022). https://doi.org/10.1080/01441647.2022.2080773
+33. Mirzaaliyan, M., Hajian Heidary, M., Amiri, M.: Evaluating the supply chain resilience strate-
+    gies using discrete event simulation and hybrid multi-criteria decision-making (case study:
+    natural stone industry). J. Simul. 1–17 (2024). https://doi.org/10.1080/17477778.2024.234
+    2927
+34. Moosavi, J., Hosseini, S.: Simulation-based assessment of supply chain resilience with con-
+    sideration of recovery strategies in the COVID-19 pandemic context. Comput. Ind. Eng. 160,
+    107593 (2021). https://doi.org/10.1016/j.cie.2021.107593
+35. Najafi, M., Zolfagharinia, H., Rostami, S., Rafiee, M.: Enhancing supply chain resilience
+    facing partial and complete disruptions: the application in the cooking oil industry. Appl.
+    Math. Model. (2024). https://doi.org/10.1016/j.apm.2024.04.013
+36. Ouda, E., Sleptchenko, A., Simsekler, M.C.E.: Comprehensive review and future research
+    agenda on discrete-event simulation and agent-based simulation of emergency departments.
+    Simul. Model. Pract. Theory 129, 102823 (2023). https://doi.org/10.1016/j.simpat.2023.
+    102823
+37. Parrado León, N., Gaviria Henao, J., Garrido, A.: Resiliencia en cadenas de suministro agroin-
+    dustriales: Una revisión sistemática de la literatura. Avances Investigación en Ingeniería 19(2)
+    (2022). https://doi.org/10.18041/1794-4953/avances.2.7921
+38. Pires Ribeiro, J., Barbosa-Povoa, A.: Supply chain resilience: definitions and quantitative
+    modelling approaches – a literature review. Comput. Ind. Eng. 115, 109–122 (2018). https://
+    doi.org/10.1016/j.cie.2017.11.006
+39. Powell, W.: The seven levels of artificial intelligence (2024). https://tinyurl.com/7levelsofAI/
+40. Prasad Agrawal, K.: Towards adoption of generative AI in organizational settings. J. Comput.
+    Inf. Syst. 1–16 (2023). https://doi.org/10.1080/08874417.2023.2240744
+41. Rahman, T., Paul, S.K., Shukla, N., Agarwal, R., Taghikhah, F.: Supply chain resilience
+    initiatives and strategies: a systematic review. Comput. Ind. Eng. 170, 108317 (2022). https://
+    doi.org/10.1016/j.cie.2022.108317
+42. Rice, J.B., Caniato, F.: Building a secure and resilient supply network. Supply Chain
+    Manag. Rev. 7(5), (2003). https://www.proquest.com/trade-journals/building-secure-resili
+    ent-supply-network/docview/221137244/se-2?accountid=44394
+43. Ruel, S., El Baz, J., Ivanov, D., Das, A.: Supply chain viability: conceptualization, measure-
+    ment, and nomological validation. Ann. Oper. Res. 335(3), 1–30 (2021). https://doi.org/10.
+    1007/s10479-021-03974-9
+44. Saisridhar, P., Thürer, M., Avittathur, B.: Assessing supply chain responsiveness, resilience
+    and robustness (Triple-R) by computer simulation: a systematic review of the literature. Int.
+    J. Prod. Res. 62(4), 1458–1488 (2024). https://doi.org/10.1080/00207543.2023.2180302
+45. Sánchez-Hevia, H.A., Gil-Pita, R., Utrilla-Manso, M., Rosa-Zurera, M.: Age group classi-
+    fication and gender recognition from speech with temporal convolutional neural networks.
+    Multimed. Tools Appl. 81(3), 3535–3552 (2022). https://doi.org/10.1007/s11042-021-116
+    14-4
+94        A. Garrido et al.
+
+46. Seyoum, E.B., Trucco, P., Pablo, F.C.: Effectiveness of resilience capabilities in mitigating
+    disruptions: leveraging on supply chain structural complexity. Supply Chain Manag. 22(6),
+    506–521 (2017). https://doi.org/10.1108/SCM-01-2017-0009
+47. Sharma, B., Mittal, M.L., Soni, G., Ramtiyal, B.: An implementation framework for resiliency
+    assessment in a supply chain. Glob. J. Flex. Syst. Manag. 24(4), 591–614 (2023). https://doi.
+    org/10.1007/s40171-023-00348-x
+48. Sheffi, Y.: Building a resilient supply chain. Harv. Bus. Rev. 1(8), 1–11 (2005)
+49. Silva, M., Pereira, M., Hendry, L.: Embracing change in tandem: resilience and sustainability
+    together transforming supply chains. Int. J. Oper. Prod. Manag. 43(1), 166–196 (2023). https://
+    doi.org/10.1108/IJOPM-09-2022-0625
+50. Sodhi, M., Tang, C.: Managing Supply Chain Risk. Springer, New York (2012). https://doi.
+    org/10.1007/978-1-4614-3238-8
+51. Taghizadeh, E., Venkatachalam, S., Chinnam, R.B.: Impact of deep-tier visibility on effective
+    resilience assessment of supply networks. Int. J. Prod. Econ. 241, 108254 (2021). https://doi.
+    org/10.1016/j.ijpe.2021.108254
+52. Taleb, N.: The Black Swan. The Impact of the Highly Improbable, 2nd edn. Random House,
+    New York (2010)
+53. Varma, S., Singh, N., Patra, A.: Supply chain flexibility: Unravelling the research trajectory
+    through citation path analysis. Glob. J. Flex. Syst. Manag. 25(2), 199–222 (2024). https://doi.
+    org/10.1007/s40171-024-00382-3
+54. von Rueden, L., Mayer, S., Sifa, R., Bauckhage, C., Garcke, J.: Combining machine learning
+    and simulation to a hybrid modelling approach: Current and future directions. Adv. Intell.
+    Data Anal. XVI, 548–560 (2020). https://doi.org/10.1007/978-3-030-44584-3_43
+55. Zeigler, B.P., Muzy, A., Kofman, E.: Theory of Modeling and Simulation, 3rd edn. Elsevier
+    (2018). https://doi.org/10.1016/C2016-0-03987-6
+56. Zhang, T., Lauras, M., Zacharewicz, G., Rabah, S., Benaben, F.: Coupling simulation and
+    machine learning for predictive analytics in supply chain management. Int. J. Prod. Res. 1–18
+    (2024). https://doi.org/10.1080/00207543.2024.2342019
+57. Ziakkas, D., Pechlivanis, K.: Artificial intelligence applications in aviation accident classifi-
+    cation: a preliminary exploratory study. Decis. Anal. J 9, 100358 (2023). https://doi.org/10.
+    1016/j.dajour.2023.100358
+

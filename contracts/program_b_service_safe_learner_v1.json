@@ -1,0 +1,60 @@
+{
+  "schema_version": "program_b_service_safe_learner_v1",
+  "status": "FROZEN_BEFORE_DEVELOPMENT_TRAINING_NO_NEW_DES_SEEDS",
+  "created_at_utc": "2026-08-07T04:47:54Z",
+  "parent_contract": "contracts/program_b_metric_repair_v1.json",
+  "scope": "Development-only learner comparison on the disclosed two-product Program B extension.",
+  "reward": {
+    "mode": "service_safe",
+    "name": "ret_service_full_clipped_v1",
+    "formula": "clip(ration_ret_visible,0,1) * (1 - omitted_quantity / demanded_quantity)",
+    "unresolved_demand_penalty": "exact quantity fraction",
+    "selection_endpoint": true,
+    "ret_excel_full_ledger": "reported secondary; identically zero in the burned B blocks"
+  },
+  "learner": {
+    "architectures": ["PPO_MLP", "RecurrentPPO_MLP"],
+    "seeds": [8201, 8202, 8203],
+    "timesteps_per_seed": 50000,
+    "device": "cpu",
+    "policy_kwargs": {"net_arch": [64, 64], "lstm_hidden_size": 64},
+    "hyperparameters": {
+      "learning_rate": 0.0003,
+      "n_steps": 512,
+      "batch_size": 64,
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.01
+    },
+    "checkpoint_rule": "final checkpoint only",
+    "architecture_search": false
+  },
+  "training_tapes": {"range": [748100001, 748350250], "status": "already_burned_parent_development_block"},
+  "evaluation_tapes": {"range": [7400097, 7400120], "status": "already_burned_parent_validation_block"},
+  "observations": {
+    "dimension": 21,
+    "forbidden": ["latent regime", "future demand", "tape seed", "oracle calendar", "score-time metrics"],
+    "allowed": ["inventory", "pipeline", "backlog", "belief", "previous action", "public phase"]
+  },
+  "comparators": {
+    "frozen_incumbent": [2, 1, 2, 2, 2, 1, 2, 2],
+    "in_sample_service_safe": "development-block argmax mean service_safe",
+    "oracle": "safe per-tape frontier; diagnostic only"
+  },
+  "evaluation": {
+    "primary": "ret_service_full_clipped_v1",
+    "secondary": ["ret_excel_clipped_0_1", "ret_excel_full_ledger", "ret_thesis", "flow_fill_rate", "delivered_rations", "lost_orders", "terminal_stock", "worst_product_fill"],
+    "paired_unit": "validation tape",
+    "bootstrap_draws": 20000,
+    "lcb95_rule": "one-sided 5th percentile",
+    "required_for_development_signal": "learner mean exceeds frozen incumbent and has positive LCB; not confirmatory"
+  },
+  "gates": {
+    "H_PI_required_before_training": true,
+    "H_PI_observed_in_burned_blocks": true,
+    "fresh_confirmatory_training": false,
+    "KAN_authorized": false,
+    "claim_status": "DEVELOPMENT_ONLY_NO_PAPER_CONFIRMATION"
+  }
+}

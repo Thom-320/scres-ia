@@ -1,0 +1,1117 @@
+EAI Endorsed Transactions
+on Scalable Information Systems                                                                    Research Article
+
+
+A Transformer-Enhanced Multi-Agent Reinforcement
+Learning Model for Resilience Optimization in
+Educational Equipment Manufacturing Supply Chains
+Yiquan Kong1,2
+
+School of Computer Science and Intelligence Education, Lingnan Normal University, Zhanjiang 524048, China
+1
+
+Guangdong Provincial Key Laboratory of Development and Education for Special Needs Children, Zhanjiang 524048,
+2
+
+China
+
+
+
+Abstract
+
+    INTRODUCTION: Educational equipment manufacturing supply chains are vulnerable to demand fluctuations, equipment
+    failures, logistics disruptions, and cross-node risk propagation, while conventional approaches often separate state prediction
+    from recovery decision-making.
+    OBJECTIVES: This study proposes TMARL-ESCR, a Transformer-enhanced multi-agent reinforcement learning
+    framework for supply chain resilience optimization.
+    METHODS: The model represents suppliers, manufacturers, logistics providers, and distribution centers as a dynamic
+    network and uses a Transformer to capture long-range temporal dependencies and cross-node interactions. Multitask
+    prediction heads estimate future demand, logistics lead time, available capacity, and disruption risk, and these predictions
+    are fused with current states to support coordinated recovery decisions. Under a centralized training and decentralized
+    execution framework, multiple agents jointly optimize procurement, production, transportation, and inventory reallocation
+    through local-global rewards and explicit operational constraints.
+    RESULTS:The prediction module achieves a demand WMAPE of 14.38% and a disruption-risk AUC of 0.941. The
+    complete model reaches a 95.2% order fulfillment rate, a 7.1-day recovery time, a 0.5% constraint violation rate, and a
+    resilience score of 0.892. Compared with Transformer-MAPPO, TMARL-ESCR reduces recovery time by 19.3% and
+    improves the resilience score by 5.9%.
+    CONCLUSION: Experiments integrating M5 Forecasting, AI4I 2020, LaDe, and an SCML-based simulation environment
+    evaluate predictive accuracy and resilience optimization under multiple disruption scenarios, demonstrating improved
+    proactive recovery and coordinated resilience under complex disruptions.
+
+
+    Keywords: Transformer, Multi-agent reinforcement learning, Supply chain resilience, Disruption-risk
+
+    Received on 23 July 2026, accepted on 12 August 2026, published on 20 August 2026
+
+    Copyright © 2026 Yiquan Kong, licensed to EAI. This is an open access article distributed under the terms of the CC BY-NC-SA 4.0,
+    which permits copying, redistributing, remixing, transformation, and building upon the material in any medium so long as the original
+    work is properly cited.
+
+    doi: 10.4108/eetsis.14151
+
+    *Corresponding author. Email: kongyq@lingnan.edu.cn
+
+
+
+
+1. Introduction                                                            efficiency to include the maintenance of operational
+                                                                           continuity and prompt recovery during disruptions. The
+     The global supply networks are vulnerable to demand                   concept of supply chain resilience relates to the capability
+volatility, the lack of essential elements, failure of                     of a system to resist any form of disruption, preserve its
+equipment, and breakdowns in logistics. As a result, the                   most important activities and return to a viable operating
+goals of manufacturing supply chain management have                        level, and has been increasingly studied as a research issue
+gone beyond traditional optimization of costs and
+
+                                                                                                                EAI Endorsed Transactions on
+                                                                                                                 Scalable Information Systems
+                                                                     1                                           | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+in complex manufacturing systems [1]. Risk exposure,                 disruption preparedness, during-disruption response, and
+redundancy of resources, and recovery capability depend              post-disruption recovery [15]. Nevertheless, its practical
+on the size and structure of supply networks and there are           effectiveness depends on organizational structures and
+significant variations between them. Supply chain                    coordination mechanisms [16]. Organizational capabilities
+resilience optimization should thus consider the                     can be a mediator or moderator in the relationship between
+heterogeneity of nodes, network interdependencies and                AI adoption and supply chain resilience [17]. According to
+dynamic spread of disruptions [2]. Manufacturing of                  the perspective of the organization as information
+educational equipment includes a variety of products and             processor, the greatest advantage of AI is enhancing the
+parts such as mechanical structural parts, electronic control        quality of information sensing and decision-making speed
+units, sensors, laboratory consumables, and specific                 in uncertain contexts [18].
+accessories. Multi-node coupling and time variability is                  Machine learning has also been used to directly
+also driven by academic calendars, laboratory development            predict the supply chain resilience and complex risk states.
+programs, and central purchasing schedules, leading to               In earlier research, machine learning has been employed to
+marked multi-node coupling and time variability.                     investigate the non-linear relationship between trade-
+      Development of artificial intelligence has opened up           network complexity and supply chain resilience [19] and to
+fresh possibilities in supply chain state awareness, risk            formulate data-driven resilience prediction models of green
+forecasting, and recovery decision-making. The study                 supply chains [20]. These solutions have however mostly
+conducted by Tian et al., based on data on manufacturing             remained in the form of state forecasting and are unable to
+companies and structural equation modeling, revealed that            come up with direct procurement, production,
+data-driven properties could enhance the level of                    transportation or inventory adjustment strategies. The use
+operational performance through the enhancement of                   of machine learning and deep learning in demand
+supply chain resilience [3]. AI has also been applied to             forecasting has been identified as being significant in
+improve risk identification, resource coordination and               supply chain forecasting, but data heterogeneity and long-
+operational recovery in manufacturing companies [4].                 range dependence continue to be challenging issues [21].
+There is a growing focus on ensuring alignment between               The deep forecasting models can enhance the nonlinear
+data, models and business decisions within existing AI               representation of complex demand sequences [22]. The
+implementation frameworks instead of seeing predictive               researchers compared the performance of models based on
+models as isolated tools [5]. In dynamic disruption settings,        transformers with traditional approaches with the support
+AI can help detect anomalies, assess their impacts, and              of the M5 dataset and demonstrated that attention
+formulate adaptive response plans [6]. Its effectiveness,            mechanisms can be effectively used to model long-horizon
+however, depends on supply-chain dynamics and the                    demand forecasting [23]. Transformer models were later
+availability of information. Multistage intelligent decision         applied to probabilistic forecasting problems containing
+frameworks are also able to incorporate network                      exogenous variables [24], whereas hybrid temporal
+configuration, risk assessment and recovery goals into a             convolutional network-Transformer architectures have
+single optimization process [7].                                     been applied to learn local variation and long-range
+      To identify disruption, Ashraf et al. created a hybrid         dependency [25]. However, the current research tends to
+deep learning framework consisting of an autoencoder,                focus on demand forecasting only, and the simultaneous
+one-class support vector machine and long short-term                 analysis of demand, lead time, available capacity, and
+memory network, which showed that deep learning can be               disruption risk is not extensively explored.
+used to detect supply chain disruptions and predict                       Graph-based post-hazard prediction has also been
+recovery time [8]. Explainable artificial intelligence has           studied at the firm level [26], providing a network-oriented
+also been applied to explain the reasons behind the                  complement to conventional resilience-prediction models.
+decisions made under the complex risk environment, thus                   In contrast to predictive models, reinforcement
+enhancing the transparency and responsiveness of the                 learning can directly optimize long-term decisions by
+supply chain reactions [9]. Generative artificial intelligence       engaging with an environment. Proximal policy
+has also pushed the boundaries of supply chain information           optimization was used by Geevers et al. to multi-echelon
+analysis and decision support [10] whereas the                       inventory optimization and it was proven that deep
+combination of AI and big data has increased the ability to          reinforcement learning can minimize operational costs of
+detect anomalies and process information in the large-scale          complex inventory networks [27]. Multi-agent proximal
+supply network [11]. Explainable AI has also been applied            policy optimization was studied by Mousa et al. to examine
+in perishable-product supply chains to make associations             the decentralized inventory control and the results revealed
+between customer characteristics and resilience choices              that decentralized execution performance could be
+[12]. Combination of AI and blockchain has also been                 enhanced if cross-agent information was available to the
+investigated to enhance supply chain transparency and                agents during training [28]. Inventory optimization and
+disruption-recovery capacity [13]. Fast-moving consumer              dynamic coordination between actors in digital supply
+goods supply chains show that AI-driven risk awareness               chains have since been implemented using multi-agent
+and operational tuning can be potentially useful in                  reinforcement learning [29]. Liu et al. came up with a
+increasing the level of resilience [14]. The other existing          multi-echelon inventory policy based on heterogeneous-
+research works also indicate that AI can be used in pre-             agent proximal policy optimization and proved that multi-
+
+                                                                                                       EAI Endorsed Transactions on
+                                                                                                        Scalable Information Systems
+                                                                 2                                      | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+agent deep reinforcement learning could minimize system               global     reward       structure,   operational-constraint
+costs and reduce the bullwhip effect [30]. Similar                    penalization, and combined prediction-decision training
+approaches have demonstrated promise to solve distributed             are presented to transform the AI-based predictions directly
+decision-making problems in multi-echelon supply chain                into actionable supply chain recovery policies. The
+environments like the Beer Game [31]. Nonetheless,                    predictive performance, overall optimization effectiveness,
+current studies have largely been centered on                         module contributions, and robustness in the case of
+replenishment and inventory control. The majority of the              complex disruptions are used to assess the proposed model.
+agents act reactively in response to the present situation,
+but reactive recovery of supply, manufacturing, logistics,
+and distribution parties during disruption conditions has             2. Transformer–Multi-Agent
+got little consideration.                                             Reinforcement Learning Model for
+      Recent studies are particularly relevant to the                 Resilience Optimization in Educational
+positioning of this work. Kotecha and del Rio Chanona
+[32] combine graph neural networks with multi-agent
+                                                                      Equipment Manufacturing Supply
+reinforcement learning for supply-chain inventory control,            Chains
+while Stranieri et al. [33] combine deep reinforcement
+learning with multistage stochastic programming for                      The supply chains that manufacture educational
+inventory management. Ashraf et al. [34] further                      equipment have significant variations in demand, are
+demonstrate disruption detection within a cognitive digital           spread across several geographic locations to source
+supply-chain twin. These studies establish graph-aware                components, have limited production and delivery time
+coordination, hybrid learning-optimization, and digital-              frames, and experience cross-node spreading of disruption
+twin risk sensing, but they do not jointly connect multi-task         events. In response to these issues, this paper proposes to
+forecasts of demand, lead time, available capacity, and               develop a supply chain resilience optimization model,
+disruption risk to heterogeneous supplier, manufacturing,             TMARL-ESCR, that incorporates both a Transformer and
+logistics, and distribution agents for disruption recovery.           multi-agent reinforcement learning. The initial
+TMARL-ESCR is therefore positioned as an integration                  representation of the model considers suppliers,
+and domain-specific extension of these directions rather              educational equipment manufacturers, logistics nodes and
+than as a new Transformer or MARL algorithm.                          regional distribution nodes as a dynamic supply chain
+      Taken together, the literature leaves three limitations         network. Long-range dependencies on heterogeneous time-
+that are directly relevant to this study. Firstly, demand             series data are extracted using a Transformer, and demand
+forecasting, risk of disruption identification, and recovery          prediction, supply delay, loss of capacity, and disruption
+decision making are usually modeled as independent                    risk at nodes are predicted. Then these predictions are
+activities and thus it is unlikely that predictive outputs will       incorporated into a multi-agent reinforcement learning
+be directly used in optimizing subsequent policy. Secondly,           framework where agents acting on behalf of various supply
+available temporal models do not have a common                        chain actors decide about procurement, production,
+mechanism of depicting the cross-node flow of risk                    redistribution of inventories, transport and allocation of
+between supplier, manufacturing, logistics and distribution           orders. The model centralizes training and decentralizes
+nodes. Finally, multi-agent reinforcement learning may                implementation to coordinate the behavior of individual
+experience conflicts between local goals and working                  agents to enhance the fulfillment of orders, increase the rate
+conditions which limit the possibility of policy                      of recovery and the continuity of supply chain services as
+coordination and action.                                              well as reduce the cost of operations.
+   In order to overcome these constraints, this paper
+presents TMARL-ESCR as a resiliency optimization                      2.1 Dynamic State Modeling of the
+model of educational equipment manufacturing supply
+                                                                      Educational Equipment Manufacturing
+chains, incorporating a Transformer with multi-agent
+reinforcement learning. Initially, the dynamic supply chain           Supply Chain
+state representation is built and a Transformer is applied to
+predict the future demand, the logistics lead time, the                     The educational equipment manufacturing supply
+available capacity and disruption risk simultaneously.                chain normally includes suppliers of raw materials and
+Secondly, the projections are integrated into the multi-              important parts, equipment manufacturers, warehousing
+agent decision-making process where supplier,                         and logistics center, regional distribution units and end-
+manufacturing, logistics and distribution agents cooperate            demand organizations including schools and laboratory
+in recovery in the context of centralized training and                training facilities, as depicted in Figure 1.
+decentralized implementation. Lastly, a combined local-
+
+
+
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                                  3                                       | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+                                     Figure 1. Disruption-aware dynamic supply chain state model
+
+
+   To characterize the time-varying interactions among                equipment utilization; and Bi,t is the number of back logged
+supply chain entities, the educational equipment                      orders.
+manufacturing supply chain is modeled in this study as a                   Since demand depends on the start of academic
+time-dependent directed graph that captures the exchange              semesters, laboratory development periods as well as
+of materials, orders, and state information [35]:                     centralized procurement schedules, end-market demand
+                            Gt =(V,Et ,At )                           has high temporal variation. Demand for product k is
+                                                                      characterized by the following equation:
+                                                          (1)
+      where V={v1 ,v2 ,…,vN } is the set of supply chain                           Dk,t+1 =Dk,t +ΔDtrend  season
+                                                                                                   k,t +ΔDk,t    +εk,t
+nodes, Et is the set of active supply relationships at time t,                                                                   (3)
+and At is the dynamic adjacency matrix. When a supplier                   where ΔDtrend  is the long-term  demand  trend, ΔD season
+                                                                                    k,t                                      k,t
+suspends production, a transportation route is disrupted, or
+                                                                      is seasonal variations due to academic terms and
+the inventory of a node falls below the safety-stock level,
+                                                                      purchasing cycles, and εk,t is a random disturbance term.
+the corresponding edge weights are updated to reflect the
+                                                                          The inventory of material or product k at node i is
+impact of the disruption on supply network availability
+                                                                      updated according to:
+[36].
+   Educational equipment products typically comprise                                Ii,k,t+1 =Ii,k,t +Qin    +Yi,k,t -Qout  -S
+                                                                                                       i,k,t           i,k,t i,k,t
+multiple classes of materials and components, including                                                                                   (4)
+structural components, electronic control modules, sensors,
+                                                                           Qin    and Qout   represent the inbound and outbound
+laboratory consumables, and specialized accessories [37].                   i,k,t      i,k,t
+The state of node i at time t is represented as:                      quantities, respectively; Yi,k,t represents the local
+                                                                      production quantity; Si,k,t and represents the quantity
+              xi,t =�Ii,t ,Di,t ,Ci,t ,Li,t ,Pi,t ,Ui,t ,Bi,t �       delivered in response to actual orders. The equation (4) can
+                                                          (2)         be used to calculate the supplier inventories, work-in-
+   where Ii,t represents the stock of raw materials, work-in-         process inventories in manufacturing plants and finished
+progress, and finished products; Di,t refers to the order             goods inventories in distribution center.
+demand; Ci,t represents the available production or                   To characterize capacity reductions caused by raw-material
+transport capacity; Li,t refers to the lead time of                   shortages, equipment failures, natural disasters, or
+procurement and distribution; Pi,t is the price of                    transportation disruptions, the capacity availability ratio ρi,t
+procurement, production, and transportation; Ui,t is                  is introduced:
+
+
+
+                                                                                                                 EAI Endorsed Transactions on
+                                                                                                                  Scalable Information Systems
+                                                                  4                                               | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+                   Cava   nom
+                    i,t =Ci,t ρi,t ,ρi,t =1-δi,t
+                                                                                        1                T
+                                                                                  R=ω1 ∑Tt=1 ηt +ω2 �1- rec � -ω3
+                                                                                                                    Ctot
+                                                                                        T                Tmax       Cmax
+                                                            (5)
+                                                                                                                                (7)
+       where Cnom    is the nominal capacity of node i, and
+                 i,t                                                        where Trec is the recovery time of the supply chain to
+δi,t ∈[0,1] is the measure of a disruption. The value δi,t =0         achieve the desired level of service, Ctot is the overall
+denotes regular functioning, and δi,t =1 implies full node            expenditure caused by the purchase, manufacturing,
+breakdown.                                                            stockpiling, shipment, and expedient changes, ω1 , ω2 and
+       The order fulfillment rate of the supply chain at time t       ω3 are weighting factors. This measure does not assess a
+is defined as:                                                        policy on the basis of cost or fulfillment rate but measures
+                                ∑K S                                  the supply chain resiliency to deal with disruptions, service
+                          ηt = Kk=1 k,t
+                              ∑k=1 Dk,t +ϵ                            continuity, and restoration of business activities. Because
+                                                        (6)           the composite score is weight-dependent, the same score
+      where Sk,t is the actual delivery amount of product k,          definition is applied to all methods and scenarios, and the
+and ϵ is a small constant that is used to avoid dividing by           composite value is interpreted together with fulfillment
+zero.                                                                 rate, recovery time, and operating cost rather than as a
+      Supply chain resilience metric is defined by                    standalone performance claim.
+simultaneously looking at order fulfillment, recovery
+speed, and operating cost
+                                                                      2.2 Transformer-Based Demand and
+                                                                      Disruption-Risk Prediction
+
+
+
+
+                         Figure 2. Cross-node Transformer for multitask state and risk prediction
+
+      The figure above (Figure 2) demonstrates that                        Let the historical supply chain state sequence of
+traditional recurrent neural networks tend to fail to                 length L be:
+maintain long-range dependencies in the context of long-                                 Xt =[st-L+1 ,st-L+2 ,…,st ]
+horizon demands changes and spread of risks in the supply                                                                      (8)
+chain network nodes. The proposed approach thus uses a                     where st represents the joint state of all the supply
+Transformer to simultaneously model heterogeneous data                chain nodes at time t. The projected input sequence is then
+sources such as past orders, inventory positions, capacities,         mixed with time-position, node-type, and product-category
+equipment status and supplier delivery history and logistics          embeddings:
+lead time, and offers estimates of future states on which                            H(0) =Xt We +Epos +Enode +Eprod
+multiple agents can make decisions later on [38].                                                                              (9)
+
+
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                                  5                                       | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+     where We is the projection matrix of the input, Epos is                                                 (l)
+                                                                                                H(l) =LN �H̃ +FFN �H̃ ��
+                                                                                                                            (l)
+
+the temporal order, Enode is used to identify the supplier,
+                                                                                                                                             (13)
+manufacturing, logistics, and distribution nodes and Eprod                          where:
+refers to various products and category of educational                                          (l)
+equipment.                                                                                    H̃ =LN�H(l-1) +MHA�H(l-1) ��
+     The query, key and value matrices of the l-th                                                                                     (14)
+Transformer encoder layer are calculated as:                                        and Le indicates the size of Transformer encoder
+                                                                               layers. In order to detect possible disruptions at a single
+                     (l)              (l)                     (l)
+       Q(l) =H(l-1) WQ ,K(l) =H(l-1) WK ,V(l) =H(l-1) WV                       node, a classification head of disruption risks is added:
+                                                                    (10)                        risk
+                                                                                             p� i,t+h =σ�Wr hi,t+h +br �,h=1,…,Hf
+     The scaled dot-product attention is given by:
+                                                                                                                                        (15)
+                                            Q(l) K(l)⊤
+        Attn�Q(l) ,K(l) ,V(l) �=softmax �                � V(l)                     and where p� risk
+                                                                                                    i,t+h
+                                                                                                          is the probability  of  a  supply
+                                              �dk
+                                                       (11)                    disruption, capacity loss or serious delivery delay at node i
+   dk with being the dimensionality of the key vectors.                        in the h-th future period.
+Attention weights are features that indicate dependencies                           The Transformer training objective jointly accounts
+between various time steps, supply chain nodes and                             for continuous-state prediction errors and disruption-risk
+material conditions [39]. As an example, as the duration of                    classification loss:
+delivery delays by a critical electronic-component supplier                             LTF =λd Ldemand +λl Llead +λc Lcapacity +λr Lrisk
+keeps growing, the model may correlate such data with                                                                                  (16)
+further changes in the production schedule and the lack of                          The optimization of demand, lead-time, and capacity
+available end-products.                                                        forecasting is based on mean squared error, and the training
+     The multi-head attention output is expressed as:                          of disruption-risk prediction is done with weighted cross-
+                                                                               entropy. The problem of class imbalance due to
+        MHA�H(l-1) �=Concat(head1 ,…,headH )WO
+                                                                               significantly higher number of normal operating samples
+                                                    (12)
+                                                                               than the number of disruption samples is resolved by
+     with H being the number of attention heads. Various
+                                                                               assigning more weight to high-risk samples.
+heads may focus on different patterns related to demand
+cycles, supply delays, node failures, and congestion of
+logistics.                                                                     2.3 Multi-Agent Collaborative Recovery and
+     The encoder output is achieved after the residual                         Response Decision-Making
+connections, layer normalization and feed-forward
+network:
+
+
+
+
+                             Figure 3. Prediction-enhanced multi-agent collaborative recovery
+
+                                                                                                                      EAI Endorsed Transactions on
+                                                                                                                       Scalable Information Systems
+                                                                           6                                           | Volume 13 | Issue 2 | 2026 |
+            A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational
+                                                                             Equipment Manufacturing Supply Chains
+
+                                                                                              op
+     Figure 3 shows that when future demand and                                     where Ci,t represents procurement, production or
+disruption-risk forecasts are derived, the educational                         transportation costs; Cinv
+                                                                                                                                              delay
+                                                                                                      i,t is inventory holding cost; Ci,t is
+equipment manufacturing supply chain optimization                                                                  switch
+problem can be formulated as a partially observable multi-                     delayed-delivery penalty; and Ci,t         means the cost of
+agent Markov decision process:                                                 supplier switching, production line reconfiguration or
+                                                                               adjustment of transportation route.
+                                     N          N
+                M=⟨N,S,{Oi }i=1a ,{Ai }i=1a ,P,R,γ                                  The global reward evaluates the overall operating
+                                                           (17)                condition of the supply chain:
+     where N is the set of agents, S is the global state space,                                    glo
+and Oi and Ai are the local observation space and action                                        rt =β1 ηt +β2 ΔRt -β3 Bt -β4 Vt
+space of agent i, respectively. P denotes the state-transition                                                                            (21)
+function, R is the reward function, and γ is the discount                           where ηt is the order fulfillment rate, ΔRt is the change
+factor.                                                                        in the resilience level, Bt is the system-wide order backlog,
+     Based on the functional roles of the actors in the                        and Vt is the extent of breach of procurement, capacity,
+educational equipment supply chain, the agents are divided                     inventory or transportation constraints.
+into suppliers, manufacturing, logistics, and distributors                          The final reward received by agent i is
+agents. Local observation of agent i is defined by:                                                              loc        glo
+                                                                                                         ri,t =μri,t +(1-μ)rt
+              oi,t = �xi,t ,xNi ,t ,Y� i,t+1:t+Hf ,p� risk
+                                                      i,t+1:t+H
+                                                                �                                                                      (22)
+                                                              f
+                                                        (18)                         where μi,t ∈[0,1] balances individual and system-level
+     in which xNi ,t represents the shareable states of                        objectives. Under severe disruptions, μ can be reduced to
+neighboring collaborative nodes, whereas the last two                          increase the emphasis placed by individual actors on
+terms are the future-state forecasts and disruption-risk                       overall supply chain recovery. The effect of this local-
+probabilities that are produced by the Transformer [40].                       global mixing is examined in Figure 11(d), where
+The reinforcement learning policies do not then simply                         intermediate reward weights provide the best overall
+react to the current inventory and order states but can                        resilience and extreme weighting reduces either
+actively stockpile, source from different sources or reserve                   coordination or local-policy flexibility.
+transportation capacity.                                                             During decentralized execution, each agent
+     The joint action of all agents is represented as:                         independently generates an action based on its local
+                                                                               observation:
+                       at =�a1,t ,a2,t ,…,aNa,t �                                                      ai,t ∼πθi �ai,t ∣oi,t �
+                                                        (19)                                                                           (23)
+     The supplier agent decides on supplier selection,                               where πθi is the policy network whose parameters are
+procurement volume as well as the percentage of                                determined by θi . In the centralized training, the value
+emergency purchase. The manufacturing agent defines                            network gets the global state and joint action:
+production batch size, switching of production lines and
+overtime capacity. The logistics agent chooses                                               Qφ �st ,a1,t ,…,aNa,t �=E�∑Tτ=t γτ-t rτ �
+transportation mode, routing choice and rush shipping                                                                                  (24)
+ratios. The distribution agent makes a decision about the                            where φ represents the parameters of the centralized
+reallocation of regional inventory, order priority, and                        critic. This model allows the critic to account on the
+deferral delivery plans [41].                                                  coupling of the actions of various individuals and at the
+     In order to avoid the minimization of the cost incurred                   same time permits each enterprise or node to implement its
+by an individual actor to the detriment of supply chain                        policies independently through the use of locally accessible
+performance across the board, a reward system that                             information in deployment [43].
+incorporates both local and global rewards is built [42].
+Local reward of agent i is defined as:
+                         op    inv             delay
+                                                 switch
+                                                                               2.4 Joint Prediction–Decision Optimization
+           rloc
+            i,t =-α1 Ci,t -α2 Ci,t -α3 Ci,t -α4 Ci,t                           and Resilience Constraints
+                                                                    (20)
+
+
+
+
+                                                                                                                         EAI Endorsed Transactions on
+                                                                                                                          Scalable Information Systems
+                                                                           7                                              | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+                                Figure 4. Prediction-enhanced constraint-aware decision network
+
+
+     According to Figure 4, to make sure that the                                                                  πθi �ai,t ∣oi,t �
+                                                                                                    ri,t (θi )=
+predictions made by the Transformer directly contribute to                                                        π old �ai,t ∣oi,t �
+                                                                                                                   θi
+recovery decisions, the present state of the supply chain,                                                                            (27)
+future state predictions, disruption risks representations,                        Âi,t is the estimation of the advantage function, and ε
+and predictive time properties are merged into a state                       is policy-update clipping parameter. Clipping mechanism
+improved by prediction:                                                      constrains the size of policy changes between successive
+                 st = �st ,Y� t+1:t+Hf ,p� risk   ,zTF �                     training iterations, thus enhancing training stability in the
+                                           t+1:t+H t
+                                                f                            presence of complex disruption conditions.
+                                                        (25)                       The loss function of the centralized value network is
+      where zTFt   is the temporal representation that is
+obtained by the last Transformer layer. In this form, there                                                        � t �2 � )
+                                                                                                 LV =Et ��Vφ (st )-G
+are higher-order dependencies between the historical                                                                               (28)
+demand, supply delays, and the spread of risks, which can                                 �
+                                                                                  where, Gt is the observed cumulative return. In order
+be used to supplement the restricted representational ability                to maintain exploration of policies, the concept of policy
+of state variables built by hand.                                            entropy is introduced as
+      The policy optimization follows the MAPPO family
+of PPO-based centralized-training/decentralized-execution                                       Hi =-Eai,t �logπθi �ai,t ∣oi,t ��
+methods [44]. MAT [45] provides a related Transformer-                                                                           (29)
+based MARL architecture, but it formulates multi-agent                            The process of decision-making in educational
+control itself as sequence modeling; TMARL-ESCR                              equipment supply chains should meet the constraints of
+instead uses the Transformer primarily to augment role-                      supply capacity, production capacity, balance between
+specific agents with predictive state information.                           inventories, and order fulfillment. The severity of the
+      To update the policy of each agent, multi-agent                        constraint violation can hence be expressed as a penalty
+proximal policy optimization is used. The clipped objective                  term:
+of the policy of the agent i is:                                                                              2                         2       2
+                                                                                 Lcon =∑Tt=1 ��Qi,t -Qi,t
+                                                                                                      max
+                                                                                                          � +�Yi,t -Cava       min
+                                                                                                                     i,t �+ +�Ii,t -Ii,t �+ �
+      clip                                                                                                    +
+    Li =Et �min�ri,t (θi )Âi,t ,clip�ri,t (θi ),1-ε,1+ε�Âi,t ��                                                            (30)
+                                                                  (26)            where (x)+ =max(0,x) and Qmax is the maximum
+                                                                                                            i,t
+     where:
+                                                                             supply or transportation capacity and Imin
+                                                                                                                    i,t is the minimum
+                                                                             safety-stock level. This penalty mitigates the infeasible
+                                                                             procurement, production and inventory reallocation
+
+                                                                                                                            EAI Endorsed Transactions on
+                                                                                                                             Scalable Information Systems
+                                                                         8                                                   | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+decisions caused by the policy. It has been found in
+previous research that integrating explicit constraints with
+continuous-action reinforcement learning enhances the
+feasibility of supply chain inventory policies [46]. More
+broadly, Constrained Policy Optimization treats feasibility
+as an explicit policy-search requirement rather than only as
+reward shaping; in TMARL-ESCR, the constraint term
+serves the narrower purpose of suppressing infeasible
+supply-chain actions.
+      To ensure that the coordination of data-driven policy
+learning and supply chain operational optimization takes
+place through reinforcement learning, the reinforcement
+learning objective is simultaneously modeled with the
+prediction and constraint objectives. The sum total of the
+training goals is given by
+                              clip
+    Ltotal =λTF LTF -λπ ∑Ni=1a Li +λV LV -λH ∑Ni=1a Hi +λcon Lcon
+                                                           (31)             Figure 5. Mechanism association network of
+      where λTF , λπ , λV , λH , and λcon are the weighting              predictive characteristics, co-related decisions, and
+coefficients for the prediction loss, policy objective, value-             resilience-related results in the TMARL-ESCR
+estimation loss, entropy regularization, and constraint
+penalty, respectively.
+      In the process of model training, the Transformer is                    Using Figure 5, the mechanism association network
+initially trained on historical normal-operation data and               of TMARL-ESCR is shown to demonstrate the
+simulated disruption data to acquire the temporal patterns              relationships between predictive information and
+of demand variation, delivery delays and node-level risks.              coordinated decision mechanisms and supply chain
+It is then allowed to freeze its parameters as multi-agent              resilience outcomes. The left side nodes are related to
+policies are learned in the presence of demand shocks,                  information on demand, lead-time, available-capacity and
+supplier failure, equipment failure and logistics disruption.           disruption-risk produced by the Transformer-based
+The stage enhances the responsiveness of the decision                   multitask prediction module. Central nodes are associated
+model to changes in the distribution and operational                    with core mechanisms, namely the fusion of prediction-
+uncertainty. Lastly, joint fine-tuning is performed with a              decision-making, the centralized critic, global coordination
+lower learning rate such that the representations of risk               of rewards, and operational constraints. Nodes on the right
+generated by the prediction module are more closely                     side are associated with recovery actions, such as
+matched with reinforcement learning goals.                              coordination with suppliers, rescheduling of production,
+      Mechanisms of reinforcement learning based on the                 re-routing of the logistics, and reallocation of inventory,
+nature of supply chain issues may enhance the stability and             along with measures of their outputs (order fulfillment,
+generalization of policies in stochastic settings. When                 backlog reduction, cost control, recovery time) and a
+deployed, each agent develops procurement and                           composite resilience score.
+production, transportation and inventory adjustment                           However, the network shows that the prediction
+strategies with respect to its local state and the Transformer          module cannot directly affect the end results of resilience.
+predictions. It allows taking active measures on resource               It merely affects the recovery behaviors of each actor by
+allocation prior to any disruption and quick switching to               increasing their knowledge of the future operating
+alternative sourcing, restructuring capacities and                      environment and possible threats. The alignment of local
+redistribution of inventories across regions in case of a               strategies with the general recovery goal through
+disruption.                                                             centralized estimation of values and coordinated global
+      The main purpose of the suggested model is not                    rewards, plus the existence of operational constraints will
+simply to forecast the occurrence of supply chain                       guarantee that the created actions meet the needs of supply,
+disruptions, but rather, to convert the risk predictions into           production, inventory, and transport. TMARL-ESCR thus
+actionable and integrated multi-actor decisions. The                    forms a full decision chain starting with state forecasting
+Transformer gives details on future demand and changing                 and risk awareness and ending up with coordinated
+risks whereas multi-agent reinforcement learning                        recovery and resilience optimization between multiple
+distributes     recovery      work       between     suppliers,         actors.
+manufacturers, logistics nodes, and distribution nodes. The
+resilience constraints guarantee that the optimized policies
+together take order fulfillment, recovery time, operating
+                                                                        3. Experiments and Results
+cost, and realistic implementation requirements.
+                                                                        3.1 Datasets and Experimental Settings
+
+
+                                                                                                          EAI Endorsed Transactions on
+                                                                                                           Scalable Information Systems
+                                                                    9                                      | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+      In order to determine the usefulness of TMARL-                   Category           Item                   Setting
+ESCR in demand forecasting, disruption-risk identification            Public data   Demand data               M5 Forecasting
+and coordinated supply chain recovery, the experiments                            Manufacturing data            AI4I 2020
+integrate the use of public data-driven modeling and multi-                         Logistics data                LaDe
+agent supply chain simulation. In the demand domain, M5                               Multi-agent
+                                                                     Environment                                SCML-based
+                                                                                     environment
+Forecasting dataset is applied to derive multi-product and
+                                                                                      Educational
+multi-region demand trends. The AI4I 2020 dataset is used                          equipment SKUs
+                                                                                                                     240
+on the manufacturing side to create the operating states of                        Suppliers / plants               30 / 4
+equipment and production-capacity disturbances. To                               Logistics / distribution
+represent delivery lead times and abnormal delays, the                                                              6 / 10
+                                                                                         centers
+LaDe dataset is used on the logistics side. Decisions                                                       Supply, production,
+concerning procurement, production, transportation and                 Scenario       Disruption types      logistics, demand,
+inventory are simultaneously modeled in a multi-agent                                                           compound
+supply chain using SCML.                                                          Historical window /
+                                                                       Sequence                                 30 / 14 days
+                                                                                    forecast horizon
+      Time series of product-store in M5 are connected to
+                                                                                   Layers / attention
+educational equipment SKU-regional demand sequence.                  Transformer
+                                                                                         heads
+                                                                                                                     4/8
+Information about equipment conditions and failure along                              Hidden / FFN
+with the use of AI4I is employed to dynamically change the                                                        128 / 256
+                                                                                       dimension
+capacity of manufacturing nodes, whereas information                             Discount factor / PPO
+                                                                        MARL                                     0.99 / 0.20
+about delivery-time distributions (LaDe) is used to create                                clip
+the normal transport lead times and regional logistic delays.                    Independent random
+                                                                      Evaluation                                      10
+Simulated supply chain consists of primary suppliers,                                    seeds
+backup suppliers, manufacturing plants, logistics centers,
+regional distribution centers and end-demand nodes. Five                   The learning rates of the Transformer, actor and critic
+disruption scenarios have been identified namely: supply             networks are respectively 1x10 -4, 3x10 -4 and 1x10-4. The
+disruptions, production disruptions, logistics disruptions,          dropout rate is 0.1 and the generalized advantage
+demand shocks, and compound disruptions.                             estimation coefficient is 0.95. Every reinforcement
+      The three public datasets are used as empirical drivers        learning experiment is repeated with 10 independent
+rather than as a literal record of a single educational-             random seeds.
+equipment enterprise. M5 product-store series provide the                  Prediction module is determined based on weighted
+temporal demand patterns assigned to SKU-region demand               mean absolute percentage error and root mean square error
+nodes; AI4I equipment-condition and failure records                  in case of demand forecasting, mean absolute error in case
+determine manufacturing-node equipment states and                    of logistic lead-time and available capacity forecasting, and
+capacity-loss events; and LaDe delivery-time observations            F1-score and area under the receiver operating
+define baseline lead-time distributions and abnormal                 characteristic curve in case of disruption risk identification.
+logistics delays. These mapped exogenous signals are then            The supply chain decisions are assessed in terms of order
+injected into the common SCML supplier-plant-logistics-              fulfillment rate, recovery time, overall operating cost,
+distribution environment, so all decision methods are                average backlog, constraint violation rate, and aggregate
+evaluated under the same material-flow and network                   resiliency score.
+structure while retaining the temporal and disruption                      The total operating cost is provided in the form of a
+characteristics of the source data.                                  normalized cost index that compares with ROP-SS, which
+      Training set is mostly composed of normal operation            has an index of 100. Recovery time refers to the amount of
+conditions, individual disruptions, and some specific                time that it takes the system service level to be restored to
+double-disruptions. Test set also comprises various types            95 percent of what it was before the disruption. All
+of disruptions including triple and quadruple combined               reinforcement-learning results are reported as means over
+disruptions never seen in training to assess robustness and          10 independent random seeds.
+generalization across situations. Every reinforcement
+learning algorithm assumes the same state space, action set,
+training budget, and stochastic scenario-generation
+                                                                     3.2 Comparative Experiments and Overall
+tool.The datasets, simulated supply chain configuration,             Performance Analysis
+disruption scenarios, sequence settings, and major model
+parameters used in the experiments are summarized in                      The various time-series models are initially compared
+Table 1.                                                             in terms of demand forecasting, lead-time prediction,
+                                                                     estimation of available capacity and disruption-risk
+                                                                     analysis. Baselines consist of LSTM, GRU, TCN,
+ Table 1. Datasets, experimental environment, and                    Informer, Temporal Fusion Transformer and a
+             major parameter settings                                conventional transformer.
+
+
+
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                                10                                        | Volume 13 | Issue 2 | 2026 |
+           A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational
+                                                                            Equipment Manufacturing Supply Chains
+
+                        Table 2. Overall performance comparison of different prediction models
+
+
+                                                                      Lead-time
+        Method          Demand WMAPE/%↓ Demand RMSE↓                               Capacity MAE/%↓ Risk F1 ↑             AUC ↑
+                                                                       MAE/h↓
+        LSTM                    19.42                  8.36             3.48              7.92               0.782        0.846
+         GRU                    18.77                  8.01             3.31              7.55               0.794        0.859
+         TCN                    17.93                  7.54             3.08              7.11               0.807        0.872
+       Informer                 16.88                  7.02             2.84              6.68               0.829        0.894
+         TFT                    16.21                  6.76             2.73              6.43               0.841        0.906
+     Transformer                15.96                  6.61             2.69              6.29               0.849        0.914
+  Proposed Predictor            14.38                  5.94             2.31              5.62               0.882        0.941
+
+                                                                      time MAE is reduced by 2.69 - 2.31 hours and the
+     Conventional recurrent neural networks do not                    available-capacity MAE is also reduced by 6.29 - 5.62 %.
+perform well in long term demand variation and abrupt                      The proposed model has an F1-score of 0.882 and an
+disruption state changes as depicted in Table 2. Informer,            AUC of 0.941 on the task of disruption-risk identification
+TFT, and Transformer can produce lower prediction errors              (see Figure 6), as opposed to the standard Transformer
+by using attention-based modeling approach. Demand                    which has an F1-score of 0.849 and an AUC of 0.914. The
+WMAPE (standard Transformer) is 15.96% with the                       findings show that node-type encoding, cross-node
+demand WMAPE of proposed predictor being 14.38%                       dependency modeling, and multitask prediction enhance
+which is a relative decrease of about 9.9%. Logistics lead-           not only continuous-state predictions but also the
+                                                                      recognition of abnormal supply chain conditions.
+
+
+
+
+                           Figure 6. Comparative performance of different prediction models
+
+
+                 Table 3. Overall performance of different supply chain resilience optimization methods
+
+
+                           Fulfillment        Recovery                         Average           Violation      Resilience Score
+        Method                                                Cost Index↓
+                            Rate/%↑           Time/day↓                        Backlog↓          Rate/% ↓               ↑
+      ROP-SS                  82.7               18.9           100.0            18.6               0.0               0.642
+     Rolling-MILP             89.1               12.8           104.6            11.7               0.0               0.748
+         IPPO                 87.4               15.1            97.5            13.9               4.8               0.711
+      MADDPG                  89.8               12.6            98.9            10.9               3.2               0.759
+       MAPPO                  91.5               10.9            98.1             9.1               2.0               0.801
+ Transformer-MAPPO            93.4               8.8                98.7          7.1              1.5                0.842
+    TMARL-ESCR                95.2               7.1                96.8          5.4              0.5                0.892
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                               11                                         | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+      As shown in Table 3, the conventional ROP-SS policy
+maintains high operational feasibility but cannot
+proactively adjust procurement, production, and inventory
+decisions according to future disruption risks. It is thus able
+to achieve just an order fulfillment rate of 82.7 percent and
+take 18.9 days to recover during a disruption. The
+fulfillment rate is improved in Rolling-MILP by
+centralized optimization, however, the cost index goes up
+to 104.6, which means that more effort would be made to
+use inventory and emergency supplies when disturbances
+occur.
+      MAPPO is one of the reinforcement learning methods
+that can be used to reduce the decision conflicts between
+the supply chain actors through centralized training. The
+forecast with Transformer-based predictions raises the
+fulfillment rate by 93.4 per cent and minimizes recovery
+time to 8.8 days when Transformer-MAPPO is applied,
+which shows that future-state forecasting will help react
+proactively before any disruption happens.
+      The full TMARL-ESCR model gives a fulfillment rate
+of 95.2, recovery time of 7.1 days, and composite resilience                Figure 7. Scenario-wise resilience scores of
+score of 0.892. The comparison between the strongest                        different supply chain optimization methods
+baseline, Transformer-MAPPO, and TMARL-ESCR
+shows that the fulfillment rate is increased by 1.8
+percentage points, the recovery time is decreased by 19.3                    The composite resilience scores of four representative
+percent, and the resilience score is increased by 5.9 per              methods in the overall test setting and seven disruption
+cent.                                                                  scenarios are compared in Figure 7. In order to enhance the
+      In particular, the TMARL-ESCR provides a cost                    legibility of the radial chart, resilience scores between 0-1
+index of 96.8 which means that their performance                       are multiplied by 100 and shown on a percentage basis.
+improvement is not at the expense of significant increases             TMARL-ESCR obtains the best score in all situations and
+in stock or emergency purchasing. The outcome shows a                  Transformer-MAPPO usually performs better than
+better joint-decision system based on the use of predictive            MAPPO. The implication of this finding is that predictions
+information, coordination across actors, and restrictions              of the future demand, lead time and capacity are useful in
+based on resilience.                                                   making proactive allocations of resources prior to the
+                                                                       occurrence of any disruption.
+                                                                             Each of the methods demonstrates a reduction in
+                                                                       performance during compound disruptions, high-intensity
+                                                                       disruptions and new combinations of disruptions.
+                                                                       However, TMARL-ESCR still has quite high scores of
+                                                                       resilience meaning that there is improvement in the
+                                                                       stability of recovery when there are complex conditions
+                                                                       with regard to global reward coordination, centralization of
+                                                                       value estimation and operational constraints.
+
+
+                                                                       3.3 Ablation Study and Mechanism Analysis
+                                                                            In order to determine how much each core mechanism
+                                                                       contributes, seven model variants are created through the
+                                                                       individual elimination of the Transformer prediction
+                                                                       module, risk prediction, cross-node interaction, multi-scale
+                                                                       fusion, centralized critic, global reward, and constraint
+                                                                       penalty.
+
+
+
+
+                                                                                                          EAI Endorsed Transactions on
+                                                                                                           Scalable Information Systems
+                                                                  12                                       | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+                                         Table 4. Ablation results of TMARL-ESCR
+
+
+             Variant             Fulfillment Rate/% ↑     Recovery Time/day ↓    Violation Rate/% ↓      Resilience Score ↑
+        w/o Transformer                   88.9                    8.6                    0.6                    0.809
+       w/o Risk Prediction                91.1                    8.3                    0.3                    0.834
+   w/o Cross-node Interaction             90.4                    8.9                    0.4                    0.826
+     w/o Multi-scale Fusion               91.5                    8.1                    0.4                    0.843
+     w/o Centralized Critic               88.0                    9.6                    0.7                    0.791
+       w/o Global Reward                  86.6                   10.0                    0.6                    0.776
+     w/o Constraint Penalty               93.6                    7.5                    6.5                    0.831
+       Full TMARL-ESCR                    95.2                    7.1                    0.5                    0.892
+
+      Table 4 findings indicate that the core modules                these elements will lower the resilience score to 0.791 and
+influence supply chain resilience in three complementary             0.776 respectively and reduce the fulfillment rate to 88.0
+areas: predictive awareness, actor coordination, and                 and 86.6 respectively. These findings show that
+operational feasibility. Deletion of Transformer prediction          centralization of values estimates and global objective
+module decreases the fulfillment rate by 95.2 to 88.9 per            alignment are important in order to prevent local optima
+cent and raises the recovery time by 7.1 to 8.6 days which           and ensure coordination between multiple agents. With the
+proves that a future-state forecasting is a better way to            elimination of the constraint penalty the fulfillment rate is
+allocate resources proactively before disruptions occur.             quite high at 93.6% and the rate of violation of constraints
+Elimination of cross-node interaction decreased the                  rises by 0.5 percentage points to 6.5 percent. It implies that
+resilience score to 0.826, which means that the model of             the primary task of the constraint mechanism is not to
+temporal changes at each node will not be enough to reflect          enhance reward-related metrics directly, but to minimize
+the correlated spreading of risk between supply,                     infeasible procurement, production, inventory, and
+manufacturing, and logistics nodes.                                  transportation behavior.
+      Centralized critic and global reward affect the overall
+recovery performance most significantly. The removal of
+
+
+
+
+  Figure 8. The image shows heat map of the impact of major TMARL-ESCR mechanisms on the supply chain
+                                            resilience indicators
+
+
+      To explore the impact of core mechanisms on                    rate by 8.6 and 7.2 percentage points respectively, raises
+resilience optimization in more detail, Figure 8 shows a             recovery time by 2.9 and 2.5 days and lowers the composite
+heatmap of the difference between absolute performances              resilience score by 0.116 and 0.101 respectively. Such
+of the complete TMARL-ESCR model and its ablated                     findings support the hypothesis that cross-actor objective
+versions in terms of fulfillment rate, recovery time,                alignment and centralized value estimation are essential to
+constraint violation rate and composite resilience score.            multi-agent recovery coordinated.
+The global reward coordination and the centralized critic                  Prediction based on transformer, interaction between
+have the biggest influence on overall performance.                   nodes and predicting risks are equally significant factors in
+Elimination of these mechanisms lowers the fulfillment               recovery performance and it demonstrates that the
+
+                                                                                                        EAI Endorsed Transactions on
+                                                                                                         Scalable Information Systems
+                                                                13                                       | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+awareness of future state and risk propagation modeling               in the constraint violation rate by 6.0 percentage points. As
+helps to make preventive decisions prior to the occurrence            a result, the mechanism mainly guarantees that
+of any disrupts. Multi-scale fusion is less effective although        procurement, production, inventory, and transportation-
+the hierarchical representation of predictive features is             related decisions can be operational. On the whole, the
+enhanced. Constraint regularization has a small direct                modules help to enhance TMARL-ESCR overall with
+impact on fulfillment rate and recovery time, but                     predictive awareness, cross-actor coordination, and
+elimination of constraint regularization leads to an increase         feasibility control.
+
+
+
+
+                     Figure 9. Ablation-derived mechanism contribution network of TMARL-ESCR
+
+
+     In order to provide more quantification in the role              raising order fulfillment and lowering recovery time by
+played by every core mechanism in supply chain resilience,            forecasting future-state and modeling risk propagation.
+a mechanism contribution network is built based on the                      The penalty of constraint accounts for 6.8 percent,
+results of the ablations, as it is depicted in Figure 9. Left         mostly due to the fact that it decreases the number of
+side nodes stand for three groups of mechanisms:                      infeasible actions and constraint violations. The nodes on
+predictive awareness, decision coordination and feasibility           the right summarize the main performance indicators of the
+control. The size and color intensity of nodes are defined            whole model, such as the fulfillment rate of 95.2, the
+by proportionate decrease in the composite resilience score           recovery time of 7.1 days, the constraint violation rate of
+when the given module is removed.                                     0.5, and composite resilience of 0.892. In total, the network
+     The global reward coordination and centralized critic            shows that the performance benefits of TMARL-ESCR are
+have contribution rates of 13.0 percent and 11.3 percent              not due to any individual element, but rather due to the
+respectively which are higher than the contribution rates of          synergistic influence of predictive awareness, cross-actor
+other components. It implies that it is necessary to match            coordination, and operational feasibility control.
+the goals of local decisions and the goals of global recovery
+as well as the values estimation across actors in the process
+of centralized training to ensure a coordinated multi-agent           3.4 Robustness, Generalization, and
+recovery. The prediction of transformers, cross-node                  Computational Efficiency
+interactions, prediction of risks and multi-scale fusion
+account at 9.3, 7.4, 6.5 and 5.5, respectively. These                     In order to assess the stability of the model in a more
+mechanisms enhance the supply chain resilience mainly by              complicated disruption scenario, the severity of the
+                                                                      combined disruption is changed.
+
+
+
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                                 14                                       | Volume 13 | Issue 2 | 2026 |
+           A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational
+                                                                            Equipment Manufacturing Supply Chains
+
+
+
+
+      Figure 10. Dynamic recovery-response profiles of TMARL-ESCR under different disruption intensities
+
+
+     Figure 10 shows standardized dynamic recovery                distributions widen at medium and high intensity. It is
+responses recorded when re-playing the trained TMARL-             shown that critical shocks elongate the recovery period and
+ESCR policy with various levels of disruption intensity.          add more uncertainty on the recovery results. Filled
+Every curve is related to a particular level of disruption        markers indicate average observations of repeated
+intensity. The peak location shows the timespan during            simulations and empty markers indicate smoothed fitted
+which the main recovery response takes place, whereas the         values based on these observations. The present figure
+curve width denotes the spread of recovery times among            describes the dynamic recovery behavior of the whole
+simulation cycles.                                                decision policy instead of considering resilience response
+     At increased intensities of disruption (10 -95%) the         as another direct prediction objective of the Transformer.
+peaks move to longer recovery times and the response
+
+
+
+
+                     Figure 11. Scalability and parameter sensitivity analysis of TMARL-ESCR
+
+
+     As shown in Figure 11(a), the online solution time of        size increases, but TMARL-ESCR continues to be able to
+Rolling-MILP becomes significantly larger as the network          have millisecond-level decision latency even in a network
+
+
+                                                                                                    EAI Endorsed Transactions on
+                                                                                                     Scalable Information Systems
+                                                             15                                      | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+of 360 nodes. Figure 11(b) also illustrates that                           Because the forecasts are part of each agent's
+simultaneous growths in network size and intensity of                 observation, prediction errors can propagate into
+disruption result in higher online inference latency but still        anticipatory procurement, capacity, transport, and
+fall within the limits necessary to respond in real-time. This        inventory actions. The dependence analysis in Figure 12
+scalability experiment extends the simulated network to               indicates that prediction-related features materially affect
+360 nodes, but it does not substitute for validation on real          the resilience score; systematic bias in demand, lead-time,
+enterprise networks; transfer across enterprise data                  capacity, or disruption-risk estimates can therefore weaken
+distributions and operating rules remains to be established.          proactive allocation. Current-state inputs and operational
+      The results of parameter sensitivity are depicted in            constraints still provide feasibility safeguards, but explicit
+Figure 11(c) and 11(d). Resilience scores are higher with a           forecast-noise and bias stress tests remain an important
+forecast horizon of about 14-18 days and a constraint                 direction for future robustness evaluation.
+penalty coefficient of about 0.4-0.5. An underweight global
+reward weight reduces cooperation between agents,
+whereas a high-weight global reward weight limits the
+flexibility of local policies. Intermediate weight values thus
+give the best overall performance.
+
+
+
+
+Figure 12. SHAP-based importance and dependence analysis of the comprehensive resilience score in TMARL-
+                                               ESCR
+
+
+     Figure 12 goes on to consider how various state                  forecast horizon has a nonlinear relationship with the most
+variables and decision mechanisms affect supply chain                 significant positive contribution at around 14 days. A
+recovery time reduction. According to the SHAP                        shorter horizon does not provide enough lead-time, but a
+beeswarm plot on the left, the highest mean absolute SHAP             longer horizon is prone to greater errors accumulated over
+values are achieved by global reward coordination, the                time.
+centralized critic and the Transformer prediction module.                  The flexibility of backup suppliers, efficiency in
+It is clear that inter-actor objective consistency, global            rescheduling production, and ability to respond to the
+value assessment, and predicting the future are the main              unexpected have a positive correlation with decreases in
+aspects of speeding up the recovery of the supply chain.              recovery time and hence supply substitution, capacity
+     According to the analysis of dependence, the                     reconfiguration, and policy generalization may hasten post-
+achievable reduction in recovery time decreases                       disruption recovery. Improving recovery performance by
+significantly with the increase in the intensity of the               increasing the constraint penalty weight in a relatively low
+disruption which means that the compound disruptions in               range has a significant effect followed by a gradual
+the severe forms limit the recovery space of the policy. The          stabilization of the effect. It implies that mild feasibility
+
+
+                                                                                                         EAI Endorsed Transactions on
+                                                                                                          Scalable Information Systems
+                                                                 16                                       | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+restrictions are useful in preventing non-productive                  is shown by this result that reinforcement learning policies
+actions, but too strict limitations cannot be used effectively        optimized only to maximize cumulative reward can
+to bring long-term extra profits.                                     produce a significant amount of infeasible operational
+                                                                      actions.
+                                                                            In summary, TMARL-ESCR creates a closed-loop
+4. Conclusion                                                         system based on the supply chain state awareness and the
+                                                                      prediction of the risk of disruption and coordinated multi-
+      The research paper talks about the problem of demand            agent recovery by using AI. It offers a practical strategy to
+volatility, cross-node risk propagation, and poor                     the     transformation     of     educational     equipment
+coordination in interactor recovery decisions in educational          manufacturing supply chains that are reactive in nature into
+equipment manufacturing supply chains through the                     prediction-based and autonomously optimized ones. The
+development of TMARL-ESCR, a model that combines a                    next wave of work would be to include multisource
+Transformer with multi-agent reinforcement learning. The              operational data of actual businesses and quantify
+general findings are as follows.                                      uncertainties as well as interact with online digital twin
+      A multitask prediction mechanism based on                       models to enhance cross-scenario transferability and
+Transformers has been devised to predict the future state of          instantaneous implementation in complex supply
+the supply chain and the risk of disruptions. The model can           networks. Accordingly, the present framework should be
+be used to learn the long-range temporal dependencies as              viewed as a decision-support tool rather than an
+well as the cross-node interactions by introducing the                autonomous ordering system until enterprise-data
+temporal-position, node-type and product-category                     retraining, sim-to-real validation, and stricter constraint
+encodings and simultaneously learning the demand,                     verification are completed.
+logistics lead times, available capacity and disruption risk.
+The suggested predictor has demand WMAPE of 14.38
+percent, logistics lead-time MAE of 2.31 hours, disruption-           Acknowledgements.
+risk F1-score of 0.882, and AUC of 0.941 which is higher              This work was supported by a project grant from Supported
+than LSTM, GRU, TCN, Informer, TFT, and the regular                   by the Open Project Program of Guangdong Provincial
+Transformer. These findings indicate that joint modeling of           Key Laboratory of Development and Education for Special
+heterogeneous states and risks offer increased anticipatory           Needs Children (Grant No.TJ202301), Guangdong
+state representations to the subsequent AI-driven decision-           Province Philosophy and Social Sciences Plan 2025 East
+making than single-series demand forecasting.                         and Northwest Research Project: Research on the
+      A collaborative recovery system of multi-agent                  Intelligent Supply of Educational Assistance Resources in
+predictions is suggested to jointly optimize supply,                  Western Guangdong Islands under the Background of the
+manufacturing, logistics, and distribution decisions.                 "Hundred Million Project"(No. GD20XJY06).
+TMARL-ESCR incorporates Transformer-based estimates
+of demand in the future, capacity, lead times, and risk
+probabilities into the local observations of each agent. Its          References
+goal is coordinated by centralised training and                       [1]   Grossman G M, Helpman E, Lhuillier H. Supply chain
+decentralised execution with a common local-global                          resilience:      Should     policy promote international
+reward system. The full-blown model has a fulfillment rate                  diversification or reshoring?[J]. Journal of Political
+of 95.2, a recovery time of 7.1 days, and a compound                        Economy, 2023, 131(12): 3462–3496.
+resilience measure of 0.892. In comparison to Transformer-            [2]   Safari A, Balicevac Al Ismail V, Parast M, et al. Supply
+MAPPO, it provides an improvement of the fulfillment rate                   chain risk and resilience in startups, SMEs, and large
+by 1.8 percentage points, the reduction of recovery time by                 enterprises: A systematic review and directions for
+19.3 percent, and the increase of the resilience score by 5.9               research[J]. The International Journal of Logistics
+                                                                            Management, 2024, 35(2): 680–709.
+percent. The outcomes of ablation also establish the
+                                                                      [3]   Tian S, Wu L, Ciano M P, et al. Enhancing innovativeness
+centralized critic and global reward as critical elements of                and performance of the manufacturing supply chain through
+the coordination between several actors. These results                      datafication: The role of resilience[J]. Computers &
+imply that AI-based prediction can be successfully                          Industrial Engineering, 2024, 188: 109841.
+translated into a useful supply chain recovery ability only           [4]   Mukherjee S, Baral M M, Nagariya R, et al. Artificial
+in conjunction with cross-actor policy learning.                            intelligence-based supply chain resilience for improving
+      Resilience constraints and joint prediction-decision                  firm performance in emerging markets[J]. Journal of Global
+training enhance the feasibility of policy and the overall                  Operations and Strategic Sourcing, 2024, 17(3): 516–540.
+optimization performance. Policy constraints include                  [5]   Riad M, Naimi M, Okar C. Enhancing supply chain
+                                                                            resilience through artificial intelligence: Developing a
+supply capacity, production capacity, safety inventory and
+                                                                            comprehensive         conceptual     framework     for   AI
+transportation feasibility whereas prediction loss, policy                  implementation and supply chain optimization[J]. Logistics,
+objectives, value estimation and constraint penalties are                   2024, 8(4): 111.
+combined into a single optimization process. The overall              [6]   Samadhiya A, Yadav S, Kumar A, et al. The influence of
+model has a violation rate of constraints of 0.5% which                     artificial intelligence techniques on disruption management:
+becomes 6.5% when eliminating the constraint penalty. It
+
+                                                                                                            EAI Endorsed Transactions on
+                                                                                                             Scalable Information Systems
+                                                                 17                                          | Volume 13 | Issue 2 | 2026 |
+Yiquan Kong
+
+
+
+
+     Does supply chain dynamism matter?[J]. Technology in                   [23] Oliveira J M, Ramos P. Evaluating the effectiveness of time
+     Society, 2023, 75: 102394.                                                  series Transformers for demand forecasting in retail[J].
+[7] Tirkolaee E B, Torkayesh A E, Tavana M, et al. An                            Mathematics, 2024, 12(17): 2728.
+     integrated decision support framework for resilient vaccine            [24] Caetano R, Oliveira J M, Ramos P. Transformer-based
+     supply chain network design[J]. Engineering Applications                    models for probabilistic time series forecasting with
+     of Artificial Intelligence, 2023, 126: 106945.                              explanatory variables[J]. Mathematics, 2025, 13(5): 814.
+[8] Ashraf M, Eltawil A, Ali I. Disruption detection for a                  [25] Alrashdi I, Abd El-Aziz R M, Taloba A I, et al. Hybrid
+     cognitive digital supply chain twin using hybrid deep                       TCN-Transformer model for predicting sustainable food
+     learning[J]. Operational Research, 2024, 24: 23.                            supply and ensuring resilience[J]. Alexandria Engineering
+[9] Sadeghi R K, Ojha D, Kaur P, et al. Explainable artificial                   Journal, 2025, 127: 380–391.
+     intelligence and agile decision-making in supply chain                 [26] Geevers K, van Hezewijk L, Mes M R K. Multi-echelon
+     cyber resilience[J]. Decision Support Systems, 2024, 180:                   inventory optimization using deep reinforcement
+     114194.                                                                     learning[J]. Central European Journal of Operations
+[10] Jackson I, Ivanov D, Dolgui A, et al. Generative artificial                 Research, 2024, 32: 653–683.
+     intelligence in supply chain and operations management: A              [27] Mousa M, van de Berg D, Kotecha N, et al. An analysis of
+     capability-based       framework       for     analysis    and              multi-agent reinforcement learning for decentralized
+     implementation[J]. International Journal of Production                      inventory control systems[J]. Computers & Chemical
+     Research, 2024, 62(17): 6120–6145.                                          Engineering, 2024, 188: 108783.
+[11] Singh D, Sharma A, Singh R K, et al. Augmenting supply                 [28] Zhang B, Tan W J, Cai W, et al. Leveraging multi-agent
+     chain resilience through AI and big data[J]. Business                       reinforcement learning for digital transformation in supply
+     Process Management Journal, 2025, 31(2): 631–657.                           chain inventory optimization[J]. Sustainability, 2024,
+[12] Jauhar S K, Harinath S, Krishnaswamy V, et al. Explainable                  16(22): 9996.
+     artificial intelligence to improve the resilience of perishable        [29] Liu X, Hu M, Peng Y, et al. Multi-agent deep reinforcement
+     product supply chains by leveraging customer                                learning for multi-echelon inventory management[J].
+     characteristics[J]. Annals of Operations Research, 2025,                    Production and Operations Management, 2025, 34(7):
+     354: 103–142.                                                               1836–1856.
+[13] Ceptureanu E G, Ferraro G, Ceptureanu S I, et al. Impact of            [30] Hu J, Xia L, Huang T, et al. A multi-agent deep
+     artificial intelligence and blockchain on supply chain                      reinforcement learning approach for multi-echelon
+     resilience under influence of change management[J]. Soft                    inventory optimization and its application to the beer
+     Computing, 2025, 29(7): 3617–3625.                                          game[J]. Transportation Research Part E: Logistics and
+[14] Singh D, Sharma A, Singh R K, et al. Artificial intelligence                Transportation Review, 2025, 203: 104367.
+     enabled supply chain resilience: Insights from FMCG                    [31] Zarghami S A, Dumrak J. Evaluating vulnerability of supply
+     industry[J]. Journal of Global Operations and Strategic                     chain networks to capacity reduction[J]. Global Journal of
+     Sourcing, 2025, 18(2): 414–441.                                             Flexible Systems Management, 2024, 25: 629–646
+[15] Tang H, Wu K, Zhou J. Smarter supply chains, stronger                  [32] Yang S, Ogawa Y, Ikeuchi K, et al. Post-hazard supply
+     resilience? The impact of AI on preparation, response, and                  chain disruption: Predicting firm-level sales using graph
+     recovery[J]. Economics Letters, 2025, 254: 112488.                          neural network[J]. International Journal of Disaster Risk
+[16] Guo X, Chen Y, Xie J, et al. Research on supply chain                       Reduction, 2024, 110: 104664.
+     resilience mechanism of AI-enabled manufacturing                       [33] Tang X, Wang Y, Liu X, et al. Federated graph neural
+     enterprises—based on organizational change perspective[J].                  network for privacy-preserved supply chain data sharing[J].
+     Scientific Reports, 2025, 15: 31177.                                        Applied Soft Computing, 2025, 168: 112475.
+[17] Yue X, Kang M, Zhang Y. The impact of artificial                       [34] Wang Z, Ran H, Ren J, et al. PWDformer: Deformable
+     intelligence usage on supply chain resilience in                            transformer for long-term series forecasting[J]. Pattern
+     manufacturing firms: A moderated mediation model[J].                        Recognition, 2024, 147: 110118.
+     Journal of Manufacturing Technology Management, 2025,                  [35] Zhao J, Chu F, Xie L, et al. A survey of transformer
+     36: 759–776.                                                                networks for time series forecasting[J]. Computer Science
+[18] Pan H, Zou N, Wang R, et al. Artificial intelligence usage                  Review, 2026, 60: 100883.
+     and supply chain resilience: An organizational information             [36] Dehaybe H, Catanzaro D, Chevalier P. Deep Reinforcement
+     processing theory perspective[J]. Systems, 2025, 13(9):                     Learning for inventory optimization with non-stationary
+     724.                                                                        uncertain demand[J]. European Journal of Operational
+[19] Nawaz W, Li Z. Complexity to resilience: Machine learning                   Research, 2024, 314(2): 433-445.
+     models for enhancing supply chains and resilience in the               [37] Kaynov I, van Knippenberg M, Menkovski V, et al. Deep
+     Middle Eastern trade corridor nations[J]. Systems, 2025,                    Reinforcement Learning for One-Warehouse Multi-Retailer
+     13(3): 209.                                                                 inventory management[J]. International Journal of
+[20] Wu D, Li T, Cai H, et al. Machine learning-based prediction                 Production Economics, 2024, 267: 109088.
+     of resilience in green agricultural supply chains: Influencing         [38] Kim B, Kim J G, Lee S. A multi-agent reinforcement
+     factors analysis and model construction[J]. Systems, 2025,                  learning model for inventory transshipments under supply
+     13(7): 615.                                                                 chain disruption[J]. IISE Transactions, 2024, 56(7): 715-
+[21] Douaioui K, Oucheikh R, Benmoussa O, et al. Machine                         728.
+     learning and deep learning models for demand forecasting               [39] Kotecha N, del Rio Chanona A. Leveraging graph neural
+     in supply chain management: A critical review[J]. Applied                   networks and multi-agent reinforcement learning for
+     System Innovation, 2024, 7(5): 93.                                          inventory control in supply chains[J]. Computers &
+[22] Aldahmani E, Alzubi A, Iyiola K. Demand forecasting in                      Chemical Engineering, 2025, 199: 109111.
+     supply chain using uni-regression deep approximate                     [40] Burtea R, Tsay C. Constrained continuous-action
+     forecasting model[J]. Applied Sciences, 2024, 14(18): 8110.                 reinforcement learning for supply chain inventory
+
+
+                                                                                                                EAI Endorsed Transactions on
+                                                                                                                 Scalable Information Systems
+                                                                       18                                        | Volume 13 | Issue 2 | 2026 |
+A Transformer-Enhanced Multi-Agent Reinforcement Learning Model for Resilience Optimization in Educational Equipment
+                                                                                        Manufacturing Supply Chains
+
+
+     management[J]. Computers & Chemical Engineering, 2024,
+     181: 108518.
+[41] Stranieri F, Fadda E, Stella F. Combining deep
+     reinforcement learning and multi-stage stochastic
+     programming to address the supply chain inventory
+     management problem[J]. International Journal of
+     Production Economics, 2024, 268: 109099.
+[42] Wang J, Swartz C L E, Huang K. Risk-averse supply chain
+     management via robust reinforcement learning[J].
+     Computers & Chemical Engineering, 2025, 192: 108912.
+[43] Temizöz T, Imdahl C, Dijkman R, et al. Deep Controlled
+     Learning for Inventory Control[J]. European Journal of
+     Operational Research, 2025, 324(1): 104-117.
+[44] Yu C, Velu A, Vinitsky E, et al. The surprising effectiveness
+     of PPO in cooperative multi-agent games[C]. Advances in
+     Neural Information Processing Systems. 2022, 35.
+[45] Wen M, Kuba J, Lin R, et al. Multi-agent reinforcement
+     learning is a sequence modeling problem[C]. Advances in
+     Neural Information Processing Systems. 2022, 35.
+[46] Achiam J, Held D, Tamar A, et al. Constrained Policy
+     Optimization[C]. Proceedings of the 34th International
+     Conference on Machine Learning. PMLR, 2017, 70: 22–31.
+
+
+
+
+                                                                                             EAI Endorsed Transactions on
+                                                                                              Scalable Information Systems
+                                                                     19                       | Volume 13 | Issue 2 | 2026 |
+

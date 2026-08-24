@@ -1,0 +1,111 @@
+{
+  "schema_version": "program_b_full_des_gate_v2",
+  "status": "FROZEN_BEFORE_REANALYSIS_NO_NEW_ROOTS",
+  "created_at_utc": "2026-08-07T04:38:35Z",
+  "scope": "Researcher-defined two-product non-fungible extension carried through the full Op1-Op13 DES. It is not a thesis-native MFSC product-mix estimate.",
+  "garrido_alignment": {
+    "paper": "Garrido et al. 2024",
+    "question_1": "Test whether retained state and a learning/search mechanism improve repeated DES configuration selection.",
+    "question_2": "Close the loop from simulation decision variables to SCRES metric and back to the next configuration.",
+    "v0_hypotheses": ["H1_learning_effect", "H2_adaptation", "H3_volatility", "H4_path_dependency"]
+  },
+  "physical_extension": {
+    "products": ["P_C", "P_H"],
+    "non_fungible_primary": true,
+    "shared_capacity": "fixed downstream dispatch entitlement and product-specific inventory",
+    "bom_equal": true,
+    "production_rate_equal": true,
+    "substitution_primary": 0.0,
+    "risks_primary": false,
+    "stochastic_processing_primary": false,
+    "decision_horizon_weeks": 8,
+    "actions": "number of the next three weekly batch targets assigned to P_C: 0,1,2,3",
+    "frontier_size": 65536,
+    "scheduler_primary": "centered_minority_v1"
+  },
+  "estimand": {
+    "primary": "safe_h_pi_ret_excel_full_ledger",
+    "definition": "For each tape, the maximum ret_excel_full_ledger among calendars satisfying all per-tape guardrails minus the comparator calendar's ret_excel_full_ledger, averaged over tapes.",
+    "secondary": [
+      "ret_excel_clipped_0_1",
+      "ret_thesis",
+      "flow_fill_rate",
+      "delivered_rations",
+      "lost_orders",
+      "unresolved_orders",
+      "terminal_stock",
+      "worst_product_fill",
+      "service_loss_auc",
+      "max_backlog_age"
+    ],
+    "comparison_references": ["frozen_incumbent", "in_sample_static_incumbent"],
+    "paired_unit": "tape",
+    "primary_tie_rule": [
+      "minimum unresolved_quantity",
+      "maximum worst_product_fill",
+      "maximum actual_payload",
+      "minimum ending_inventory_total",
+      "lexicographically smallest calendar"
+    ]
+  },
+  "guardrails": {
+    "abandonment": {
+      "ret_full_includes_all_48_generated_orders": true,
+      "lost_orders": "candidate <= comparator",
+      "unresolved_orders": "candidate <= comparator",
+      "delivered_rations": "candidate >= comparator",
+      "remaining_quantity_by_product": "candidate <= comparator"
+    },
+    "service_and_equity": {
+      "fill_P_C": "candidate >= comparator",
+      "fill_P_H": "candidate >= comparator",
+      "worst_product_fill": "candidate >= comparator"
+    },
+    "operations": {
+      "service_loss_auc": "candidate <= comparator",
+      "max_backlog_age": "candidate <= comparator",
+      "gross_production_and_charged_capacity": "candidate == comparator",
+      "mass_residual_abs_max": 1e-8,
+      "terminal_stock": "reported; flag if candidate exceeds comparator by >5% of generated ration demand without a primary improvement"
+    },
+    "clipped_endpoint": "secondary descriptive only; never used alone for selection",
+    "ret_thesis": "secondary robustness endpoint; never replaces the primary"
+  },
+  "sesoi": {
+    "primary_absolute_index": 0.01,
+    "interpretation": "one percentage point of safe full-ledger resilience",
+    "validation_rule": "one-sided simultaneous LCB95 > 0.01 on the predeclared primary comparison",
+    "development_rule": "mean safe HPI > 0.015 and at least 17 favorable tapes; descriptive only"
+  },
+  "comparators": {
+    "frozen_incumbent": {
+      "calendar": [2, 1, 2, 2, 2, 1, 2, 2],
+      "source": "development block best static calendar in parent Program O full-DES contract"
+    },
+    "in_sample_static_incumbent": "argmax of the 65536 static calendars within each block and profile; selection is descriptive and never substituted for the frozen comparison"
+  },
+  "controls": {
+    "fungible_placebo": "complete_substitution=true; outcome arrays must be bit-identical and H_PI=0; product-label inventory partitions are reported but are not outcome nulls",
+    "uninformed_placebo": "frozen open-loop incumbent; no tape-specific or state-conditioned calendar",
+    "deterministic_product_season": "must match the exact oracle",
+    "within_week_ordering": ["centered_minority_v1", "blocked_left_v1", "blocked_right_v1"]
+  },
+  "seed_blocks": {
+    "development": {"range": [7400049, 7400072], "status": "ALREADY_BURNED_AND_CUSTODY_VERIFIED"},
+    "validation": {"range": [7400097, 7400120], "status": "ALREADY_BURNED_AND_CUSTODY_VERIFIED"},
+    "new_roots_opened_by_this_contract": false
+  },
+  "adjudication": {
+    "development_pass": "primary mean safe HPI > 0.015, all physical/null/conservation gates pass, and no guardrail fails",
+    "validation_pass": "primary simultaneous one-sided LCB95 > 0.01, all physical/null/conservation gates pass, secondary endpoints do not reverse the operational conclusion",
+    "stop": "any guardrail, fungible null, conservation, parity, custody, or metric-definition failure",
+    "learner_authorization": "false until the validation rule passes; H_PI is a necessary headroom gate, not evidence that RL is superior"
+  },
+  "claim_boundary": [
+    "No claim that the two-product extension is Garrido's real product mix",
+    "No H_obs claim",
+    "No neural/RL/KAN superiority claim",
+    "No replacement of the Garrido 2024 outer-loop answer",
+    "No fresh-seed confirmation from this retrospective reanalysis"
+  ]
+}

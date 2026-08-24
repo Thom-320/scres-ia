@@ -1,0 +1,21 @@
+{
+  "schema_version": "program_b_metric_repair_v1",
+  "status": "FROZEN_BEFORE_EXPLORATORY_REANALYSIS_AFTER_FULL_LEDGER_NULL",
+  "scope": "Exploratory metric repair of the Program B full-DES extension; no new seeds and no confirmatory claim.",
+  "reason": "ret_excel_full_ledger is identically zero in both burned full-DES blocks, so it cannot discriminate policies in this extension.",
+  "primary": {
+    "id": "ret_service_full_clipped_v1",
+    "formula": "sum_i(q_i * clip_0_1(ret_visible_i)) / sum_i(q_i) over all generated orders, with unresolved orders contributing zero",
+    "equivalent_matrix_form": "clip_0_1(ration_ret_visible) * (1 - omitted_quantity / demanded_quantity)",
+    "properties": ["all generated orders included", "quantity weighted", "bounded [0,1]", "does not reward abandonment"],
+    "not_claimed_as": ["Garrido Excel ReT", "thesis-native metric", "causal attribution"]
+  },
+  "secondaries": ["ret_excel_clipped_0_1", "ret_excel_full_ledger", "ret_thesis", "flow_fill_rate", "delivered_rations", "lost_orders", "unresolved_orders", "terminal_stock", "worst_product_fill"],
+  "comparators": ["frozen_incumbent", "in_sample_static_incumbent"],
+  "sesoi": {"absolute_hpi": 0.01, "rule": "one-sided LCB95 > 0.01; exploratory only"},
+  "guardrails": {"lost_orders": "<= comparator", "unresolved_orders": "<= comparator", "worst_product_fill": ">= comparator", "flow_fill_rate": ">= comparator - 0.01", "terminal_stock": "reported and flagged, not hidden"},
+  "blocks": {"development": [7400049, 7400072], "validation": [7400097, 7400120]},
+  "new_roots_opened": false,
+  "learner_authorized": false,
+  "adjudication": "Report whether the metric repairs discrimination; do not promote to confirmatory status or train a learner from this reanalysis."
+}

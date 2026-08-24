@@ -473,6 +473,20 @@ IMMUTABLE_CONTRACT_FIELDS = {
     "rpj_onset_admission",
     "transport_block_mode",
     "transport_retry_poll_hours",
+    # Added 2026-08-24. Eight run-configuration fields of the CSSU-switch, expedite and
+    # LOC-graph extensions. Each is assigned exactly once in ``MFSCSimulation.__init__``
+    # (supply_chain.py:507-531 and 511-515) and never rebound afterwards, so it is
+    # immutable run configuration and stays OUT of the Markov key by construction. The
+    # invariants in ``audit_frozen_state_inventory`` assert the shipped values rather
+    # than trusting this comment.
+    "cssu_min_dwell_days",
+    "cssu_switch_cost_rations",
+    "expedite_budget_hours",
+    "expedite_reduction_hours",
+    "expedite_charge_hours",
+    "loc_topology_mode",
+    "loc_graph",
+    "_cssu_capacity_ledger",
 }
 INERT_FROZEN_FIELDS = {
     "adaptive_benchmark_enabled",
@@ -516,6 +530,22 @@ INERT_FROZEN_FIELDS = {
     "op8_last_action",
     "op8_convoy_action_events",
     "op8_convoy_departure_events",
+    # Added 2026-08-24. Ten mutable fields introduced by the CSSU-switch, expedite and
+    # LOC-graph extensions. Under this frozen contract every one of them is inert -- the
+    # frozen invariants below assert that, rather than trusting the claim -- but they are
+    # written by live code paths, so they are classified with the other mutable
+    # diagnostics and folded into the key conservatively. A mutable field left outside
+    # the key is exactly what produces a false merge.
+    "cssu_switch_count",
+    "cssu_switch_cost_paid",
+    "cssu_switch_cost_unpaid",
+    "cssu_blocked_by_dwell_count",
+    "expedite_budget_remaining",
+    "expedite_events",
+    "loc_arcs_down",
+    "loc_arc_down_events",
+    "_cssu_last_switch_at",
+    "_pending_expeditions",
 }
 OUTPUT_OR_REPLAY_FIELDS = {
     "contract_completion_events",
@@ -2523,6 +2553,30 @@ def audit_frozen_state_inventory(sim: Any) -> dict[str, Any]:
         "parallel_downstream_transport": (
             sim.downstream_transport_capacity_mode == "parallel"
         ),
+        # Added 2026-08-24 alongside the CSSU-switch / expedite / LOC-graph
+        # classification. These assert that the newly classified fields really are
+        # inert under this contract instead of taking the classification on trust:
+        # if a future contract switches any of them on, the audit fails loudly here
+        # rather than silently keeping live state out of the Markov key.
+        "cssu_dwell_inert": float(sim.cssu_min_dwell_days) == 1.0,
+        "cssu_switch_cost_zero": float(sim.cssu_switch_cost_rations) == 0.0,
+        "cssu_switch_counters_zero": (
+            sim.cssu_switch_count == 0
+            and sim.cssu_blocked_by_dwell_count == 0
+            and float(sim.cssu_switch_cost_paid) == 0.0
+            and float(sim.cssu_switch_cost_unpaid) == 0.0
+            and sim._cssu_last_switch_at is None
+        ),
+        "cssu_storage_unlimited": sim._cssu_capacity_ledger is None,
+        "expedite_budget_zero": float(sim.expedite_budget_hours) == 0.0,
+        "expedite_unused": (
+            float(sim.expedite_budget_remaining) == float(sim.expedite_budget_hours)
+            and not sim.expedite_events
+            and not sim._pending_expeditions
+        ),
+        "loc_topology_serial": sim.loc_topology_mode == "serial_v1",
+        "loc_graph_absent": sim.loc_graph is None,
+        "loc_arcs_untouched": not sim.loc_arcs_down and not sim.loc_arc_down_events,
     }
     static_reads = static_sim_attribute_reads()
     return {

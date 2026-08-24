@@ -1,0 +1,1444 @@
+                                             Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+                                                                     Tianwei Ni 1 Benjamin Eysenbach 2 Ruslan Salakhutdinov 2
+                                                                     https://github.com/twni2016/pomdp-baselines
+
+
+                                                                Abstract
+                                             Many problems in RL, such as meta-RL, robust
+
+
+
+
+arXiv:2110.05038v3 [cs.LG] 5 Jun 2022
+                                             RL, generalization in RL, and temporal credit as-
+                                             signment, can be cast as POMDPs. In theory,
+                                             simply augmenting model-free RL with memory-
+                                             based architectures, such as recurrent neural net-
+                                             works, provides a general approach to solving
+                                             all types of POMDPs. However, prior work has
+                                             found that such recurrent model-free RL meth-
+                                             ods tend to perform worse than more specialized
+                                             algorithms that are designed for specific types
+                                             of POMDPs. This paper revisits this claim. We
+                                             find that careful architecture and hyperparameter           Figure 1: The importance of implementation for recurrent
+                                             decisions can often yield a recurrent model-free            model-free RL. This paper identifies important design deci-
+                                                                                                         sions for recurrent model-free RL. Our implementation outper-
+                                             implementation that performs on par with (and               forms prior implementations (e.g. PPO-GRU and A2C-GRU
+                                             occasionally substantially better than) more so-            from Kostrikov (2018)) and purpose-designed methods (e.g. VRM
+                                             phisticated recent techniques. We compare to 21             from Han et al. (2020)) on their respective POMDP benchmarks.
+                                             environments from 6 prior specialized methods
+                                             and find that our implementation achieves greater           Many subareas in RL study problems that are special cases
+                                             sample efficiency and asymptotic performance                of POMDPs (see Table 1). For example, meta-RL (Schmid-
+                                             than these methods on 18/21 environments. We                huber, 1987; Thrun & Pratt, 2012; Duan et al., 2016; Wang
+                                             also release a simple and efficient implementation          et al., 2017) is a POMDP where certain aspects of the re-
+                                             of recurrent model-free RL for future work to use           ward function or (less commonly) dynamics function are
+                                             as a baseline for POMDPs.                                   unobserved but held constant through one episode. The
+                                                                                                         robust RL problem (Bagnell et al., 2001; Rajeswaran et al.,
+                                        1. Introduction                                                  2017a; Pinto et al., 2017; Pattanaik et al., 2018) assumes
+                                        Reinforcement learning (RL) is typically cast as a problem       that certain aspects of the dynamics or reward function are
+                                        of learning a single fully observable task (an MDP), training    unknown, and aims to find optimal policies that perform
+                                        and testing on that same task. However, most real-world          well against adversarially-chosen perturbations. General-
+                                        applications of RL demand some degree of transfer and            ization in RL (Whiteson et al., 2011; Zhang et al., 2018a;
+                                        handling of partial observability. For example, visual navi-     Packer et al., 2018; Cobbe et al., 2019) focuses on unob-
+                                        gation (Zhu et al., 2017) requires that robots adapt to unseen   served aspects of the dynamics or reward function that are
+                                        scenes with occlusion in observations, and human-robot col-      novel during testing, using an average-case objective instead
+                                        laboration requires that robots infer the intentions of human    of the worst-case objective of robust RL. Temporal credit as-
+                                        collaborators (Chen et al., 2018).                               signment (Sutton, 1984; Arjona-Medina et al., 2019; Hung
+                                                                                                         et al., 2018; Ren et al., 2021) assumes that the reward func-
+                                           Work was primarily done when TN was at Carnegie Mellon        tion is history-dependent and aims to learn to assign credits
+                                        University. 1 Université de Montréal & Mila – Quebec AI In-    of current actions to future rewards.
+                                        stitute 2 Carnegie Mellon University. Correspondence to: Tian-
+                                        wei Ni <tianwei.ni@mila.quebec>, Benjamin Eysenbach <bey-        Recent work has proposed efficient and performant algo-
+                                        senba@cs.cmu.edu>.                                               rithms to solve each of these specialized problem settings.
+                                        Proceedings of the 39 th International Conference on Machine     However, these algorithms often make assumptions that
+                                        Learning, Baltimore, Maryland, USA, PMLR 162, 2022. Copy-        preclude their application to other POMDPs. For example,
+                                        right 2022 by the author(s).                                     methods for robust RL are rarely used for generalization in
+                            Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+RL due to objective mismatch (average-case versus worst-          mentation of recurrent-model free RL. We demonstrate that
+case). Similarly, methods for meta-RL are rarely used for         simple yet important design decisions, such as the underly-
+temporal credit assignment due to the stationarity assump-        ing RL algorithm and the context length, can often yield a
+tion in meta-RL.                                                  recurrent model-free RL algorithm that performs (at least)
+                                                                  on par with prior specialized POMDP algorithms on the
+One method that is applicable to any POMDP is model-free
+                                                                  benchmarks those algorithms were designed to solve. Ab-
+RL equipped with a recurrent policy (actor) and (sometimes)
+                                                                  lation experiments identify the importance of these design
+recurrent value function (Duan et al., 2016; Wang et al.,
+                                                                  decisions. We have released the code that is easy to use and
+2017; Packer et al., 2018; Igl et al., 2018; Rakelly et al.,
+                                                                  memory-efficient.
+2019; Fakoor et al., 2020; Yu et al., 2019). We will refer to
+this approach as recurrent model-free RL. This baseline           2. Background
+is simultaneously simple, as it requires changing only a few
+                                                                  MDP. A Markov decision process (MDP) (Bellman, 1957)
+lines of code from a model-free RL algorithm, and gen-
+                                                                  is a tuple (S, A, T, T0 , R, H, γ) , where S is the set of states,
+eral, as RNNs (Elman, 1990) are Turing-complete (Siegel-
+                                                                  A is the set of actions, T : S × A × S → [0, 1] is the tran-
+mann & Sontag, 1995) and universal function approxima-
+                                                                  sition function (dynamics), T0 : S → [0, 1] is the initial
+tors (Schäfer & Zimmermann, 2006).
+                                                                  state distribution, R : S × A × S → R is the reward func-
+This approach has been used as a baseline in many prior           tion, H ∈ N is the time horizon, and γ ∈ [0, 1) is the
+works, but these prior works report that it performs poorly in    discount factor. Solving an MDP requires learning a policy
+many problem settings, including meta-RL (Rakelly et al.,         π : S × A → [0, 1] that maximizes theh expected discounted      i
+2019; Zintgraf et al., 2020), general POMDPs (Igl et al.,         return: π ∗ = arg maxπ Est ,at ,rt ∼T,π
+                                                                                                            PH−1 t
+                                                                                                               t=0 γ rt+1 | s0 .
+2018; Han et al., 2020), robust RL (Zhang et al., 2021),
+                                                                  For any MDP, there exists an optimal policy that is memo-
+generalization in RL (Packer et al., 2018), and temporal
+                                                                  ryless (Puterman, 2014). MaxEnt RL algorithms (Ziebart,
+credit assignment (Arjona-Medina et al., 2019; Raposo et al.,
+                                                                  2010; Haarnoja et al., 2018a) add an entropy bonus to the
+2021). Why does recurrent model-free RL perform poorly?
+                                                                  RL objective.
+One common explanation is that specialized algorithms or
+more complicated memory architectures (Ritter et al., 2018;       POMDP. A partially observable Markov deci-
+Parisotto et al., 2020) (implicitly) encode inductive biases to   sion process (POMDP) (Åström, 1965) is a tuple
+solve these specific tasks. For example, algorithms for meta-     (S, A, O, T, T0 , O, O0 , R, H, γ), where the underlying
+RL may assume that the underlying dynamics (while un-             process is an MDP (S, A, T, T0 , R, H, γ). Let O be the
+known) are fixed, and the underlying goals are fixed within       set of observations and let O : S × A × O → [0, 1] be
+one episode (Rakelly et al., 2019; Zintgraf et al., 2020).        the emission function. Let the observable trajectory up to
+Similarly, algorithms for robust RL may assume that the           time-step t be τ0:t = (o0 , a0 , o1 , r1 , . . . , at−1 , ot , rt ), the
+dynamics parameters are known (Rajeswaran et al., 2017a)          memory-based policy in the most general form is defined as
+and dynamics is Lipschitz continuous (Jiang et al., 2021).        π(at | τ0:t ), conditioning on the whole history. At the first
+Algorithms for temporal credit assignment sometimes as-           time step t = 0, an initial state s0 ∼ T0 (·) and an initial
+sume that the history-dependent reward can be decomposed          observation o0 ∼ O0 (· | s0 ) are sampled. At any time-step
+into a sum of Markovian rewards (Ren et al., 2021).               t ∈ {0, . . . , H − 1}, the policy emits the action at ∈ A
+This paper challenges the claim that recurrent model-free         to the system, the system updates the state following the
+RL performs poorly. We argue that, contrary to popular            dynamics, st+1 ∼ T (· | st , at ), the next observation is
+belief, recurrent model-free RL can be competitive with           sampled ot+1 ∼ O(· | st+1 , at ) and the reward is computed
+recent state-of-the-art algorithms across a range of differ-      as rt+1 = R(st , at , st+1 ).
+ent POMDP settings. Similar to the spirit in prior work           We refer to the part of the state st at current time-step t
+in Markovian PPO (Engstrom et al., 2020; Andrychowicz             that can be directly unveiled from current observation ot as
+et al., 2021) and recurrent DQN (Kapturowski et al., 2019),       the observable state sot , and the rest part of the state as the
+our experiments show that the implementation of recurrent         hidden state sht . We call the hidden state sht stationary if it
+model-free RL matters. Through extensive experiments              does not change within an episode. The average-case and
+(e.g., Fig. 1 shows results on an occluded locomotion bench-      worst-case objectives for POMDPs can be written as:
+mark), we show that the careful design and implementation
+of recurrent model-free RL is critical to its performance.
+                                                                                      "     "H−1                   ##
+                                                                                             X
+                                                                                                    t          h
+Design decisions such as the actor-critic architecture, the           max Esh ∼T0 Eτ               γ rt+1 | s              (average-case)
+                                                                        π
+underlying model-free RL algorithm, and context length in                                    t=0
+                                                                                                 "H−1                  #
+RNNs are especially important.                                                                    X
+                                                                                                         t         h
+                                                                      max        min        Eτ          γ rt+1 | s           (worst-case)
+The main contribution of this paper is a performant imple-              π   sh ∈supp(T0 )
+                                                                                                  t=0
+                            Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+3. Related Work                                                    et al., 2019). These different values of these parameters
+                                                                   represent different tasks. The meta-RL setting is almost
+We discuss subareas of RL that explicitly or implicitly solve      the same as multi-task RL (Wilson et al., 2007; Yu et al.,
+POMDPs, as well as algorithms proposed for these special-          2019), but differs in that multi-task RL can observe the
+ized settings. Table 1 summarizes these subareas.                  task parameters, making it an MDP instead of a POMDP.
+                                                                   Algorithms for meta-RL can be roughly categorized based
+RL for “standard” POMDPs. We use the term “stan-                   on how the adaptation step is performed. Gradient-based
+dard” to refer to prior work that explicitly labels the prob-      algorithms (Hochreiter et al., 2001; Finn et al., 2017;
+lems studied as POMDPs. Common tasks include scenar-               Fakoor et al., 2020) perform adaptation by running a
+ios where the states are partially occluded (Heess et al.,         few gradient steps on the pre-trained models. Memory
+2015), different states correspond to the same observation         or context-based algorithms use memory architectures to
+(perceptual aliasing (Whitehead & Ballard, 1990)), random          implicitly adapt. These memory-based methods which
+frames are dropped (Hausknecht & Stone, 2015), obser-              can be further subdivided into implicit and explicit task
+vations use egocentric images (Zhu et al., 2017), or the           inference methods. Implicit task inference methods (Wang
+observations are perturbed with random noise (Meng et al.,         et al., 2017; Duan et al., 2016; Ritter et al., 2018; Espeholt
+2021). These POMDPs often have hidden states that are              et al., 2018; Parisotto et al., 2020) use an RL objective only
+non-stationary and affect both the rewards and the dynamics.       to learn memory-based policies. Explicit task inference
+POMDPs are hard to solve because of the curse of dimen-            methods (Zintgraf et al., 2020; Rakelly et al., 2019) train
+sionality: the size of the history grows linearly with the         an extra inference model to estimate task embeddings
+horizon length (Papadimitriou & Tsitsiklis, 1987; Littman,         (i.e., a representation of the unobserved parameters) by
+1996). Prior POMDP algorithms (Cassandra et al., 1994)             approximate inference. Task embeddings are then used as
+attempt to infer the state from the past sequence of ob-           additional inputs to memoryless policies.
+servations, and then apply standard RL techniques to that
+inferred state. Such an inferred state is known as a belief        Robust RL. The goal of robust RL is to find a policy that
+state (Kaelbling et al., 1998). However, exact inference           maximizes returns in the worst-case environments. Prior
+requires the knowledge of the dynamics, emission proba-            work designs deep RL algorithms that are robust against per-
+bilities, and reward functions, and is intractable in all ex-      turbations to the dynamics (Khalil et al., 1996; Bagnell et al.,
+cept the most simple settings. One strategy for solving            2001; Nilim & Ghaoui, 2005; Morimoto & Doya, 2005; Der-
+these general POMDPs is to use memory-based policies,              man et al., 2018; Rajeswaran et al., 2017a; Mankowitz et al.,
+which take the entire history of past observations as inputs.      2020; Jiang et al., 2021), observations (Lin et al., 2017; Pat-
+Among the memory architectures, RNNs have been widely              tanaik et al., 2018; Huang et al., 2017; Wang et al., 2019),
+used to equip RL algorithms (Schmidhuber, 1991; Bakker,            and actions (Pinto et al., 2017; Gleave et al., 2020; Tessler
+2001; Wierstra et al., 2007), as they have a simpler design        et al., 2019). Treating the robust RL problem as a POMDP,
+without losing the expressivity (Schäfer & Zimmermann,            rather than an MDP (as done in most prior work), unlocks a
+2006), compared to more complicated ones, e.g. external            key capability: using memory to identify the hidden state
+memory (Graves et al., 2016; Oh et al., 2016) and episodic         within a single episode. While some work find memory-
+memory (Fortunato et al., 2019; Zhu et al., 2020). These           based policies are more robust to adversarial attacks than
+recurrent RL strategies can be further subdivided into model-      Markovian policies (Russo & Proutière, 2021; Zhang et al.,
+free methods (Heess et al., 2015; Hausknecht & Stone, 2015;        2021), they train these baselines in a single MDP without
+Mirowski et al., 2017; Meng et al., 2021), where the single        adversaries. In contrast, we will train recurrent model-free
+objective is to maximize the return, and model-based meth-         RL on a distribution of MDPs.
+ods (Watter et al., 2015; Ha & Schmidhuber, 2018; Igl et al.,
+2018; Zhang et al., 2018c; Espeholt et al., 2018; Gregor           Generalization in RL. The goal of generalization in RL
+et al., 2019; Hafner et al., 2019; Han et al., 2020; Lee et al.,   is to make RL algorithms perform well in test domains
+2020a).that have explicitly inferred the belief state and pass     that are unseen during training. This setting differs from
+it as an additional input to a memoryless policy. The recur-       robust RL because it uses an average-case objective in-
+rent model-free RL that we focus on belongs to the class of        stead of a worst-case objective. In this sense, meta-RL
+model-free, off-policy, memory-based algorithms.                   is closely related to (in-distribution) generalization in RL.
+                                                                   Prior work has studied generalization to initial states in
+Meta-RL. Meta-RL, also called “learning to                         the same MDP (Whiteson et al., 2011; Rajeswaran et al.,
+learn” (Schmidhuber, 1987; Thrun & Pratt, 2012),                   2017b; Zhang et al., 2018b), to random disturbance in dy-
+focuses on POMDPs where some parameters in the rewards             namics (Rajeswaran et al., 2017b), states (Stulp et al., 2011),
+or (less commonly) dynamics are varied from episode to             observations (Zhang et al., 2018a; Song et al., 2020), and
+episode, but remain fixed within a single episode (Humplik         actions (Srouji et al., 2018), and to different modes in proce-
+                              Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Table 1: Summary of selected POMDP subareas. For each subarea, we indicate whether the hidden state sh determines the dynamics
+or the reward function, and whether it changes within an episode. We indicate the typical inputs to the agent: observations, actions,
+rewards, and done signals. We indicate whether the subarea uses the average-case or worst-case objective, and whether the evaluation
+typically includes domain shift. A “*” indicates that some prior work violates the trend.
+
+
+  Subarea                 sh in dynamics?     sh in reward?   Is sh stationary?   Agent input     RL objective     Domain shift?
+
+  “Standard” POMDP        3                   3               7                   oar             Avg              7
+  Meta-RL                 7*                  3               3                   oard            Avg              7
+  Robust RL               3*                  7*              3*                  oa              Worst            7
+  Generalization in RL    3*                  7*              3*                  oa              Avg              3*
+  Temporal credit as-     7                   3               7                   oa              Avg              7
+  signment
+
+
+
+durally generated games (Justesen et al., 2018; Farebrother         decomposition into a sum of (dense) rewards (Liu et al.,
+et al., 2018; Cobbe et al., 2019). Among them, Packer               2019; Ren et al., 2021; Raposo et al., 2021), and reward re-
+et al. (2018); Zhao et al. (2019) provide benchmarks on both        distribution across time (Hung et al., 2018; Arjona-Medina
+in-distribution and out-of-distribution generalization to dif-      et al., 2019; Ferret et al., 2020; Gangwani et al., 2020).
+ferent dynamics parameters. Algorithms for improving gen-
+eralization in RL can be roughly divided into regularization-       4. Design Considerations for Recurrent
+based methods (Farebrother et al., 2018; Cobbe et al., 2020;
+Igl et al., 2019), methods that use special model architec-
+                                                                       Model-Free RL
+tures (Srouji et al., 2018; Raileanu & Fergus, 2021), and           Implementing a recurrent model-free RL algorithm requires
+methods that use data augmentation (Tobin et al., 2017; Lee         making a number of design decisions. In the following
+et al., 2020b). While randomizing the dynamics or observa-          paragraphs, we will describe the important decision factors
+tions implicitly transforms an MDP into a POMDP, these              we find in recurrent model-free RL. Table 2 summarizes
+prior methods normally use memoryless RL algorithms. By             how prior work and our work make these design decisions.
+contrast, we consider memory-based RL algorithms that can
+adapt online for generalization (Kirk et al., 2021, Sec. 5.2).
+                                                                    Recurrent (off-policy) actor-critic architecture. The
+                                                                    first important design decision is whether the recurrent pol-
+Temporal credit assignment. POMDPs are sometimes                    icy (actor) and the recurrent Q-value function (critic) use
+disguised as MDPs. For example, delaying the reward sig-            a shared RNN encoder (and embedders) or use separate
+nals (Sutton, 1984; Arjona-Medina et al., 2019) can make an         ones. In our experiments (Sec. 5.2), we show that a shared
+MDP into a POMDP, as the rewards at current time still de-          encoder increases the gradient norm and hinders learning.
+pend on previous observations and/or actions, given current         While recent work has adopted the design of separate en-
+observations. Similarly, when rewards are defined in terms          coders (Fakoor et al., 2020; Ding, 2019; Meng et al., 2021;
+of trajectories (Liu et al., 2019; Ren et al., 2021) (episodic      Sun et al., 2021; Weng et al., 2021), some implementations
+rewards), the problem can likewise become a POMDP. Al-              of recurrent model-free RL use the (inferior) shared encoder.
+gorithms to solve these problems belong to temporal credit          After running some experiments to compare this design de-
+assignment subarea (Hung et al., 2018). While prior work            cision, we will use the separate architecture in the rest of
+has applies recurrent model-free RL to these problem set-           the paper.
+tings, it has been reported with poor performance (Hung
+et al., 2018; Liu et al., 2019; Arjona-Medina et al., 2019;
+Raposo et al., 2021). Methods to tackle delayed rewards             Agent inputs. The next consideration is the choice of in-
+include stacking recent observations to make the problems           puts for the actor and critic. While prior work often only
+as MDPs (Katsikopoulos & Engelbrecht, 2003), tuning the             conditions the recurrent RL baseline on previous observa-
+discount factor (Fedus et al., 2019) and lambda in eligibility      tions (and actions) (Igl et al., 2018; Kostrikov, 2018; Han
+traces (Xu et al., 2020) to increase effective horizons, and        et al., 2020; Ding, 2019; Meng et al., 2021; Yang & Nguyen,
+using hindsight and counterfactuals to reduce the variance          2021), our experiments in Sec. 5.2 find that additionally con-
+of policy gradients (Harutyunyan et al., 2019; Mesnard et al.,      ditioning on other previous information, such as previous
+2021). A popular branch of specialized methods, is to learn         rewards, can increase return by up to 30%. Table 1 shows
+surrogate reward functions for efficient learning, e.g. return      which inputs we found useful for which types of POMDPs.
+                             Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Table 2: How does prior work implement recurrent model-free RL? Almost no two prior methods implement recurrent model-free
+RL in the same way. Most prior implementations made design choices that led to poor performance. The last rows show the design
+decisions that we found to work best on each benchmark.
+
+           Algorithm                              Domain / Benchmark                   Arch      Encoder Inputs   Len     RL
+       Duan et al. (2016)                              Meta-RL                        separate   GRU     oard 1000 TRPO, PPO
+       Wang et al. (2017)                              Meta-RL                         shared    LSTM    oart 5-150     A2C
+Baseline in Rakelly et al. (2019)                      Meta-RL                        separate   GRU     oard 100       PPO
+Baseline in Zintgraf et al. (2020)                     Meta-RL                        separate   GRU     oard Max     A2C, PPO
+Baseline in Fakoor et al. (2020)                       Meta-RL                        separate   GRU      oar 10-25     TD3
+  Baseline in Yu et al. (2019)                         Meta-RL                        separate   GRU     oard 500       PPO
+        Kostrikov (2018)                               POMDP                           shared    GRU        o  5-2048 PPO, A2C
+          Ding (2019)                                  POMDP                          separate   LSTM      oa   150   TD3, SAC
+       Meng et al. (2021)                              POMDP                          separate   LSTM      oa    1-5    TD3
+    Yang & Nguyen (2021)                               POMDP                          separate    both     oa   Max   TD3, SAC
+  Baseline in Igl et al. (2018)                        POMDP                           shared    GRU       oa     25    A2C
+  Baseline in Han et al. (2020)                        POMDP                           shared    LSTM       o    64     SAC
+ Baseline in Zhang et al. (2021)                      Robust RL                       separate   LSTM       o   100     PPO
+Baseline 1 in Packer et al. (2018)               Generalization in RL                  shared    LSTM       o 128-512 PPO, A2C
+Baseline 2 in Packer et al. (2018)               Generalization in RL                 separate   LSTM    oard 128-512 PPO, A2C
+ Baseline in Hung et al. (2018)                Temporal credit assignment              shared    LSTM     oar   Max     A3C
+  Baseline in Liu et al. (2019)                Temporal credit assignment             separate   LSTM      oa   Max     PPO
+Baseline in Raposo et al. (2021)               Temporal credit assignment              shared    LSTM     oar 10-60   IMPALA
+                                            Meta-RL (Dorfman et al., 2020)            separate   LSTM oard        64     TD3
+                                            Meta-RL (Zintgraf et al., 2020)           separate   GRU oard         Max    SAC
+                                               POMDP (Han et al., 2020)               separate   GRU   oa         64     TD3
+            Our work
+                                             Robust RL (Jiang et al., 2021)           separate   LSTM   o         64     TD3
+                                        Generalization in RL (Packer et al., 2018)    separate   LSTM   o         64     TD3
+                                     Temporal credit assignment (Raposo et al., 2021) separate   LSTM   o         Max   SAC-D
+
+
+Model-free RL algorithm. Recurrent model-free RL can                  RNN for training. We find that the architecture has a minor
+be understood as applying an off-the-shelf model-free RL              effect on the final performance (App. E.2). Prior POMDP
+algorithm with an actor and a Q function conditioned on               methods use context lengths ranging from 1 to 2048 (see
+sequences of inputs. As such, the choice of the underly-              the “Len” column of Table 2), and we select three represen-
+ing model-free RL algorithm is paramount. in While off-               tatives of short (5), medium (64), and long length (larger
+policy algorithms such as TD3 (Fujimoto et al., 2018) and             than 100) in the experiments for comparison. We find that
+SAC (Haarnoja et al., 2018a;b) improve sample efficiency              the optimal context length is task-specific (Sec. 5.2). For
+and asymptotic performance in continuous control tasks,               example, a POMDP that hides velocities from observations
+these RL algorithms are rarely used in recurrent model-free           theoretically only requires a short context length to infer
+RL baselines (Rakelly et al., 2019; Zintgraf et al., 2020;            velocities through consecutive positions (Meng et al., 2021).
+Zhang et al., 2020). Our experiments show that using these
+off-policy algorithms for recurrent model-free RL generally            5. Experiments
+works better than recurrent model-free RL implementations
+that use on-policy algorithms. This result echoes the finding          Our experiments aim to answer two questions. First, how
+that model-free off-policy TD3-Context (Fakoor et al., 2020)           does a well-tuned implementation of recurrent model-free
+can be better than the specialized method PEARL (Rakelly               RL compare to specialized POMDP methods? To give these
+et al., 2019) in meta-RL.                                              prior methods the strongest possible footing, we perform the
+                                                                       comparison on the benchmarks used by these prior methods.
+                                                                       Second, which design decisions are essential for recurrent
+RNN variants and context length. RNN training is                       model-free RL? We put the environment details in App. D.
+known to be unstable, especially with long sequences in-
+put (Bengio et al., 1994). RNN variants like LSTM (Hochre-
+iter & Schmidhuber, 1997) and GRU (Chung et al., 2014)                 Code implementation. We release a modular and config-
+can mitigate the training issues, but still may fail to learn          urable implementation of recurrent (off-policy) model-free
+long-term dependencies (Trinh et al., 2018). We study two              RL in the supplementary material. Our implementation is
+design decisions here: the RNN architecture (LSTM, GRU)                efficient in terms of computer memory compared to previ-
+and the context length, i.e. the length of sequence fed into           ous off-policy RL methods for POMDPs. For example, our
+                            Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+          Semi-Circle                         Wind                            Cheetah-Dir                       Ant-Dir
+Figure 2: Learning curves on four meta-RL environments. Our implementation on recurrent model-free RL can surpass the
+specialized meta-RL method off-policy variBAD (Dorfman et al., 2020) on their environments, Semi-Circle and Wind; and greatly
+outperform on-policy variBAD (Zintgraf et al., 2020) on their environment Cheetah-Dir, but fail to match their performance on Ant-Dir.
+On Cheetah-Dir and Ant-Dir, we show the learning curves of the best off-policy oracle and Markovian policies. We copied the data from
+on-policy variBAD’s public github repository1 to plot the learning curves of it, oracle PPO and RL2 (Duan et al., 2016).
+
+implementation uses 200x less RAM than Han et al. (2020)             This policy should therefore be treated as an upper bound on
+and 9x less GPU memory than Dorfman et al. (2020).                   the performance that any POMDP method should receive.
+                                                                     Second, as a lower bound, we use a Markovian policy
+5.1. Recurrent Model-Free RL is Comparable with                      to solve the POMDP. Both oracle policy and Markovian
+     Prior Specialized Methods on Their Benchmarks                   policy are trained with the same hyperparameters as our
+                                                                     recurrent model-free RL implementation. We also compare
+Recurrent model-free RL is a ubiquitous baseline across a            to a random policy, which represents a trivial lower bound.
+range of different POMDP settings (e.g., meta-RL, occluded           We show the complete learning curves in App. E.1 and
+observations, delayed rewards) (Rakelly et al., 2019; Zint-          numerical results in Table 7, and provide implementation
+graf et al., 2020; Humplik et al., 2019; Igl et al., 2018; Han       details in App. B.
+et al., 2020; Arjona-Medina et al., 2019). This section casts
+doubt on that claim, showing that a well-tuned implementa-
+                                                                     “Standard” POMDP. We study “standard” POMDPs by
+tion of recurrent model-free RL can perform at least as well
+                                                                     looking at tasks that typically occlude some part of the ob-
+as more complex or specialized methods in most of their
+                                                                     servation. We will compare against VRM (Han et al., 2020),
+experimented environments.
+                                                                     a recent, state-of-the-art, model-based POMDP algorithm.
+We tune a wide range of decision factors, shown in Sec. 4.           We adopt the occlusion benchmark proposed by VRM and
+App. A.3 shows the detailed options of each decision factor.         there are 8 environments {Hopper, Ant, Walker, Cheetah}-
+For each subarea, we select one recent specialized method            {P, V}, where “-P” stands for observing positions and angles
+and use the same benchmark as used in the paper propos-              only, and “-V” stands for observing velocities only.
+ing that method. For meta-RL, we perform one additional
+                                                                     Fig. 1 and Fig. 22 show that the best single variant of our
+comparison.
+                                                                     model-free recurrent RL implementation outperforms VRM
+For each benchmark, we show the performance of a single              in 6 out of 8 environments, especially in {Cheetah, Hopper}-
+variant among our design combinations that works best                P (over 80% of the oracles). Our results suggest that, while
+across the environments in that benchmark; in other words,           the variational dynamics model used by VRM may be use-
+we use the same hyperparameters for each task within a               ful for some tasks, this model is not necessary to achieve
+benchmark, and do not tune hyperparameters individually              high results. While we are primarily interested in sample
+for each task. The exact configurations of each benchmark            complexity, but not compute, it is worth noting that our re-
+can be found in the last five rows of Table 2. Our implemen-         current model-free RL implementation is substantially more
+tation is at least comparable to (and sometimes outperforms          efficient than the open-source VRM implementation: our
+by a wide margin) prior specialized methods across most              implementation trains 5× faster and can reduce 200× RAM
+tasks (18 out of 21 environments). Our method performs               usage (see App. A).
+especially well in terms of sample efficiency. However, we
+find one benchmark where it performs worse on 2 out of 3             Meta-RL. We next study the meta-RL setting, where
+environments (Ant-Dir and Humanoid-Dir from on-policy                some indicator of the task is unobserved. We compare
+variBAD (Zintgraf et al., 2020)). This result is not entirely        our implementation of recurrent model-free RL to a spe-
+surprising, as on-policy methods typically outperform off-           cialized, state-of-the-art method, variBAD (Zintgraf et al.,
+policy methods (which our implementation uses) on the                2020). VariBAD explicitly learns task embeddings using
+fully-observed versions of these tasks (see Fig. 12).                a variational, model-based objective. While the variBAD
+                                                                     was originally proposed using PPO (Zintgraf et al., 2020),
+For each plot of learning curves, we show three approaches
+                                                                     recent work has effectively used the same method with
+as references. First, an oracle policy has access to the
+POMDP hidden states, turning the POMDP into an MDP.                     1
+                                                                            https://github.com/lmzintgraf/varibad
+                             Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+Figure 3: Learning curves on one robust RL environment,              Figure 4: Learning curves on RL in generalization in one envi-
+Cheetah-Robust. We show the average returns (left figure) and        ronment, Hopper-Generalize. We show the interpolation success
+worst returns (right figure) of each method. The single best vari-   rates (left figure) and extrapolation success rates (right figure) of
+ant of our implementation on recurrent model-free RL can greatly     each method. The single best variant of our implementation on
+outperform the specialized robust RL method MRPO (Jiang et al.,      recurrent model-free RL can be par with the specialized method
+2021), and is more sample-efficient and stable than recurrent PPO.   EPOpt-PPO-FF (Rajeswaran et al., 2017a) in interpolation and
+                                                                     outperform it in extrapolation. The data of EPOpt-PPO-FF and
+                                                                     A2C-RC (a recurrent model-free on-policy RL method) are copied
+SAC (Dorfman et al., 2020). We refer to these methods                from the Table 7 & 8 in Packer et al. (2018).
+as on-policy variBAD and off-policy variBAD, and will
+compare to both of them. Importantly, we use the same en-
+vironments as the papers that proposed these methods. The
+                                                                     density and the friction coefficients of the simulated robots.
+environments proposed for off-policy variBAD are relatively
+easy: Semi-Circle, Wind, and Cheetah-Vel. We adapt Wind              Fig. 3 shows both the average return and worst return of
+to make it harder to solve. Off-policy variBAD is shown              our single best variant and MRPO on one environment. Fol-
+to have superior performance over on-policy variBAD in               lowing prior work (Jiang et al., 2021), we measure the worst
+this benchmark (Dorfman et al., 2020, Fig. 11). The en-              return using the average return in the worst 10% testing
+vironments proposed for on-policy one are harder: {Ant,              tasks. Despite using the average-case objective, our method
+Cheetah, Humanoid}-Dir. On-policy variBAD outperforms                achieves better worst-case performance than MRPO, which
+RL2 (Duan et al., 2016) in this benchmark (Zintgraf et al.,          directly optimizes this worst-case objective. Surprisingly,
+2021, Fig. 13).                                                      our method even outperforms the oracle, which has access to
+                                                                     hidden state information. Our method is also over 80% more
+Fig. 2 shows that our best single variant outperforms
+                                                                     sample-efficient than these alternative approaches. Our limi-
+off-policy variBAD on their environments (Semi-Circle
+                                                                     tation of recurrent model-free RL is its slow wall-clock time;
+and Wind), and on-policy variBAD on their environment
+                                                                     our implementation is 17.5x slower than MRPO, given the
+(Cheetah-Dir), both in terms of sample efficiency and asymp-
+                                                                     same simulation steps (see App. A). Nonetheless, we be-
+totic return. While methods like variBAD disentangle task
+                                                                     lieve that sample efficiency is often a more important factor
+inference from control, potentially stabilizing training, our
+                                                                     than computing efficiency.
+experiments suggest that stable training might be achieved
+with simple recurrent model-free RL. As our implementa-
+tion is off-policy, it has the potential to have better sample
+efficiency than on-policy variBAD. As our implementation             Generalization in RL. We study generalization in RL
+is trained end-to-end, without using pre-trained task rep-           using two environments from the SunBlaze benchmark:
+resentations like off-policy variBAD, it does not have the           {Hopper, Cheetah}-Generalize. Following the evaluation
+staleness issue in task representations (Kapturowski et al.,         metrics (Packer et al., 2018, Sec. 6), we report the average
+2019). We believe that these factors may contribute to the           success rates in interpolation setting (training and testing
+relatively good performance of recurrent model-free RL.              on the same POMDP) and extrapolation setting (training
+Nevertheless, our implementation performs worse than on-             on a POMDP with a hidden state distribution of small sup-
+policy variBAD on Ant-Dir (Fig. 2) and Humanoid-Dir                  port, and testing on another POMDP with a hidden state
+(Fig. 12). These negative results are not entirely surprising,       distribution of a disjoint support). We pick the best special-
+as off-policy methods tend to perform worse than on-policy           ized method in the tables of final performance (Packer et al.,
+methods on the fully-observed versions of these tasks (com-          2018, Table 7,8), a Markovian on-policy robust RL method
+pare oracle SAC/TD3 to oracle PPO in Fig. 12).                       EPOpt-PPO-FF (Rajeswaran et al., 2017a).
+                                                                     Fig. 4 shows interpolation and extrapolation results on one
+Robust RL. We then study robust RL. We choose the                    environment. In the interpolation setting, our method per-
+recent, specialized algorithm MRPO (Jiang et al., 2021),             forms on par with the best prior method, EPOpt-PPO-FF.
+and adopt their benchmark based on SunBlaze bench-                   In the more challenging extrapolation setting, our method
+mark (Packer et al., 2018). These environments have hidden           outperforms it and is comparable to the oracle. However, un-
+states that are fixed during one episode, namely {Cheetah,           like EPOpt-PPO-FF and oracle, our method does not require
+Hopper, Walker}-Robust. The hidden state includes the                access to the dynamics parameters.
+                             Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+          Delayed-Catch                       Key-to-Door
+Figure 5: Learning curves on two temporal credit assignment          Figure 6: Comparison between shared and separate recurrent
+environments. We show the returns for Delayed-Catch and the          actor-critic architecture with all the other hyperparameters same,
+success rates of opening the door for Key-to-Door, following the     on Semi-Circle, a toy meta-RL environment. We show the per-
+practice of IMPALA+SR (Raposo et al., 2021). The single best         formance metric (left) and also the average squared `2 -norm of
+variant of our implementation on recurrent model-free RL is much     the gradient w.r.t. RNN encoder(s) (right, in log-scale). For the
+more sample efficient than the specialized method IMPALA+SR          separate one, :critic and :actor refer to the separate RNN
+(the horizontal lines show their performance at 2.5M and 4M steps,   in critic and actor networks, respectively.
+respectively).                                                       5.2. What Matters in Recurrent Model-Free RL
+                                                                          Algorithms?
+                                                                     To study what factors explain the good performance of re-
+Temporal credit assignment. Finally we move on to tem-               current model-free RL, we will ablate the five important
+poral credit assignment. We choose the recent, special-              design decisions introduced in Sec. 4: the actor-critic ar-
+ized algorithm IMPALA+SR (Raposo et al., 2021), and                  chitecture (Arch), the agent input space (Inputs), the
+adopt their environments, namely, Delayed-Catch and Key-             underlying model-free RL algorithm (RL), the RNN en-
+to-Door. Both tasks have sparse rewards that depend on               coder (Encoder), and the RNN context length (Len). See
+the whole trajectory, thus the optimal value function should         Table 2 for a summary of how prior work made these de-
+be memory-based, and we did not compare Markovian RL                 sign decisions. Due to the space limit, we show the “single
+methods. As both tasks are discrete control with pixel in-           factor analysis” plots for each decision factor by averaging
+put, we adapt the observation embedder into a simple CNN,            the performance over the other factors in App. E.2.
+and select SAC-Discrete (Christodoulou, 2019) as the RL
+algorithm, which is the discrete version of SAC. We fol-             Recurrent off-policy actor-critic architecture. We
+low IMPALA+SR to use LSTM as encoder and set context                 study the choice of shared/separated architectures in two
+length as full episode length. We tune the entropy tempera-          simple POMDP environments. The results, shown in Fig. 6
+ture of SAC-Discrete and find that 0.1 works well on both            and App. E.3, show that the shared architecture failed to
+tasks.                                                               learn either of these tasks. The different scale of RNN gra-
+                                                                     dient norms w.r.t. actor and critic in the shared architecture
+Fig. 5 shows this single best variant can not only solve             suggests that the gradient of critic loss may dominate the
+the tasks, but also requires 100× fewer samples than IM-             actor’s. Our results echo prior work (Fakoor et al., 2020;
+PALA+SR (Raposo et al., 2021, Fig. 7b, Fig. 5b), which is            Meng et al., 2021; Sun et al., 2021) that use separate RNN
+also a recurrent off-policy method.                                  encoders and achieve high asymptotic rewards, and also
+                                                                     echo that (Han et al., 2020) shows poor results in the shared
+                                                                     architecture of SAC-LSTM.
+
+                                                                     Agent inputs. We next study the choice of agent inputs
+Discussion on the performance of oracle policies. One
+                                                                     using the Walker-P task. As shown in Table 3 (row 1), ad-
+seemingly surprising result is that the oracle policies often
+                                                                     ditionally conditioning the agent on past rewards increases
+underperform our implementation of recurrent model-free
+                                                                     performance by 1.3×. The reward signals could help reveal
+RL. We believe that this result is caused by using the same
+                                                                     the missing information of the velocity of the robot base,
+hyperparameters for the oracle policies as for our recurrent
+                                                                     which is occluded in Walker-P. On other tasks where veloc-
+model-free implementation. We expect that further tuning
+                                                                     ity is occluded, we similarly find that conditioning on past
+of the hyperparameters for the oracle policies would allow
+                                                                     rewards improves performance (see o vs. or in Fig. 16).
+them to surpass all the alternative approaches.
+In summary, recurrent model-free RL can perform at least             Model-free RL algorithms. Table 2 shows that recurrent
+as well as more specialized or complex methods on most of            model-free RL implementations using TD3 dominate in
+their tasks, provided that the implementation is well tuned.         4 out of 5 benchmarks. This finding might be partially
+The good performance of this baseline across a wide range            explained by the fact that most environments have relatively
+of tasks and problem types bodes well for its performance            easy dynamics. However, on environments with harder
+on other problems.                                                   dynamics such as Ant and Humanoid, SAC performs better
+                             Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Table 3: Ablation results in our implementation of recurrent model-free RL. This table shows how a single change in one decision
+factor from the variant that is best on average in that subarea/benchmark, could significantly increase the performance. The first column
+shows how we change the single decision factor, and the last column shows the performance comparison between the best variant in that
+benchmark (left) and the ablated one (right). We choose the environments where the ablation makes the largest performance difference.
+For robust RL and generalization in RL, we show the performance metric in worst returns and extrapolation success rates, respectively.
+
+              Change in one decision factor     Subarea / Benchmark         Environment        Performance comparison
+                 Inputs: oa → oar               “Standard” POMDP            Walker-P            981.6 → 1345.0 (1.3×)
+                  RL: TD3 → SAC                 “Standard” POMDP              Ant-P             310.7 → 2123.5 (6.8×)
+               Encoder: LSTM → GRU                  Robust RL             Walker-Robust         765.9 → 931.3 (1.2×)
+                   Len: 64 → 400                     Meta-RL               Cheetah-Vel           -85.2 → -74.6 (+14%)
+                    Len: 64 → 5                   Generalization         Hopper-Generalize       0.292 → 0.415 (1.4×)
+                    Len: 64 → 5                 “Standard” POMDP            Walker-V             121.4 → 264.3 (2.2×)
+
+than TD3. For instance, the 2nd row of Table 3 shows the                     optimal length seems to be task-specific. Starting with
+effect of RL algorithm in a POMDP environment Ant-P.                         a medium length is a good strategy (Rows 4–6 in
+SAC is significantly better than TD3 (increase by 6.8×,                      Table 3 and Figures in App. E.2).
+surpassing the PPO-GRU (Kostrikov, 2018) in Fig. 1). Two                4. It is important that the inputs to the recurrent actor and
+exceptions to this rule are Walker-V (Fig. 17) and Ant-Dir                 critic, such as past observations and past returns, con-
+(Fig. 2) where on-policy algorithms (PPO-GRU and RL2)                      tain enough information to infer the POMDP hidden
+outperform off-policy ones as used in our implementation.                  states (Row 1 in Table 3 and Figures in App. E.2).
+                                                                      These findings may provide a useful initialization for re-
+RNN variants and context length. Generally, there is no               searchers to study recurrent model-free RL.
+significant difference between LSTM and GRU (see the
+single factor analysis in App. E.2). However, the 3rd row             6. Conclusion and Future Work
+of Table 3 shows the effect of RNN encoder in a robust RL
+environment. We can see replacing LSTM with GRU can                   This paper shows that a carefully-designed implementation
+increase the worst-case metric in Walker-Robust. For the              of recurrent model-free RL can perform well across a range
+context length in RNNs, a medium length (64) dominates in             of benchmarks corresponding to different types of POMDPs.
+all the best variants in most benchmarks (see Table 2), which         In most cases, our implementation performs on par with (if
+could be viewed as a trade-off between memory capacity                not significantly better than) prior methods that are specif-
+and computation costs. However, the remaining rows of                 ically designed for the corresponding types of POMDPs.
+Table 3 show the mixed effects of context length in RNNs.             Our ablation experiments demonstrate the importance of
+Both increasing and decreasing the context length can boost           key design decisions, such as the underlying RL algorithm
+the performance in different environments. Specifically, de-          and the RNN context length. While the best choices for
+creasing the length from 64 to 5 makes our implementation             some decisions (such as using separate RNNs for the actor
+surpass VRM in Walker-V (increase by 2.2×). This result               and the critic) seem to be consistent across domains, the best
+might explain why the prior methods adopt a wide range of             choices for other decisions (such as RNN context length)
+context lengths from 1 to 2048 (see Table 2). Therefore, the          are problem-dependent. We encourage future work to study
+choice of context length seems to be problem-specific and             automated mechanisms for selecting these crucial design
+may require tuning.                                                   decisions. In releasing our code, we hope to aid future
+                                                                      research into the design of stronger POMDP algorithms.
+Summary. We now summarize the main findings of our
+experiments based on the benchmarks:                                  Acknowledgement
+
+  1. Using separate weights for the recurrent actor and               We thank Pierre-Luc Bacon, Murtaza Dalal, Paul Pu Liang, Sergey
+     recurrent critic can boost performance, likely because           Levine, Evgenii Nikishin, Hao Sun, and Maxime Wabartha for
+     it avoids gradient explosion (Fig. 6 and Fig. 21).               their constructive feedback on the draft of this paper. TN thanks
+                                                                      Pierre-Luc Bacon for suggesting temporal credit assignment ex-
+  2. Using state-of-the-art off-policy RL algorithms as the           periments and Michel Ma and Pierluca D’Oro for their help on the
+     backbone in recurrent model-free RL can improve                  environments. We thank Luisa Zintgraf for sharing the learning
+     asymptotic performance and sample efficiency in most             curves of on-policy variBAD. TN thanks CMU cluster and Mila
+     environments (Fig. 1 and Figures in App. E.1).                   cluster for compute resources. This work is supported by the Face-
+  3. The context length for the recurrent actor and critic            book CIFAR AI Chair, the Fannie and John Hertz Foundation and
+     has a large influence on task performance, but the               NSF GRFP (DGE1745016).
+                              Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+References                                                             Cobbe, K., Hesse, C., Hilton, J., and Schulman, J. Leveraging
+                                                                         procedural generation to benchmark reinforcement learning. In
+Andrychowicz, M., Raichuk, A., Stanczyk, P., Orsini, M., Girgin,         Proceedings of the 37th International Conference on Machine
+  S., Marinier, R., Hussenot, L., Geist, M., Pietquin, O., Michal-       Learning, ICML 2020, 13-18 July 2020, Virtual Event, 2020. 4
+  ski, M., Gelly, S., and Bachem, O. What matters for on-policy
+  deep actor-critic methods? A large-scale study. In 9th Inter-
+                                                                       Coumans, E. and Bai, Y. PyBullet, a python module for physics
+  national Conference on Learning Representations, ICLR 2021,
+                                                                         simulation for games, robotics and machine learning. 2016. 18
+  Virtual Event, Austria, May 3-7, 2021, 2021. 2
+
+Arjona-Medina, J. A., Gillhofer, M., Widrich, M., Unterthiner, T.,     Derman, E., Mankowitz, D. J., Mann, T. A., and Mannor, S. Soft-
+  Brandstetter, J., and Hochreiter, S. RUDDER: return decompo-           robust actor-critic policy-gradient. In Proceedings of the Thirty-
+  sition for delayed rewards. In Advances in Neural Information          Fourth Conference on Uncertainty in Artificial Intelligence, UAI
+  Processing Systems 32: Annual Conference on Neural Informa-            2018, Monterey, California, USA, August 6-10, 2018, 2018. 3
+  tion Processing Systems 2019, NeurIPS 2019, December 8-14,
+  2019, Vancouver, BC, Canada, 2019. 1, 2, 4, 6                        Ding, Z. Popular-rl-algorithms. https://github.com/
+                                                                         quantumiracle/Popular-RL-Algorithms, 2019. 4,
+Åström, K. J. Optimal control of Markov processes with incom-          5, 16
+   plete state information i. Journal of Mathematical Analysis and
+   Applications, 10:174–205, 1965. 2                                   Dorfman, R., Shenfeld, I., and Tamar, A. Offline meta learning of
+                                                                         exploration. arXiv preprint arXiv:2008.02598, 2020. 5, 6, 7,
+Bagnell, J. A., Ng, A. Y., and Schneider, J. G. Solving uncertain        15, 16, 17, 18, 19, 24
+  Markov decision processes. 2001. 1, 3
+                                                                       Duan, Y., Schulman, J., Chen, X., Bartlett, P. L., Sutskever, I.,
+Bakker, B. Reinforcement learning with long short-term mem-              and Abbeel, P. Rl$ˆ2$: Fast reinforcement learning via slow
+  ory. In Advances in Neural Information Processing Systems 14           reinforcement learning. arXiv preprint arXiv:1611.02779, 2016.
+  [Neural Information Processing Systems: Natural and Synthetic,         1, 2, 3, 5, 6, 7, 25
+  NIPS 2001, December 3-8, 2001, Vancouver, British Columbia,
+  Canada], 2001. 3                                                     Elman, J. L. Finding structure in time. Cogn. Sci., 1990. 2
+Bellman, R. A Markovian decision process. Journal of mathemat-
+  ics and mechanics, 6(5):679–684, 1957. 2                             Engstrom, L., Ilyas, A., Santurkar, S., Tsipras, D., Janoos, F.,
+                                                                         Rudolph, L., and Madry, A. Implementation matters in deep
+Bengio, Y., Simard, P. Y., and Frasconi, P. Learning long-term           RL: A case study on PPO and TRPO. In 8th International
+  dependencies with gradient descent is difficult. IEEE Trans.           Conference on Learning Representations, ICLR 2020, Addis
+  Neural Networks, 1994. 5                                               Ababa, Ethiopia, April 26-30, 2020, 2020. 2
+
+Cassandra, A. R., Kaelbling, L. P., and Littman, M. L. Acting opti-    Espeholt, L., Soyer, H., Munos, R., Simonyan, K., Mnih, V., Ward,
+  mally in partially observable stochastic domains. In Proceed-          T., Doron, Y., Firoiu, V., Harley, T., Dunning, I., Legg, S., and
+  ings of the 12th National Conference on Artificial Intelligence,       Kavukcuoglu, K. IMPALA: scalable distributed deep-rl with
+  Seattle, WA, USA, July 31 - August 4, 1994, Volume 2, 1994. 3          importance weighted actor-learner architectures. In Proceedings
+                                                                         of the 35th International Conference on Machine Learning,
+Chen, M., Nikolaidis, S., Soh, H., Hsu, D., and Srinivasa, S. S.         ICML 2018, Stockholmsmässan, Stockholm, Sweden, July 10-
+  Planning with trust for human-robot collaboration. In Pro-             15, 2018, 2018. 3
+  ceedings of the 2018 ACM/IEEE International Conference on
+  Human-Robot Interaction, HRI 2018, Chicago, IL, USA, March           Fakoor, R., Chaudhari, P., Soatto, S., and Smola, A. J. Meta-q-
+  05-08, 2018, 2018. 1                                                   learning. In 8th International Conference on Learning Rep-
+                                                                         resentations, ICLR 2020, Addis Ababa, Ethiopia, April 26-30,
+Cho, K., van Merrienboer, B., Gülçehre, Ç., Bahdanau, D.,             2020, 2020. 2, 3, 4, 5, 8
+  Bougares, F., Schwenk, H., and Bengio, Y. Learning phrase
+  representations using RNN encoder-decoder for statistical ma-        Farebrother, J., Machado, M. C., and Bowling, M. Generalization
+  chine translation. In Proceedings of the 2014 Conference on            and regularization in DQN. arXiv preprint arXiv:1810.00123,
+  Empirical Methods in Natural Language Processing, EMNLP                2018. 4
+  2014, October 25-29, 2014, Doha, Qatar, A meeting of SIGDAT,
+  a Special Interest Group of the ACL, 2014. 16
+                                                                       Fedus, W., Gelada, C., Bengio, Y., Bellemare, M. G., and
+Christodoulou, P. Soft actor-critic for discrete action settings.        Larochelle, H. Hyperbolic discounting and learning over multi-
+  arXiv preprint arXiv:1910.07207, 2019. 8, 16                           ple horizons. arXiv preprint arXiv:1902.06865, 2019. 4
+
+Chung, J., Gülçehre, Ç., Cho, K., and Bengio, Y. Empirical evalu-   Ferret, J., Marinier, R., Geist, M., and Pietquin, O. Self-attentional
+  ation of gated recurrent neural networks on sequence modeling.         credit assignment for transfer in reinforcement learning. In
+  arXiv preprint arXiv:1412.3555, 2014. 5                                Proceedings of the Twenty-Ninth International Joint Conference
+                                                                         on Artificial Intelligence, IJCAI 2020, 2020. 4
+Cobbe, K., Klimov, O., Hesse, C., Kim, T., and Schulman, J. Quan-
+  tifying generalization in reinforcement learning. In Proceedings     Finn, C., Abbeel, P., and Levine, S. Model-agnostic meta-learning
+  of the 36th International Conference on Machine Learning,               for fast adaptation of deep networks. In Proceedings of the 34th
+  ICML 2019, 9-15 June 2019, Long Beach, California, USA,                 International Conference on Machine Learning, ICML 2017,
+  2019. 1, 4                                                              Sydney, NSW, Australia, 6-11 August 2017, 2017. 3
+                                Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Fortunato, M., Tan, M., Faulkner, R., Hansen, S., Badia, A. P.,             Harutyunyan, A., Dabney, W., Mesnard, T., Azar, M. G., Piot, B.,
+  Buttimore, G., Deck, C., Leibo, J. Z., and Blundell, C. Gener-              Heess, N., van Hasselt, H., Wayne, G., Singh, S., Precup, D.,
+  alization of reinforcement learners with working and episodic               and Munos, R. Hindsight credit assignment. In Advances in
+  memory. In Advances in Neural Information Processing Sys-                   Neural Information Processing Systems 32: Annual Conference
+  tems 32: Annual Conference on Neural Information Processing                 on Neural Information Processing Systems 2019, NeurIPS 2019,
+  Systems 2019, NeurIPS 2019, December 8-14, 2019, Vancouver,                 December 8-14, 2019, Vancouver, BC, Canada, 2019. 4
+  BC, Canada, 2019. 3
+                                                                            Hausknecht, M. J. and Stone, P. Deep recurrent q-learning for par-
+Fujimoto, S., van Hoof, H., and Meger, D. Addressing function                 tially observable mdps. In 2015 AAAI Fall Symposia, Arlington,
+  approximation error in actor-critic methods. In Proceedings of              Virginia, USA, November 12-14, 2015, 2015. 3, 17
+  the 35th International Conference on Machine Learning, ICML
+  2018, Stockholmsmässan, Stockholm, Sweden, July 10-15, 2018,             Heess, N., Hunt, J. J., Lillicrap, T. P., and Silver, D. Memory-
+  2018. 5, 16, 18                                                             based control with recurrent neural networks. arXiv preprint
+                                                                              arXiv:1512.04455, 2015. 3
+Gangwani, T., Zhou, Y., and Peng, J. Learning guidance rewards
+  with trajectory-space smoothing. In Advances in Neural Infor-             Hochreiter, S. and Schmidhuber, J. Long short-term memory.
+  mation Processing Systems 33: Annual Conference on Neural                   Neural computation, 9(8):1735–1780, 1997. 5, 16
+  Information Processing Systems 2020, NeurIPS 2020, Decem-
+  ber 6-12, 2020, virtual, 2020. 4                                          Hochreiter, S., Younger, A. S., and Conwell, P. R. Learning to
+Gleave, A., Dennis, M., Wild, C., Kant, N., Levine, S., and Russell,          learn using gradient descent. In Artificial Neural Networks -
+  S. Adversarial policies: Attacking deep reinforcement learning.             ICANN 2001, International Conference Vienna, Austria, August
+  In 8th International Conference on Learning Representations,                21-25, 2001 Proceedings, 2001. 3
+  ICLR 2020, Addis Ababa, Ethiopia, April 26-30, 2020, 2020. 3
+                                                                            Huang, S. H., Papernot, N., Goodfellow, I. J., Duan, Y., and Abbeel,
+Graves, A., Wayne, G., Reynolds, M., Harley, T., Danihelka, I.,               P. Adversarial attacks on neural network policies. In 5th Inter-
+  Grabska-Barwinska, A., Colmenarejo, S. G., Grefenstette, E.,                national Conference on Learning Representations, ICLR 2017,
+  Ramalho, T., Agapiou, J. P., Badia, A. P., Hermann, K. M.,                  Toulon, France, April 24-26, 2017, Workshop Track Proceed-
+  Zwols, Y., Ostrovski, G., Cain, A., King, H., Summerfield, C.,              ings, 2017. 3
+  Blunsom, P., Kavukcuoglu, K., and Hassabis, D. Hybrid com-
+  puting using a neural network with dynamic external memory.               Humplik, J., Galashov, A., Hasenclever, L., Ortega, P. A., Teh,
+  Nat., 2016. 3                                                               Y. W., and Heess, N. Meta reinforcement learning as task
+                                                                              inference. arXiv preprint arXiv:1905.06424, 2019. 3, 6
+Gregor, K., Rezende, D. J., Besse, F., Wu, Y., Merzic, H., and
+  van den Oord, A. Shaping belief states with generative envi-              Hung, C., Lillicrap, T. P., Abramson, J., Wu, Y., Mirza, M.,
+  ronment models for RL. In Advances in Neural Information                    Carnevale, F., Ahuja, A., and Wayne, G. Optimizing agent
+  Processing Systems 32: Annual Conference on Neural Informa-                 behavior over long time scales by transporting value. arXiv
+  tion Processing Systems 2019, NeurIPS 2019, December 8-14,                  preprint arXiv:1810.06721, 2018. 1, 4, 5, 16
+  2019, Vancouver, BC, Canada, 2019. 3
+                                                                            Igl, M., Zintgraf, L. M., Le, T. A., Wood, F., and Whiteson, S. Deep
+Ha, D. and Schmidhuber, J. Recurrent world models facilitate                   variational reinforcement learning for pomdps. In Proceedings
+  policy evolution. In Advances in Neural Information Process-                 of the 35th International Conference on Machine Learning,
+  ing Systems 31: Annual Conference on Neural Information                      ICML 2018, Stockholmsmässan, Stockholm, Sweden, July 10-
+  Processing Systems 2018, NeurIPS 2018, December 3-8, 2018,                   15, 2018, 2018. 2, 3, 4, 5, 6
+  Montréal, Canada, 2018. 3
+                                                                            Igl, M., Ciosek, K., Li, Y., Tschiatschek, S., Zhang, C., Devlin,
+Haarnoja, T., Zhou, A., Abbeel, P., and Levine, S. Soft actor-critic:          S., and Hofmann, K. Generalization in reinforcement learning
+  Off-policy maximum entropy deep reinforcement learning with                  with selective noise injection and information bottleneck. In
+  a stochastic actor. In Proceedings of the 35th International Con-            Advances in Neural Information Processing Systems 32: Annual
+  ference on Machine Learning, ICML 2018, Stockholmsmässan,                   Conference on Neural Information Processing Systems 2019,
+  Stockholm, Sweden, July 10-15, 2018, 2018a. 2, 5                             NeurIPS 2019, December 8-14, 2019, Vancouver, BC, Canada,
+Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan,              2019. 4
+  J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P., and Levine, S.
+  Soft actor-critic algorithms and applications. arXiv preprint             Jiang, Y., Li, C., Dai, W., Zou, J., and Xiong, H. Monotonic robust
+  arXiv:1812.05905, 2018b. 5, 16, 18                                           policy optimization with model discrepancy. In Proceedings of
+                                                                               the 38th International Conference on Machine Learning, ICML
+Hafner, D., Lillicrap, T. P., Fischer, I., Villegas, R., Ha, D., Lee, H.,      2021, 18-24 July 2021, Virtual Event, 2021. 2, 3, 5, 7, 15, 17,
+  and Davidson, J. Learning latent dynamics for planning from                  19, 26
+  pixels. In Proceedings of the 36th International Conference on
+  Machine Learning, ICML 2019, 9-15 June 2019, Long Beach,                  Justesen, N., Torrado, R. R., Bontrager, P., Khalifa, A., Togelius, J.,
+  California, USA, 2019. 3                                                     and Risi, S. Illuminating generalization in deep reinforcement
+                                                                               learning through procedural level generation. arXiv preprint
+Han, D., Doya, K., and Tani, J. Variational recurrent models for               arXiv:1806.10729, 2018. 4
+  solving partially observable control tasks. In 8th International
+  Conference on Learning Representations, ICLR 2020, Addis                  Kaelbling, L. P., Littman, M. L., and Cassandra, A. R. Planning
+  Ababa, Ethiopia, April 26-30, 2020, 2020. 1, 2, 3, 4, 5, 6, 8, 15,          and acting in partially observable stochastic domains. Artif.
+  17, 18, 22, 23, 33                                                          Intell., 1998. 3
+                              Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Kapturowski, S., Ostrovski, G., Quan, J., Munos, R., and Dabney,       Mesnard, T., Weber, T., Viola, F., Thakoor, S., Saade, A., Haru-
+  W. Recurrent experience replay in distributed reinforcement           tyunyan, A., Dabney, W., Stepleton, T. S., Heess, N., Guez, A.,
+  learning. In 7th International Conference on Learning Repre-          Moulines, E., Hutter, M., Buesing, L., and Munos, R. Counter-
+  sentations, ICLR 2019, New Orleans, LA, USA, May 6-9, 2019,           factual credit assignment in model-free reinforcement learning.
+  2019. 2, 7, 17                                                        In Proceedings of the 38th International Conference on Ma-
+                                                                        chine Learning, ICML 2021, 18-24 July 2021, Virtual Event,
+Katsikopoulos, K. V. and Engelbrecht, S. E. Markov decision             2021. 4
+  processes with delays and asynchronous cost collection. IEEE
+  Trans. Autom. Control., 2003. 4                                      Mirowski, P., Pascanu, R., Viola, F., Soyer, H., Ballard, A., Ban-
+                                                                         ino, A., Denil, M., Goroshin, R., Sifre, L., Kavukcuoglu, K.,
+Khalil, I. S., Doyle, J., and Glover, K. Robust and optimal control.     Kumaran, D., and Hadsell, R. Learning to navigate in complex
+  prentice hall, new jersey, 1996. 3                                     environments. In 5th International Conference on Learning
+                                                                         Representations, ICLR 2017, Toulon, France, April 24-26, 2017,
+Kingma, D. P. and Ba, J. Adam: A method for stochastic opti-             Conference Track Proceedings, 2017. 3
+  mization. In 3rd International Conference on Learning Repre-
+  sentations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015,            Morimoto, J. and Doya, K. Robust reinforcement learning. Neural
+  Conference Track Proceedings, 2015. 18                                computation, 17(2):335–359, 2005. 3
+
+                                                                       Nilim, A. and Ghaoui, L. E. Robust control of Markov decision
+Kirk, R., Zhang, A., Grefenstette, E., and Rocktäschel, T. A survey
+                                                                         processes with uncertain transition matrices. Oper. Res., 2005.
+  of generalisation in deep reinforcement learning. arXiv preprint
+                                                                         3
+  arXiv:2111.09794, 2021. 4
+                                                                       Oh, J., Chockalingam, V., Singh, S., and Lee, H. Control of mem-
+Kostrikov, I. Pytorch implementations of reinforcement learn-            ory, active perception, and action in minecraft. In Proceedings
+  ing algorithms. https://github.com/ikostrikov/                         of the 33nd International Conference on Machine Learning,
+  pytorch-a2c-ppo-acktr-gail, 2018. 1, 4, 5, 9, 22,                      ICML 2016, New York City, NY, USA, June 19-24, 2016, 2016.
+  23                                                                     3
+Lee, A. X., Nagabandi, A., Abbeel, P., and Levine, S. Stochastic       Packer, C., Gao, K., Kos, J., Krähenbühl, P., Koltun, V., and Song,
+  latent actor-critic: Deep reinforcement learning with a latent         D. Assessing generalization in deep reinforcement learning.
+  variable model. In Advances in Neural Information Processing           arXiv preprint arXiv:1810.12282, 2018. 1, 2, 4, 5, 7, 19, 20, 27
+  Systems 33: Annual Conference on Neural Information Process-
+  ing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual,        Papadimitriou, C. H. and Tsitsiklis, J. N. The complexity of
+  2020a. 3                                                               Markov decision processes. Math. Oper. Res., 1987. 3
+
+Lee, K., Lee, K., Shin, J., and Lee, H. Network randomization:         Parisotto, E., Song, H. F., Rae, J. W., Pascanu, R., Gülçehre, Ç.,
+  A simple technique for generalization in deep reinforcement            Jayakumar, S. M., Jaderberg, M., Kaufman, R. L., Clark, A.,
+  learning. In 8th International Conference on Learning Rep-             Noury, S., Botvinick, M. M., Heess, N., and Hadsell, R. Stabiliz-
+  resentations, ICLR 2020, Addis Ababa, Ethiopia, April 26-30,           ing transformers for reinforcement learning. In Proceedings of
+  2020, 2020b. 4                                                         the 37th International Conference on Machine Learning, ICML
+                                                                         2020, 13-18 July 2020, Virtual Event, 2020. 2, 3
+Lin, Y., Hong, Z., Liao, Y., Shih, M., Liu, M., and Sun, M. Tactics
+  of adversarial attack on deep reinforcement learning agents. In      Pattanaik, A., Tang, Z., Liu, S., Bommannan, G., and Chowd-
+  Proceedings of the Twenty-Sixth International Joint Conference         hary, G. Robust deep reinforcement learning with adversarial
+  on Artificial Intelligence, IJCAI 2017, Melbourne, Australia,          attacks. In Proceedings of the 17th International Conference
+  August 19-25, 2017, 2017. 3                                            on Autonomous Agents and MultiAgent Systems, AAMAS 2018,
+                                                                         Stockholm, Sweden, July 10-15, 2018, 2018. 1, 3
+Littman, M. L. Algorithms for sequential decision-making. Brown
+   University, 1996. 3                                                 Pinto, L., Davidson, J., Sukthankar, R., and Gupta, A. Robust
+                                                                          adversarial reinforcement learning. In Proceedings of the 34th
+Liu, Y., Luo, Y., Zhong, Y., Chen, X., Liu, Q., and Peng, J. Se-         International Conference on Machine Learning, ICML 2017,
+  quence modeling of temporal credit assignment for episodic             Sydney, NSW, Australia, 6-11 August 2017, 2017. 1, 3
+  reinforcement learning. arXiv preprint arXiv:1905.13420, 2019.
+                                                                       Puterman, M. L. Markov decision processes: discrete stochastic
+  4, 5
+                                                                         dynamic programming. John Wiley and Sons, 2014. 2
+Mankowitz, D. J., Levine, N., Jeong, R., Abdolmaleki, A., Sprin-       Raffin, A. Rl baselines3 zoo. https://github.com/
+ genberg, J. T., Shi, Y., Kay, J., Hester, T., Mann, T. A., and          DLR-RM/rl-baselines3-zoo, 2020. 17
+ Riedmiller, M. A. Robust reinforcement learning for continu-
+ ous control with model misspecification. In 8th International         Raffin, A., Kober, J., and Stulp, F. Smooth exploration for robotic
+ Conference on Learning Representations, ICLR 2020, Addis                reinforcement learning. In Conference on Robot Learning, 8-11
+ Ababa, Ethiopia, April 26-30, 2020, 2020. 3                             November 2021, London, UK, 2021. 17, 33
+
+Meng, L., Gorbet, R., and Kulic, D. Memory-based deep reinforce-       Raileanu, R. and Fergus, R. Decoupling value and policy for
+  ment learning for pomdps. In IEEE/RSJ International Confer-            generalization in reinforcement learning. In Proceedings of
+  ence on Intelligent Robots and Systems, IROS 2021, Prague,             the 38th International Conference on Machine Learning, ICML
+ Czech Republic, September 27 - Oct. 1, 2021, 2021. 3, 4, 5, 8           2021, 18-24 July 2021, Virtual Event, 2021. 4
+                              Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Rajeswaran, A., Ghotra, S., Ravindran, B., and Levine, S. Epopt:       Srouji, M., Zhang, J., and Salakhutdinov, R. Structured control
+  Learning robust neural network policies using model ensembles.         nets for deep reinforcement learning. In Proceedings of the 35th
+  In 5th International Conference on Learning Representations,           International Conference on Machine Learning, ICML 2018,
+  ICLR 2017, Toulon, France, April 24-26, 2017, Conference               Stockholmsmässan, Stockholm, Sweden, July 10-15, 2018, 2018.
+  Track Proceedings, 2017a. 1, 2, 3, 7, 17, 27                           3, 4
+
+Rajeswaran, A., Lowrey, K., Todorov, E., and Kakade, S. M. To-         Stulp, F., Theodorou, E. A., Buchli, J., and Schaal, S. Learning to
+  wards generalization and simplicity in continuous control. In           grasp under uncertainty. In IEEE International Conference on
+  Advances in Neural Information Processing Systems 30: Annual            Robotics and Automation, ICRA 2011, Shanghai, China, 9-13
+  Conference on Neural Information Processing Systems 2017,              May 2011, 2011. 3
+  December 4-9, 2017, Long Beach, CA, USA, 2017b. 3
+                                                                       Sun, H., Xu, Z., Fang, M., Peng, Z., Guo, J., Dai, B., and Zhou,
+Rakelly, K., Zhou, A., Finn, C., Levine, S., and Quillen, D. Effi-       B. Safe exploration by solving early terminated MDP. arXiv
+  cient off-policy meta-reinforcement learning via probabilistic         preprint arXiv:2107.04200, 2021. 4, 8
+  context variables. In Proceedings of the 36th International
+  Conference on Machine Learning, ICML 2019, 9-15 June 2019,           Sutton, R. S. Temporal credit assignment in reinforcement learning.
+  Long Beach, California, USA, 2019. 2, 3, 5, 6                          PhD thesis, University of Massachusetts Amherst, 1984. 1, 4
+
+                                                                       Tessler, C., Efroni, Y., and Mannor, S. Action robust reinforcement
+Raposo, D., Ritter, S., Santoro, A., Wayne, G., Weber, T.,               learning and applications in continuous control. In Proceedings
+  Botvinick, M. M., van Hasselt, H., and Song, H. F. Syn-                of the 36th International Conference on Machine Learning,
+  thetic returns for long-term credit assignment. arXiv preprint         ICML 2019, 9-15 June 2019, Long Beach, California, USA,
+  arXiv:2102.12425, 2021. 2, 4, 5, 8, 20                                 2019. 3
+Ren, Z., Guo, R., Zhou, Y., and Peng, J. Learning long-term re-        Thrun, S. and Pratt, L. Learning to learn. Springer Science and
+  ward redistribution via randomized return decomposition. arXiv         Business Media, 2012. 1, 3
+  preprint arXiv:2111.13485, 2021. 1, 2, 4
+                                                                       Tobin, J., Fong, R., Ray, A., Schneider, J., Zaremba, W., and
+Ritter, S., Wang, J. X., Kurth-Nelson, Z., Jayakumar, S. M., Blun-       Abbeel, P. Domain randomization for transferring deep neural
+   dell, C., Pascanu, R., and Botvinick, M. M. Been there, done          networks from simulation to the real world. In 2017 IEEE/RSJ
+   that: Meta-learning with episodic recall. In Proceedings of           International Conference on Intelligent Robots and Systems,
+   the 35th International Conference on Machine Learning, ICML           IROS 2017, Vancouver, BC, Canada, September 24-28, 2017,
+   2018, Stockholmsmässan, Stockholm, Sweden, July 10-15, 2018,         2017. 4
+   2018. 2, 3
+                                                                       Todorov, E., Erez, T., and Tassa, Y. Mujoco: A physics engine for
+Russo, A. and Proutière, A. Towards optimal attacks on reinforce-       model-based control. In 2012 IEEE/RSJ International Confer-
+  ment learning policies. In 2021 American Control Conference,           ence on Intelligent Robots and Systems, IROS 2012, Vilamoura,
+  ACC 2021, New Orleans, LA, USA, May 25-28, 2021, 2021. 3               Algarve, Portugal, October 7-12, 2012, 2012. 19
+
+Saxe, A. M., McClelland, J. L., and Ganguli, S. Exact solutions        Trinh, T. H., Dai, A. M., Luong, T., and Le, Q. V. Learning
+  to the nonlinear dynamics of learning in deep linear neural             longer-term dependencies in rnns with auxiliary losses. In
+  networks. In 2nd International Conference on Learning Repre-            Proceedings of the 35th International Conference on Machine
+  sentations, ICLR 2014, Banff, AB, Canada, April 14-16, 2014,            Learning, ICML 2018, Stockholmsmässan, Stockholm, Sweden,
+  Conference Track Proceedings, 2014. 18                                 July 10-15, 2018, 2018. 5
+
+Schäfer, A. M. and Zimmermann, H. G. Recurrent neural networks        Wang, J., Kurth-Nelson, Z., Soyer, H., Leibo, J. Z., Tirumala, D.,
+  are universal approximators. In International Conference on            Munos, R., Blundell, C., Kumaran, D., and Botvinick, M. M.
+  Artificial Neural Networks, pp. 632–640. Springer, 2006. 2, 3          Learning to reinforcement learn. In Proceedings of the 39th
+                                                                        Annual Meeting of the Cognitive Science Society, CogSci 2017,
+                                                                        London, UK, 16-29 July 2017, 2017. 1, 2, 3, 5
+Schmidhuber, J. Evolutionary principles in self-referential learn-
+  ing, or on learning how to learn: the meta-meta-... hook. PhD        Wang, Y., He, H., and Tan, X. Robust reinforcement learning in
+  thesis, Technische Universität München, 1987. 1, 3                   pomdps with incomplete and noisy observations. arXiv preprint
+                                                                         arXiv:1902.05795, 2019. 3
+Schmidhuber, J. Reinforcement learning in Markovian and non-
+  Markovian environments. In Advances in Neural Information            Watter, M., Springenberg, J. T., Boedecker, J., and Riedmiller,
+  Processing Systems 3, NIPS’3, pp. 500–506, 1991. 3                     M. A. Embed to control: A locally linear latent dynamics
+                                                                         model for control from raw images. In Advances in Neural
+Siegelmann, H. T. and Sontag, E. D. On the computational power          Information Processing Systems 28: Annual Conference on
+   of neural nets. Journal of computer and system sciences, 50(1):      Neural Information Processing Systems 2015, December 7-12,
+  132–150, 1995. 2                                                      2015, Montreal, Quebec, Canada, 2015. 3
+
+Song, X., Jiang, Y., Tu, S., Du, Y., and Neyshabur, B. Observa-        Weng, J., Chen, H., Yan, D., You, K., Duburcq, A., Zhang, M., Su,
+  tional overfitting in reinforcement learning. In 8th International     H., and Zhu, J. Tianshou: a highly modularized deep reinforce-
+  Conference on Learning Representations, ICLR 2020, Addis               ment learning library. arXiv preprint arXiv:2107.14171, 2021.
+  Ababa, Ethiopia, April 26-30, 2020, 2020. 3                            4
+                               Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Whitehead, S. D. and Ballard, D. H. Active perception and rein-          Zhu, G., Lin, Z., Yang, G., and Zhang, C. Episodic reinforcement
+ forcement learning. In Machine Learning Proceedings 1990,                 learning with associative memory. In 8th International Confer-
+ pp. 179–188. Elsevier, 1990. 3                                            ence on Learning Representations, ICLR 2020, Addis Ababa,
+                                                                           Ethiopia, April 26-30, 2020, 2020. 3
+Whiteson, S., Tanner, B., Taylor, M. E., and Stone, P. Protect-
+ ing against evaluation overfitting in empirical reinforcement           Zhu, Y., Mottaghi, R., Kolve, E., Lim, J. J., Gupta, A., Fei-Fei, L.,
+ learning. In 2011 IEEE Symposium on Adaptive Dynamic Pro-                 and Farhadi, A. Target-driven visual navigation in indoor scenes
+ gramming And Reinforcement Learning, ADPRL 2011, Paris,                   using deep reinforcement learning. In 2017 IEEE International
+ France, April 12-14, 2011, 2011. 1, 3                                     Conference on Robotics and Automation, ICRA 2017, Singapore,
+                                                                           Singapore, May 29 - June 3, 2017, 2017. 1, 3
+Wierstra, D., Förster, A., Peters, J., and Schmidhuber, J. Solv-
+  ing deep memory pomdps with recurrent policy gradients. In             Ziebart, B. D. Modeling purposeful adaptive behavior with the
+ Artificial Neural Networks - ICANN 2007, 17th International               principle of maximum causal entropy. Carnegie Mellon Univer-
+  Conference, Porto, Portugal, September 9-13, 2007, Proceed-              sity, 2010. 2
+  ings, Part I, 2007. 3
+                                                                         Zintgraf, L. M., Shiarlis, K., Igl, M., Schulze, S., Gal, Y., Hof-
+Wilson, A., Fern, A., Ray, S., and Tadepalli, P. Multi-task re-            mann, K., and Whiteson, S. Varibad: A very good method for
+  inforcement learning: a hierarchical bayesian approach. In               bayes-adaptive deep RL via meta-learning. In 8th International
+  Machine Learning, Proceedings of the Twenty-Fourth Interna-              Conference on Learning Representations, ICLR 2020, Addis
+  tional Conference (ICML 2007), Corvallis, Oregon, USA, June              Ababa, Ethiopia, April 26-30, 2020, 2020. 2, 3, 5, 6, 16, 19, 25
+  20-24, 2007, 2007. 3
+                                                                         Zintgraf, L. M., Schulze, S., Lu, C., Feng, L., Igl, M., Shiarlis, K.,
+Xu, Z., van Hasselt, H. P., Hessel, M., Oh, J., Singh, S., and Silver,     Gal, Y., Hofmann, K., and Whiteson, S. Varibad: Variational
+  D. Meta-gradient reinforcement learning with an objective dis-           bayes-adaptive deep RL via meta-learning. J. Mach. Learn.
+  covered online. In Advances in Neural Information Processing             Res., 2021. 7
+  Systems 33: Annual Conference on Neural Information Process-
+  ing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual,
+  2020. 4
+Yang, Z. and Nguyen, H. Recurrent off-policy baselines
+  for memory-based continuous control. arXiv preprint
+  arXiv:2110.12628, 2021. 4, 5, 15
+Yu, T., Quillen, D., He, Z., Julian, R., Hausman, K., Finn, C., and
+  Levine, S. Meta-World: A benchmark and evaluation for multi-
+  task and meta reinforcement learning. In 3rd Annual Conference
+  on Robot Learning, CoRL 2019, Osaka, Japan, October 30 -
+  November 1, 2019, Proceedings, 2019. 2, 3, 5
+Zhang, A., Ballas, N., and Pineau, J. A dissection of overfitting
+  and generalization in continuous reinforcement learning. arXiv
+  preprint arXiv:1806.07937, 2018a. 1, 3
+Zhang, C., Vinyals, O., Munos, R., and Bengio, S. A study
+  on overfitting in deep reinforcement learning. arXiv preprint
+  arXiv:1804.06893, 2018b. 3
+Zhang, H., Chen, H., Xiao, C., Li, B., Liu, M., Boning, D. S.,
+  and Hsieh, C. Robust deep reinforcement learning against
+  adversarial perturbations on state observations. In Advances in
+  Neural Information Processing Systems 33: Annual Conference
+  on Neural Information Processing Systems 2020, NeurIPS 2020,
+  December 6-12, 2020, virtual, 2020. 5
+Zhang, H., Chen, H., Boning, D. S., and Hsieh, C. Robust rein-
+  forcement learning on state observations with learned optimal
+  adversary. In 9th International Conference on Learning Repre-
+  sentations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021,
+  2021. 2, 3, 5
+Zhang, M., Vikram, S., Smith, L., Abbeel, P., Johnson, M. J.,
+  and Levine, S. SOLAR: deep structured latent representa-
+  tions for model-based reinforcement learning. arXiv preprint
+  arXiv:1808.09105, 2018c. 3
+Zhao, C., Sigaud, O., Stulp, F., and Hospedales, T. M. Investigating
+  generalisation in continuous deep reinforcement learning. arXiv
+  preprint arXiv:1902.07015, 2019. 4
+                           Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+A. Code-Level Details
+In this section, we first introduce the outline of code design, especially the replay buffer for sequences, and then compare the
+system usage, including computing speed, RAM, and GPU memory, with previous POMDP methods.
+
+A.1. Code Design
+Easy to use. Our code can be used either as an API to call the recurrent model-free RL class or a framework to tune
+the details in the class. The recurrent model-free RL class takes the hyperparameters of RNN encoder type, shared or
+separate actor-critic architecture, and whether include previous observations, and/or actions, and/or rewards into the inputs,
+to generate different instances. The details of the hyperparameter tuning set are shown in Sec. A.3.
+
+
+Memory-efficient replay buffer for sequence data. Moreover, we design an efficient replay buffer for off-policy RL
+methods to cope with sequential inputs. Previous methods (Han et al., 2020; Yang & Nguyen, 2021) mainly use a
+three-dimensional replay buffer to store sequential inputs, with the dimensions of (num episodes, max episode
+length, observation dimension), taking observation storage as an example. This kind of implementation
+becomes memory-inefficient if the actual episode length is far smaller than the max episode length (e.g. in VRM’s occlusion
+benchmark, the shortest episode length can be 5, while the max episode length is 1000, which can cause 200x waste in RAM).
+Instead, we manage to implement a two-dimensional replay buffer of shape (num transitions, observation
+dimension) for observation storage, which also records the locations where each stored episode ends. In case of
+actual episodes that are shorter than the provided context length, the buffer also generates on-the-fly masks to indicate
+if the corresponding transitions are valid, so that we do not need to save zero-padded observations in the buffer. This
+enables the agent to receive a batch of previous experiences in a three-dimensional tensor of (batch size, context
+length, observation dimension) when sampling from the replay buffer. To sum up, our replay buffer can
+support varying-length sequence inputs and subsequence sampling without zero padding in the buffer.
+
+
+Flexible training speed. Finally, our code supports flexible training speed by controlling the ratio of the numbers of
+gradient updates in RL w.r.t. the environment rollout steps (called num updates per iter in the code). The training
+speed is approximately proportional to the ratio if the simulator speed is much faster than the policy gradient update.
+Typically, the ratio is less than or equal to 1.0 to enjoy higher training speed.
+
+A.2. System Usage
+Table 4 shows the typical system usage of our implementation and the compared specialized methods on different environ-
+ments. The time cost for our implementation and off-policy variBAD depends on how many processes in parallel are run on
+a single GPU – our implementation can be run with 8 processes on a single GPU while off-policy variBAD is run with one
+process due to large GPU memory usage. From the results we can see that our implementation is memory-efficient in both
+RAM and GPU, and has an acceptable training speed with default hyperparameters. The computer system we used during
+the experiments includes a GeForce RTX 2080 Ti Graphic Card (with 11GB memory) and Intel(R) Xeon(R) Gold 6148
+CPU @ 2.40GHz (with 250GB RAM and 80 cores).
+Table 4: Comparison between our implementation and specialized methods in system usage. The time costs are
+evaluated within 1M environment steps. Both VRM and MRPO are run on CPUs and MRPO does not have a replay buffer
+(shown in N/A). Off-policy variBAD requires the assumption of fixed episode length for the RAM cost.
+
+
+                            Method                          Environment       Time cost     RAM       GPU memory
+                          Ours                              Hopper-V            22.5 h      O(1)          1.2 GB
+                  VRM (Han et al., 2020)                    Hopper-V            102 h      O(200)          N/A
+                          Ours                             Semi-Circle           12 h       O(1)           1 GB
+         Off-policy variBAD (Dorfman et al., 2020)         Semi-Circle           2.3 h     O(1)*          9.5 GB
+                          Ours                            Cheetah-Robust          7h        O(1)          1.1 GB
+                 MRPO (Jiang et al., 2021)                Cheetah-Robust         0.4 h      N/A            N/A
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+A.3. Our Hyperparameter Tuning Set
+Our proposed implementation has the following decision factors (introduced in Sec. 4) to tune in the experiments with the
+following options (the names in brackets are abbreviated ones):
+
+  • Actor-Critic architecture (Arch): share the encoder weights between the recurrent actor and recurrent critic or not,
+    namely shared and separate.
+  • Model-free RL algorithms (RL): td3 (Fujimoto et al., 2018) and sac (Haarnoja et al., 2018b) (i.e. automated tuning
+    of the entropy temperature)
+  • Encoder architecture (Encoder): lstm (Hochreiter & Schmidhuber, 1997) and gru (Cho et al., 2014).
+  • Agent inputs (Inputs): o, oa, or, oar, oard (the notation is introduced in Sec. 4; depending on the POMDPs, see
+    “Agent input space” row in Table 5).
+  • Context length (Len): short (5), medium (64), long (larger than 100, depending on the POMDPs).
+  • Entropy temperature of SAC-Discrete (SAC-D) (Christodoulou, 2019) (used in temporal credit assignment tasks):
+    0.001, 0.01, 0.1, 1.0.
+
+For each instance, we label it with the names of all the hyperparameters it used in lowercase as notation. For example,
+td3-lstm-64-or-separate in Fig. 6 refers to the instance that uses the separate actor-critic architecture, TD3 RL
+algorithm, LSTM encoder, the agent input space of previous observations and reward sequences, and RNN context length of
+64.
+
+B. Training Details
+
+
+
+
+Figure 7: The network architecture of our implementation on recurrent model-free RL with separate RNNs. The left
+part shows the actor network, and the right shows the critic network. Each block shows a trainable module, with independent
+weights. We italicize the previous action and reward embedders as they are optional. By default, each embedder has one
+hidden layer, each RNN is one-layer LSTM or GRU, each MLP has two hidden layers.
+
+Fig. 7 shows our (separate) recurrent actor-critic architecture (except for temporal credit assignment tasks). The shortcut
+from current observation embedding to the MLP may reduce the burden of accurately memorizing it in RNN, and is widely
+used in prior memory-based architectures (Zintgraf et al., 2020; Dorfman et al., 2020; Ding, 2019; Hung et al., 2018). For
+temporal credit assignment tasks (image-based observations, discrete actions), we adjust the network architectures: replace
+the MLP observation embedders in actor and critic with two-layer CNNs, remove the observation-action embedder in critic.
+Table 5 shows the main hyperparameters we adopt for each benchmark. We did not tune these hyperparameters, except that
+we adjusted the number of gradient steps so that all the experiments could be completed in 72 hours.
+                           Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+Figure 8: The network architecture of our implementation on recurrent model-free RL with shared RNN. The upper
+right part shows the critic heads, and the bottom right shows the actor head. Both take the inputs from the same RNN.
+Notation is same as Fig. 7.
+
+
+
+We store the observed trajectories in the replay buffer we designed (see App. A). Each time we sample a (sub)trajectory
+given the context length. If the actual episode length is smaller than the context length, we zero-pad the (sub)trajectory. We
+use the zero start state strategy (Hausknecht & Stone, 2015; Kapturowski et al., 2019) for simplicity, i.e. use zeros as the
+initial hidden state of RNNs.
+For Markovian policies (SAC and TD3), we remove the embedders and RNNs from the actor-critic architecture, and
+train them with same hyperparameters as those of recurrent policies. For each task, we report the results of either SAC
+or TD3, whichever achieves higher returns. For oracle policies, we use the well-tuned results from Table 1 (“SAC w/
+unstructured row”) in Raffin et al. (2021) based on Stable Baseline3 (Raffin, 2020), for “standard” POMDPs. For the
+other benchmarks, we have to run the Markovian policies (SAC and TD3) with access to the hidden states, using the same
+training hyperparameters as those of recurrent policies. But these oracle policies might be not well-tuned given the same
+environment and gradient steps, especially in robust RL and generalization in RL. In temporal credit assignment benchmark,
+as the optimal value function is history-dependent, we do not run Markovian policies or oracle policies.
+We also show the settings of the specialized methods we compared in the main paper in Table 6. Note that our recurrent
+model-free RL share exactly the same settings as off-policy variBAD (Dorfman et al., 2020) and VRM (Han et al., 2020).
+For MRPO (Jiang et al., 2021) and EPOPT (Rajeswaran et al., 2017a), they adopt totally different settings, i.e. on-policy
+Markovian approaches to MDPs (with access to the ground-truth state (s) of environment). Thus, in fact, MRPO and EPOPT
+should be viewed more as oracle policies as upper bounds of recurrent model-free RL.
+
+C. Evaluation Details
+Throughout the experiments, we run each instance/variant in our implementation and each compared method with 4 random
+seeds.
+There are two steps to select the best single variant of our implementation in each benchmark. First, we calculate the final
+performance of each variant by the average performance of the last 20% environment steps across the 4 seeds. Then we
+                                                                             R−Rmin
+select the best variant in terms of the normalized returns, calculated by Rmax  −Rmin ∈ [0, 1], where R is the raw average
+return of that variant and Rmax and Rmin are the maximum and minimum of all the methods including oracle policy and
+random policy.
+The bar charts in Fig. 1 and 22 and Table 3 show the final normalized performance of each method / variant.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Table 5: Hyperparameter summary in our implementation of model-free recurrent RL. For each benchmark, we report
+the hidden layer size of each module, RL and training hyperparameters. For meta-RL, we take the model on Cheetah-Vel
+as example, which follows the architecture design of off-policy variBAD (Dorfman et al., 2020). The hidden size of
+observation-action embedder is the sum of that of observation embedder, previous action embedder (if exists), and reward
+embedder (if exists).
+
+
+                                                         “Standard”                     Generalization       Temporal
+                                          Meta-RL                       Robust RL
+                                                          POMDP                            in RL         credit assignment
+               Observ. embedder                                     [32]                                   2-layer CNN
+  Hidden     Prev. Action embedder                                  [16]                                     not used
+  layer        Reward embedder                                      [16]                                     not used
+  size               RNN                                                       [128]
+                     MLP                [128,128,128]                      [256, 256]                       [128, 128]
+                  Optimizer                                       Adam (Kingma & Ba, 2015)
+                 Learning rate                                              3e-4
+               Discount factor γ                                            0.99
+ RL
+               Smoothing coef τ                                            0.005
+ hparams
+              SAC(D) temperature             automatically updated by Haarnoja et al. (2018b)                  0.1
+                  TD3 noises                    default values from Fujimoto et al. (2018)                     N/A
+               Replay buffer size                                           1e6
+                  Batch size                 32                            64                                   32
+   RNN        Weight initialization                          Orthogonal matrices (Saxe et al., 2014)
+ Training      Environment steps             5M             1.5M                     3M                         5M
+ hparams         Gradient steps             0.1M            1.5M                    0.6M                      1.25M
+  Agent        Largest input space          oard             oar            oa              oar                 o
+  inputs        Best input space            oard              oa             o               o                  o
+
+
+
+D. Benchmark Details
+We conduct our experiments on 6 benchmarks with 21 environments in total.
+
+D.1. “Standard” POMDP Benchmark from VRM
+We adopt the occlusion benchmark proposed by VRM, replace the deprecated roboschool with PyBullet (Coumans & Bai,
+2016) as suggested by the official github repository2 . We follow the practice in VRM (Han et al., 2020) in the other aspects
+of environment design, i.e. we remove all the position/angle-related entries in the observation space for “-V” environments
+and velocity-related entries for “-P” environments, to transform the original MDP into POMDP.
+We also consider the classic Pendulum environment for sanity check in App. E.3.
+
+
+{Pendulum, Ant, Cheetah, Hopper, Walker}-P. The “-P” stands for the environments that keep position-related entries
+by removal of velocity-related entries. Thus, the observed state so includes positions p, while the hidden state sh is the
+velocities v.
+
+
+{Pendulum, Ant, Cheetah, Hopper, Walker}-V. The “-V” stands for the environments that keep velocity-related entries
+by removal of position-related entries. Thus, the observed state so includes positions v, while the hidden state sh is the
+velocities p.
+   2
+       https://github.com/openai/roboschool#deprecated-please-use-pybullet-instead
+                           Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+Table 6: Settings of the specialized methods we compared in the main paper. For off-policy variBAD, we take the
+model on Cheetah-Vel as example.
+
+
+                                                           “Standard”                   Generalization         Temporal
+                               Meta-RL       Meta-RL                      Robust RL
+                                                            POMDP                          in RL           credit assignment
+                               Off-policy    On-policy
+         Approach                                             VRM           MRPO            EPOPT            IMPALA+SR
+                               variBAD       variBAD
+     Memory-based?                 3             3             3              7                7                   3
+       Off-policy?                 3             7             3              7                7                   3
+       Input space               oard         oard            oar             s                s                  oar
+  Access to hidden states?         7             7             7              3                3                   7
+
+
+
+D.2. Meta-RL Benchmark from Off-Policy VariBAD
+For a fair comparison with the same training setting, we directly use the benchmark adopted in off-policy variBAD (Dorfman
+et al., 2020), and limit the number of training tasks as it does.
+
+
+Semi-Circle. The observed state so includes the agent’s 2D position p, and the hidden state sh is referred to the goal
+state pg . The goal state only appears in reward function: R(sot , sot+1 , at , sh ) := R(pt+1 , pg ) = 1(kpt+1 − pg k2 ≤ r). The
+dynamic function T is independent of the goal state.
+
+
+Wind. We modified the parameters of Wind environment in Dorfman et al. (2020) to make it harder to solve. The agent must
+navigate to a fixed (but unknown) goal pg within a distance of D = 1 from its fixed initial state. Similarly to Semi-Circle, the
+reward function is goal conditioned but without hidden state: R(sot , sot+1 , at , sh ) := R(pt+1 , pg ) = 1(kpt+1 − pg k2 ≤ r).
+The hidden state sh appears in the deterministic dynamics as a noise term, i.e. sot+1 = sot + at + sh , where sh is sampled
+from U [−0.08, 0.08] at the initial time-step and then kept fixed.
+
+
+Cheetah-Vel. It uses MuJoCo (Todorov et al., 2012) simulator of HalfCheetah-v2. The hidden state sh is the target
+speed vg ∈ R and the observed state so includes the velocity v ∈ R. Reward function includes both the hidden state and
+action: R(sot , sot+1 , at , sh ) := R(vt , vg , at ) = −kvt − vg k1 − 0.05kat k22 . The dynamic function T is independent of the
+goal state.
+
+D.3. Meta-RL Benchmark from On-Policy VariBAD
+For a fair comparison with the same training setting, we directly use the benchmark adopted in on-policy variBAD (Zintgraf
+et al., 2020), and do not limit the number of training tasks as it does.
+
+
+{Ant, Cheetah, Humanoid}-Dir. It uses MuJoCo (Todorov et al., 2012) simulator of Ant-v2, HalfCheetah-v2,
+Humanoid-v2. The hidden state sh is the target velocity direction vg ∈ R2 , and the observed state so includes the velocity
+v ∈ R2 . The reward function takes both the hidden state and action as inputs: R(sot , sot+1 , at , sh ) := R(vt , vg , at ) =
+hvt , vg i − αkat k22 where α > 0 is the penalty constant. The dynamic function T is independent of the goal state. Ant-Dir
+and Cheetah-Dir have only 2 tasks (forward or backward), while Humanoid-Dir samples tasks uniformly from the unit
+circle.
+
+D.4. Robust RL Benchmark from MRPO
+{Hopper, Walker, Cheetah}-Robust. We directly adopt the environments used in MRPO (Jiang et al., 2021). In each
+environment, the hidden state is the dynamics parameters including the density and friction coefficients of the simulated robot
+in roboschool, adapted from the SunBlaze (Packer et al., 2018). The exact ranges of the hidden states in each environment
+can be found in Jiang et al. (2021, Table 1). We evaluate the algorithms with 100 tasks in each environment, and use the
+average of them as average returns, and the average of the worst 10% of them as worst returns, following the MRPO paper.
+                           Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+D.5. Generalization in RL Benchmark from SunBlaze
+{Hopper, Cheetah}-Generalize. We directly adopt the environments used in SunBlaze (Packer et al., 2018). In each
+environment, the hidden state is the dynamics parameters including the density, friction coefficients, and the power of the
+simulated robot in roboschool. The exact ranges of both interpolation and extrapolation in the hidden state distribution
+for each environment can be found in Packer et al. (2018, Table 1). We follow the practice of SunBlaze to evaluate the
+interpolation and extrapolation success rates.
+
+D.6. Temporal Credit Assignment Benchmark from IMPALA+SR
+Delayed-Catch, Key-to-Door. We directly adopted the two environments from IMPALA+SR paper (Raposo et al., 2021,
+Sec. 3.2 and 3.3). In both environments, they have discrete action spaces (3 and 4 actions) and pixels as observations
+(1 × 7 × 7 and 3 × 5 × 5). The reward functions are trajectory-level and sparse.
+In Delayed-Catch, there are 40 runs in each episode, with a total length of around 280. The agent will only receive a non-zero
+reward at the end of each episode, which is the total number of successful runs, thus the optimal terminal reward is 40.
+In Key-to-Door, there are three phases in one episode. In the first phase, the agent can pick up a key, but no reward will be
+given. In the second phase, the agent can pick up apples to get rewards. In the third phase, the agent can open the door, only
+if it has picked up the key in the first phase (the agent cannot see the key after the first phase), to get a reward bonus. Thus
+the final reward bonus depends on the agent’s action that happens in the distant past. We follow the prior work to report the
+success rate of opening the door as the evaluation metric.
+
+E. Full Experimental Results
+E.1. Learning Curves of All the Compared Methods
+In this subsection, we show all the learning curves of all the compared methods (including oracle policy as upper bound,
+Markovian and random policies as lower bounds) in each benchmark, namely “standard” POMDPs (Fig. 9 and Fig. 10),
+meta-RL (Fig. 11 and Fig. 12), robust RL (Fig. 13), generalization in RL (Fig. 14), and temporal credit assignment (Fig. 15).
+
+E.2. Single Factor Analysis on Our Implementation
+Our analysis will focus on ablating the important design decisions: the actor-critic architecture (Arch), the agent input
+space (Inputs), the underlying model-free RL algorithm (RL), the RNN encoder (Encoder), and the RNN context length
+(Len).
+From these plots, we can see that each decision factor can make a difference in some environments. For example, the
+choice of RL algorithm is crucial in Ant-P (Fig. 16), Cheetah-V (Fig. 17), Wind (Fig. 18) and Hopper-Generalize (Fig. 20).
+The context length is essential in all the “-P” environments (Fig. 16), Cheetah-Vel (Fig. 18), and both the generalization
+environments (Fig. 20). The agent input space can make a difference in most “-P” environments (Fig. 16) possibly because
+oar contains the information of missing velocities.
+
+E.3. Additional Results on Separate vs Shared Recurrent Actor-Critic Architecture
+Now we show the result in another POMDP environment, Pendulum-V, which occludes the positions and angles, in Fig. 21.
+We can see that the shared encoder architecture is also worse than the separate one, possibly due to the different gradient
+scales in actor and critic losses w.r.t. the encoder.
+
+E.4. Additional Results on Comparison with VRM
+Both Fig. 1 and Fig. 22 shows the final performance of the same single variant of our implementation, but the former shows
+our results with 1.5M simulation steps while the latter shows our results with 0.5M simulation steps to match with those of
+VRM due to the time budget.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+Table 7: Numerical results of our final performance. The best single variant follows the notation in App. A.3. The
+performance column shows the mean and standard deviation of the metric (averaged at the last 20% of the total environment
+steps) across the 4 seeds.
+
+     Benchmark               Best single variant            Environment       Env steps      Metric       Performance
+                                                               Ant-P                                        348 ± 282
+                                                              Ant-V                                        1113 ± 360
+                                                             Cheetah-P                                     2693 ± 219
+     “Standard”                                              Cheetah-V                                     1980 ± 143
+                       td3-gru-64-oa-separate                                   1.5M       Avg return
+     POMDP                                                   Hopper-P                                      2133 ± 326
+                                                             Hopper-V                                      1495 ± 381
+                                                             Walker-P                                      982 ± 339
+                                                             Walker-V                                       121 ± 52
+                       td3-lstm-64-ord-separate             Semi-Circle        1.5M                         94.2 ± 0.6
+                       td3-lstm-64-oad-separate                Wind            0.75M                       62.8 ± 0.5
+                      td3-lstm-64-oard-separate             Cheetah-Vel         5M                        -84.7 ± 11.1
+      Meta-RL                                                                              Avg return
+                                                              Ant-Dir           30M                        1886 ± 177
+                      sac-gru-max-oard-separate             Cheetah-Dir         20M                        4189 ± 282
+                                                           Humanoid-Dir         30M                        1322 ± 257
+                                                                                          Avg return       2278 ± 454
+                                                           Cheetah-Robust
+                                                                                          Worst return     1587 ± 355
+                                                                                          Avg return       2392 ± 127
+     Robust RL         td3-lstm-64-o-separate              Hopper-Robust         3M
+                                                                                          Worst return     1169 ± 304
+                                                                                          Avg return       1807 ± 347
+                                                           Walker-Robust
+                                                                                          Worst return      766 ± 504
+                                                                                          Interpolation   0.989 ± 0.008
+                                                         Cheetah-Generalize
+   Generalization                                                                         Extrapolation   0.656 ± 0.011
+                       td3-lstm-64-o-separate                                    3M
+   in RL                                                                                  Interpolation   0.757 ± 0.138
+                                                          Hopper-Generalize
+                                                                                          Extrapolation   0.299 ± 0.029
+  Temporal                                                 Delayed-Catch        2.5M       Avg return       39.8 ± 0.4
+                      sacd-lstm-max-o-separate
+  credit assignment                                         Key-to-Door          4M       Success rate    0.996 ± 0.009
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                            Ant-P                                                       Cheetah-P
+
+
+
+
+                          Hopper-P                                                       Walker-P
+
+Figure 9: Learning curves on “standard” POMDP benchmark that preserves positions & angles but occludes veloc-
+ities in the states (namely “-P”). We show the results from the single best variant of our implementation on recurrent
+model-free RL, the popular recurrent model-free on-policy implementation (PPO-GRU, A2C-GRU) (Kostrikov, 2018), and
+also model-based method VRM (Han et al., 2020). Note that VRM is around 5x slower than ours, so we have to run 0.5M
+environment steps for it. Given 0.5M steps budget, our implementation is at least comparable to (if not greatly surpasses)
+the specialized method VRM on all the 4 environments.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                            Ant-V                                                       Cheetah-V
+
+
+
+
+                          Hopper-V                                                       Walker-V
+
+Figure 10: Learning curves on “standard” POMDP benchmark that preserves velocities but occludes positions &
+angles in the states (namely “-V”). We show the results from the single best variant of our implementation on recurrent
+model-free RL, the popular recurrent model-free on-policy implementation (PPO-GRU, A2C-GRU) (Kostrikov, 2018), and
+also model-based method VRM (Han et al., 2020). Note that VRM is around 5x slower than ours, so we have to run 0.5M
+environment steps for it. Given 0.5M steps budget, our implementation is at least comparable to (if not greatly surpasses)
+the specialized method VRM on 3 out of the 4 environments.
+                         Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                        Semi-Circle                                                     Wind
+
+
+
+
+                                                     Cheetah-Vel
+Figure 11: Learning curves on meta-RL benchmark adopted in off -policy variBAD paper (Dorfman et al., 2020).
+We show the results from the single best variant of our implementation on recurrent model-free RL, and the specialized
+meta-RL method off-policy variBAD (Dorfman et al., 2020). With better sample efficiency, our implementation is at least
+comparable to (if not greatly surpasses) the specialized method off-policy variBAD on all the 3 environments.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                        Cheetah-Dir                                                      Ant-Dir
+
+
+
+
+                                                     Humanoid-Dir
+Figure 12: Learning curves on meta-RL benchmark adopted in on-policy variBAD paper (Zintgraf et al., 2020). We
+show the results from the single best variant of our implementation on recurrent model-free RL, RL2 (Duan et al., 2016),
+and the specialized meta-RL method on-policy variBAD (Zintgraf et al., 2020). We also show the learning curves of
+oracle PPO, off-policy oracle, off-policy Markovian policies for reference. We directly use the open-sourced learning
+curve data from https://github.com/lmzintgraf/varibad#results for oracle PPO, RL2, and on-policy
+variBAD. Our implementation is at least comparable to (if not greatly surpasses) the specialized method on-policy variBAD
+on 1 out of the 3 environments.
+                         Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                                                    Hopper-Robust
+
+
+
+
+                                                    Cheetah-Robust
+
+
+
+
+                                                    Walker-Robust
+Figure 13: Learning curves on robust RL benchmark. We show the average returns (left figures) and worst returns (right
+figures) from the single best variant of our implementation on recurrent model-free RL, the specialized robust RL method
+MRPO (Jiang et al., 2021), and recurrent PPO. Note that our implementation is much slower than MRPO and recurrent PPO,
+so we have to run our implementation within 3M environment steps. With better sample efficiency, our implementation is at
+least comparable to (if not greatly surpasses) the specialized method MRPO on all the 3 environments.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                                                   Hopper-Generalize
+
+
+
+
+                                                  Cheetah-Generalize
+Figure 14: Learning curves on generalization in RL benchmark. We show the interpolation success rates (left figures)
+and extrapolation success rates (right figures) from the single best variant of our implementation on recurrent model-
+free RL. We also show the final performance of the specialized method EPOpt-PPO-FF (Rajeswaran et al., 2017a) and
+another recurrent model-free (on-policy) RL method (A2C-RC) copied from the Table 7 & 8 in Packer et al. (2018). Our
+implementation is at least comparable to (if not greatly surpasses) the specialized method EPOpt-PPO-FF on both the 2
+environments.
+
+
+
+
+                        Delayed-Catch                                                   Key-to-Door
+
+Figure 15: Learning curves on temporal credit assignment benchmark. We show the total rewards for Delayed-Catch
+and the success rates of opening the door for Key-to-Door, from the single best variant of our implementation on recurrent
+model-free RL. We also show the performance of the specialized method IMPALA+SR at 2.5M and 4M steps, respectively.
+Our implementation is at least comparable to (if not greatly surpasses) the specialized method IMPALA+SR on both the 2
+environments.
+                         Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                           Ant-P                                                       Cheetah-P
+
+
+
+
+                          Hopper-P                                                     Walker-P
+
+Figure 16: Ablation study of our implementation on “standard” POMDP benchmark that preserves positions &
+angles but occludes velocities in the states (namely “-P”). We show the single factor analysis on the 4 decision factors
+including RL, Encoder, Len, and Inputs for each environment.
+                         Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                           Ant-V                                                     Cheetah-V
+
+
+
+
+                         Hopper-V                                                    Walker-V
+
+Figure 17: Ablation study of our implementation on “standard” POMDP benchmark that preserves velocities but
+occludes positions & angles in the states (namely “-V”). We show the single factor analysis on the 4 decision factors
+including RL, Encoder, Len, and Inputs for each environment.
+                      Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                                                Semi-Circle
+
+
+
+
+                                                   Wind
+
+
+
+
+                                                Cheetah-Vel
+Figure 18: Ablation study of our implementation on meta-RL benchmark from off-policy variBAD. We show the
+single factor analysis on covering all the decision factors.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                                                    Hopper-Robust
+
+
+
+
+                                                    Cheetah-Robust
+
+
+
+
+                                                     Walker-Robust
+Figure 19: Ablation study of our implementation on robust RL benchmark. We show the single factor analysis on the
+4 decision factors including RL, Encoder, Len, and Inputs for each environment in both average returns and worst returns.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+                                                    Hopper-Generalize
+
+
+
+
+                                                    Cheetah-Generalize
+Figure 20: Ablation study of our implementation on generalization in RL benchmark. We show the single factor
+analysis on the 3 decision factors including RL, Len, and Inputs for each environment in both interpolation and extraploation
+success rates.
+
+
+
+
+Figure 21: Comparison between shared and separate recurrent actor-critic architecture with all the other hyperparam-
+eters same, on Pendulum-V, a simple “standard” POMDP environment. We show the performance metric (left) and also the
+average squared `2 -norm of the gradient w.r.t. RNN encoder(s) (right, in log-scale). For the separate architecture, :critic
+and :actor refer to the separate RNN in critic and actor networks, respectively.
+                          Recurrent Model-Free RL Can Be a Strong Baseline for Many POMDPs
+
+
+
+
+Figure 22: Final normalized returns of our implemented recurrent model-free RL algorithm with the same hyperparameters,
+and the prior method VRM (Han et al., 2020) across the eight environments in “standard” POMDPs, each of which trained
+in 0.5M simulation steps. Our implementation surpasses the specialized method VRM on 7 out of 8 environments. In the
+figure, we also show Markovian policies as lower bounds for reference, and the y-axis is normalized return given the return
+of oracle policy from Raffin et al. (2021).
+

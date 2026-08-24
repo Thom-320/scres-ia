@@ -1,0 +1,475 @@
+                                        Improving the Effectiveness of Potential-Based Reward Shaping
+                                                          in Reinforcement Learning
+                                                                   Henrik Müller                                                     Daniel Kudenko
+                                                                 L3S Research Center                                                L3S Research Center
+                                                                 Hannover, Germany                                                  Hannover, Germany
+                                                                   hmueller@l3s.de                                                    kudenko@l3s.de
+                                        ABSTRACT                                                                how the Q-value initialization and external rewards affect sample
+                                        Potential-based reward shaping is commonly used to incorporate          efficiency in potential-based reward shaping; and second, how the
+                                        prior knowledge of how to solve the task into reinforcement learn-      potential function can be modified to improve the sample efficiency
+
+
+
+
+arXiv:2502.01307v1 [cs.LG] 3 Feb 2025
+                                        ing because it can formally guarantee policy invariance. As such,       without altering the encoded preferences over states.
+                                        the optimal policy and the ordering of policies by their returns           In this paper, we propose a modification of the potential function
+                                        are not altered by potential-based reward shaping. In this work,        incorporating a constant bias 𝑏. We demonstrate that a constant
+                                        we highlight the dependence of effective potential-based reward         bias of the potential function can be used in sparse-reward settings
+                                        shaping on the initial Q-values and external rewards, which deter-      to improve the sample efficiency by improving the attribution of
+                                        mine the agent’s ability to exploit the shaping rewards to guide its    positive and negative shaped rewards through the mitigation of
+                                        exploration and achieve increased sample efficiency. We formally        differences between the intermediate rewards and the initial Q-
+                                        derive how a simple linear shift of the potential function can be       values. We show that scaling the potential function is inherently
+                                        used to improve the effectiveness of reward shaping without chang-      limited in its ability to create a more effective reward shaping in
+                                        ing the encoded preferences in the potential function, and without      terminal MDPs.
+                                        having to adjust the initial Q-values, which can be challenging            Notably, potential-based reward shaping does not alter the opti-
+                                        and undesirable in deep reinforcement learning. We show the theo-       mal policy, and our method does not change the state preferences
+                                        retical limitations of continuous potential functions for correctly     of the potential function. Consequently, our approach is applicable
+                                        assigning positive and negative reward shaping values. We verify        in any situation where additional knowledge of the task can be
+                                        our theoretical findings empirically on Gridworld domains with          exploited for more sample-efficient RL.
+                                        sparse and uninformative reward functions, as well as on the Cart          The primary contributions of this paper can be summarized as
+                                        Pole and Mountain Car environments, where we demonstrate the            follows:
+                                        application of our results in deep reinforcement learning.                  (1) We introduce a generalized framework of requirements for
+                                                                                                                        an effective potential-based reward shaping.
+                                        KEYWORDS                                                                    (2) We explore how to choose the scale and offset for potential
+                                        Reinforcement Learning, Reward Shaping, Potential-Based Reward                  functions to adapt the potential function to the Q-value
+                                        Shaping                                                                         initialization and reward function, thus improving the ef-
+                                                                                                                        fectiveness of reward shaping.
+                                        1   INTRODUCTION                                                            (3) We show the theoretical limitations for the creation of ef-
+                                                                                                                        fective potential-based reward shaping when dealing with
+                                        Reward shaping is a common approach to accelerate the training
+                                                                                                                        continuous potential functions.
+                                        of reinforcement learning agents by incorporating some form of
+                                                                                                                    (4) We verify our findings empirically first on tabular RL, and
+                                        external guidance into the reward function, thereby improving the
+                                                                                                                        then extend our experiments to the deep RL setting.
+                                        exploration of the environment.
+                                           In this work, we focus on potential-based reward shaping [12].
+                                        The primary appeal of potential-based reward shaping is the guaran-     2   RELATED WORK
+                                        tee of policy invariance. Despite changing the rewards, the optimal     Potential-based reward shaping (PBRS) is a type of reward shaping
+                                        policy of the MDP with the shaped reward function remains iden-         defined by the difference in heuristic valuations of the states before
+                                        tical to that of the original MDP. Potential-based reward shaping       and after the execution of an action using a potential function
+                                        utilizes a potential function to assign a heuristic value of goodness   over the state space. PBRS is widely used, because it has been
+                                        (or potential) to each state, with the reward shaping subsequently      shown to be necessary and sufficient for policy invariance [12]. In
+                                        derived from the difference between the potential of the states         Wiewiora [17], it was shown that potential-based reward shaping
+                                        before and after executing an action.                                   is equivalent to simply adding the potential function values to the
+                                           Previous theoretical evaluations of potential-based reward shap-     corresponding initial Q-values and then continuing the learning
+                                        ing have given pointers of how to structure an effective potential      process with the original non-shaped reward function. However, in
+                                        function [5, 6], yet they have overlooked the intrinsic link between    the case of potential functions that change dynamically over time,
+                                        the reward and the initialization of the state-action values. While     it was shown that while policy invariance still holds, the change
+                                        potential-based reward shaping has been shown to be equivalent          in the learning process cannot be equated to a simple modification
+                                        to shifting the Q-value initialization by adding the potential func-    of the initial Q-values [3]. This work extends the results of Grzes
+                                        tion [17], previous work has not addressed two key questions: first,    and Kudenko [6] on considerations for effective PBRS to include
+the connection between reward shaping and the initial Q-values             either to maximize the number of steps before termination for pos-
+and external rewards.                                                      itive reward values, or to minimize the number of steps before
+   PBRS is often used to incorporate prior knowledge of the task           reaching a terminal state for negative rewards.
+to guide the agent in solving difficult tasks. The potential function
+can be created from automatically extracted automata specifying a          3.2    Potential-Based Reward Shaping
+sequence of goals to achieve [7], from user provided linear temporal       Potential-based reward shaping (PBRS) is defined by its potential
+logic formulas [4], or directly from demonstrations in imitation           function Φ(𝑠) mapping each state to a heuristic scalar value. Given
+learning settings [2, 14, 16, 18].                                         the potential function, the reward shaping function 𝐹 is defined as:
+   In Sun et al. [15], the authors show that a constant linear reward
+shift is equivalent to an optimistic or pessimistic Q-value initial-                             𝐹 (𝑠, 𝑎, 𝑠 ′ ) = 𝛾Φ(𝑠 ′ ) − Φ(𝑠)               (2)
+ization, depending on the value of the reward shift. Our work can
+                                                                           where 𝑠 ′ is the state reached after executing action 𝑎 in 𝑠 and 𝛾
+provide a novel perspective on this problem. The constant reward
+                                                                           is the reward discount factor of the MDP. With this the shaped
+shift by a constant 𝑐 is equivalent to using a constant potential func-
+                𝑐                                                          reward 𝑅 ′ can be defined as:
+tion Φ(𝑠) =          in PBRS. By linking to potential-based reward
+              𝛾 −1                                                                          𝑅 ′ (𝑠, 𝑎, 𝑠 ′ ) = 𝑅(𝑠, 𝑎, 𝑠 ′ ) + 𝐹 (𝑠, 𝑎, 𝑠 ′ )   (3)
+shaping, we can directly draw on its large catalog of theoretical
+results regarding policy invariance [12], the connection to Q-value            Due to the guarantee of policy invariance for potential-based
+initialization [17], and the need for potential values of zero in ter-     reward shaping, the optimal policy (and the order of returns for all
+minal states [5]. Notably, the last point is missing in Sun et al. [15].   policies) will not change for the shaped MDP 𝑀 ′ = (𝑆, 𝐴,𝑇 , 𝑅 ′, 𝛾)
+Therefore, using the same constant shift for all rewards can change        [12]. As such, there is no way to specify a reward shaping func-
+the optimal policy when moving into terminal states of episodic            tion without making assumptions about the reward and transition
+MDPs. We are able to extend their results to also include additional       functions that does not alter the optimal policy except through
+knowledge about how to solve the task for more fine-grained guid-          shaping functions that are equivalent to PBRS. As a result, PBRS
+ance about which parts of the state space to explore and which             can guarantee not to change the problem defined by the reward
+parts to avoid exploring.                                                  function and can instead be used to add exploitable structure to the
+                                                                           reward function of an MDP to guide the exploration.
+3 BACKGROUND                                                                   In the case of episodic MDPs, it is necessary that all Q-values
+                                                                           of terminal states be equal to zero. As a consequence of the con-
+3.1 Reinforcement Learning                                                 nection between PBRS and the Q-value initialization, the potential
+Reinforcement learning (RL) leverages experience from interactions         function must also be equal to zero in all terminal states to be able
+with its environment to solve sequential decision-making tasks. At         to guarantee policy invariance [5]. Notably, this includes the state
+each step, an RL agent can execute an action based on the current          preceding the truncation of a training episode after a fixed number
+environment state and will receive the reward for the executed             of steps. Intuitively, potential-based reward shaping removes the
+action and the new environment state. Formally, the problem for            previously added potential by subtracting it in the very next tran-
+RL is commonly defined as a Markov decision process (MDP). An              sition to remove the reward shaping from the total return. If the
+MDP is a tuple 𝑀 = (𝑆, 𝐴,𝑇 , 𝑅, 𝛾), where 𝑆 is the state space, 𝐴 is the   episode ends, there is no next transition and the potential of the last
+action space, 𝑇 describes the transition dynamics when executing           (terminal) state in the episode has to be zero to avoid biasing the
+action 𝑎 in state 𝑠, 𝑅 is the reward function attributing scalar reward    total return, which could change the optimal policy. Nonetheless,
+feedback to transitions, and 𝛾 is the discount factor used to define       all of our conclusions will extend to non-episodic MDPs unless they
+                                                                           explicitly focus on the special case of terminal states.
+                                                  Í
+the goal to maximize - the discounted return 𝑡 𝛾 𝑡 𝑟𝑡 .
+   We focus in this work on sparse reward functions that offer                 Although, PBRS can guarantee not to change the optimal policy
+very little (intermediate) feedback for the exploration strategy of        (and - if applicable - the convergence guarantee to the optimal
+the learning agent and are therefore inherently difficult to solve         policy of the used RL agent), the convergence speed and therefore
+efficiently. We adopt the reward formulation of Matignon et al. [8]        the sample efficiency can vary depending on how the potential
+for a goal-directed reward function with respect to a goal state 𝑠𝑔 :      function is defined. In this work, we focus on how to structure
+                                                                           potential functions to create the most effective bias of a learning
+                                  (                                        agent rather than on how to create and ground potential functions.
+                            ′      𝑟𝑔   if 𝑠 ′ = 𝑠𝑔
+                    𝑅(𝑠, 𝑎, 𝑠 ) =                                    (1)
+                                   𝑟∞   otherwise                          4     MOTIVATING EXAMPLE
+                                                                           We first look at the dependence of effective potential-based reward
+   In section 6, we will also empirically verify our theoretical find-     shaping on the initial Q-values when using the optimal state value
+ings on two different well-known parameterizations of this reward          function 𝑉 ∗ as the potential function as introduced in Ng et al. [12].
+function. The goal-directed reward where 𝑟𝑔 = 1 and 𝑟 ∞ = 0 and the        Intuitively 𝑉 ∗ should be the best possible state-based guidance one
+on-step reward where 𝑟𝑔 = 𝑟 ∞ . In goal-directed tasks, the only non-      can offer. If one uses Φ(𝑠) = 𝑉 ∗ (𝑠), the shaped rewards will be
+zero reward is given for reaching a goal state, where the episode          exactly zero for any optimal action and less than zero for any sub-
+terminates. Tasks with uniform on-step reward functions always             optimal action. The RL agent therefore should only have to explore
+give the same non-zero reward for each transition. Their goal is           to determine which actions give a reward of zero and should then
+                                                                          initialization of all Q-Values with 0.01 solves this problem by being
+                                                                          pessimistic with regard to the optimal actions.
+                                                                             Overall, this highlights the importance of the initialization for the
+                                                                          convergence. In the following we will explore how to adapt a given
+                                                                          potential function to gain the same benefits as a good initialization
+                                                                          without having to adapt the initialization itself, which is not always
+                                                                          trivial. Especially, when using a function approximator as in deep
+                                                                          RL.
+
+                                                                          5      MAIN RESULTS
+                                                                          Potential-based rewards shaping can be used to increase the inter-
+                                                                          mediate valuation of specific actions and transitions at the begin-
+                                                                          ning of the learning process while the guaranteed policy invariance
+                                                                          will ensure the eventual convergence towards the original valu-
+                                                                          ation of policies. The goal for an effective application of PBRS is
+                                                                          for the agent to exploit the potential function to guide its initial
+                                                                          exploration, thereby opting to maximize the value of the potential
+Figure 1: Average length of evaluation runs (with 𝜖 = 0.05)               function at the start of the training. As such, our theoretical results
+on a 25x25 Gridworld with potential-based reward shaping                  will focus on the first updates of the initial estimates.
+where Φ(𝑠) = 𝑉 ∗ (𝑠).                                                        To obtain concrete results, we exemplarily focus here on the
+                                                                          update in Q-Learning (similar results can be obtained analogously
+                                                                          for other TD-based approaches):
+be able to exploit this knowledge to bias the action selection to                                            h                                          i
+repeat these actions.                                                         𝑄 (𝑠𝑡 , 𝑎𝑡 ) ← 𝑄 (𝑠𝑡 , 𝑎𝑡 ) + 𝛼 𝑅𝑡 +1 + 𝛾 max 𝑄 (𝑠𝑡 +1, 𝑎) − 𝑄 (𝑠𝑡 , 𝑎𝑡 )
+                                                                                                                          𝑎
+    But whether the RL agent is able to exploit to shaped rewards
+to easily recognize optimal actions relies entirely on the Q-Value        The target for the TD-update 𝑅𝑡 +1 + 𝛾 max𝑎 𝑄 (𝑠𝑡 +1, 𝑎) determines
+initialization, which (although generally well established) has not       whether the respective Q-value is increased or decreased from the
+been considered in the context of potential-based reward shaping.         initial value. In advantage-based action selection, this results in
+If all Q-Values are larger than zero, the agent would have to initially   the action being more likely to be repeated or respectively ignored
+try every action (possibly multiple times) to correctly discern the       when the same state is visited again.
+optimal action. If the Q-Values are all smaller than zero the agent          Notably, for the first updates on the initial Q-values we have:
+could start to focus on whichever sub-optimal action were ran-
+domly explored early on. In that case, the agent would depend on                               𝑄 (𝑠𝑡 , 𝑎𝑡 ) = max 𝑄 (𝑠𝑡 +1, 𝑎) = 𝑄𝑖𝑛𝑖𝑡
+exploration actions whilst the exploitative (greedy) action selection                                           𝑎
+would select sub-optimal actions.
+    For the fastest convergence the optimal initialization would             Therefore, we can simplify the TD-update and focus on the
+therefore be with a value between zero (for the shaped rewards of         following case instead: 𝑅 ′ (𝑠, 𝑎, 𝑠 ′ ) + 𝛾𝑄𝑖𝑛𝑖𝑡 . We can now formalize
+all optimal actions) and the smallest possible shaping difference         the requirements for increasing and decreasing Q-values with the
+with respect to the given 𝑉 ∗ . As soon as an optimal action is first     following equation:
+encountered the Q-Value of that action would increase and end up
+being the largest Q-Value for that state. Any of the commonly used                              𝑅 ′ (𝑠, 𝑎, 𝑠 ′ ) + 𝛾𝑄𝑖𝑛𝑖𝑡 ≶ 𝑄𝑖𝑛𝑖𝑡                       (4)
+                                                                                                    ′       ′
+advantage-based action selection schemes (like 𝜖-greedy) would                                 ∴ 𝑅 (𝑠, 𝑎, 𝑠 ) ≶ (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                            (5)
+then always choose the optimal action in that state (outside of the
+random action selections for exploration).                                   The general idea is that the shaped reward should be larger (or
+    In figure 1 we show the average episode length for ten evalua-        respectively smaller) than the initial Q-value for transitions that
+tion runs every 500 training steps in a simple 25-by-25 Gridworld.        should be incentivized (or respectively disincentivized) in the future.
+The task of the agent is to move from the top left into the bottom        After the transition is seen for the first time the updated Q-value
+right corner of the grid. The agent gets a reward of zero for every       would then be larger (or smaller) than the initial Q-value and any
+action except when moving into the goal. Initializing the Q-Values        advantage-based action selection mechanism (like 𝜖-greedy) would
+with −1 or 1 leads to the gray and orange lines respectively that         then prefer (or avoid) the corresponding action. That way excessive
+do not converge within the 100,000 training steps. The blue graph         exploration can be avoided and the agent focuses in the initial
+shows the behavior for a zero initialization. It converges fast, but      exploration on states with increasingly larger potential values.
+takes many more steps to stabilize in the evaluation performance             The following set of requirements for the relation of the shaped
+as unexplored actions in states that are reached by executing a           rewards to the initial Q-values is an extension of the requirements
+small number of random steps during exploration cannot be differ-         originally proposed in Grzes and Kudenko [6] using the above
+entiated from already found optimal actions. The green plot for an        relation between TD-update and initial Q-values, where we look at
+transitions between the states 𝑠 and 𝑠 ′ with Φ(𝑠 ′ ) > Φ(𝑠):             This constant bias term shifts all rewards (except when moving into
+                        ′                                                 terminal states) by 𝑏. If we set 𝑏 = (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 − 𝑟 ∞ , we are able to
+             𝑟 ∞ + 𝛾Φ(𝑠 ) − Φ(𝑠) > (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                    (6)
+                                                                          remove the dependence on both the external reward and the initial
+             𝑟 ∞ + 𝛾Φ(𝑠) − Φ(𝑠 ′ ) < (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                  (7)    Q-values. This allows us to make direct use of the prior results on
+              𝑟 ∞ + 𝛾Φ(𝑠) − Φ(𝑠) ≤ (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                    (8)    how to create an effective PBRS [6, 11].
+   These three inequalities formalize the requirements on non-               This shift of the potential values has to exclude the potential
+terminal transitions. Only transitions that lead to states with a         values for terminal states as the potential of any terminating state
+higher potential value should be incentivized. Other transitions          has to be zero [5]. The above choice for the bias term therefore can-
+should be disincentivized at the beginning of the learning process.       not remove the dependence on the external reward and Q-values
+As a result, any of the commonly used advantage-based action              in equation 9 and 10. For these transitions the additional term in
+selection schemes would repeat actions that lead to the largest           the shaped reward is 𝑄𝑖𝑛𝑖𝑡 + 𝛾𝑟−1 ∞
+                                                                                                              . The benefit of removing 𝑟 ∞ and
+possible next potential value while avoiding to repeatedly explore        𝑄𝑖𝑛𝑖𝑡 in the requirements for non-terminal transitions therefore
+actions that lead to states with smaller potential values.                can come at the cost of incorrectly (dis-)incentivizing transitions
+                                                                          into terminal states. This can create challenges during training
+5.1    Potential Scale                                                    where all terminal states either have a (large) positive or (large)
+                                                                          negative shaping reward. Which causes the agent to focus its ex-
+For goal-directed MDPs, we have the following additional require-
+                                                                          ploration on terminating in any possibly sub-optimal state or lead
+ments on the value of the shaped rewards when moving from any
+                                                                          the exploration away from any terminal state. The application of
+state 𝑠 into a terminal state:
+                                                                          our method is therefore more limited in settings with short episode
+                   𝑟𝑔 − Φ(𝑠) > (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                        (9)    lengths where episodes are more likely to be truncated and in set-
+                  𝑟 ∞ − Φ(𝑠) < (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                       (10)    tings where the difference between terminal states is important (e.g.
+                                                                          when learning to reach a terminal goal state).
+   Intuitively, reaching the goal state should be incentivized. Reach-
+ing any other terminal state or truncating the episode before reach-
+                                                                          5.3    Limitations of continuous potential
+ing the goal state should be disincentivized. As a direct result of
+these two inequalities, we can obtain the upper and lower bounds                 functions
+on the scale of the potential function in goal-directed MDPs:             As shown in Grzes and Kudenko [6], any continuous potential
+                                                                          function will create some incorrect shaping rewards. In positive
+           𝑟 ∞ − (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 < Φ(𝑠) < 𝑟𝑔 − (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡          (11)
+                                                                          potential functions this occurs in the form of negative shaping
+   As a direct result of these bounds, it is not possible to utilize      rewards for small improvements 𝛿 in potential between consecutive
+the scale of the potential function to compensate the mismatch            states:
+between the original rewards and the initial Q-values, and thus                                   𝛾Φ(𝑠 ′ ) − Φ(𝑠) < 0                  (13)
+satisfying the general requirements outlined in equations 6-8.
+   Notably, equation 11 implicitly requires that 𝑟𝑔 > 𝑟 ∞ . Accord-                              𝛾 (Φ(𝑠) + 𝛿) − Φ(𝑠) < 0                     (14)
+ingly, the incentive to terminate in a goal state must originate                                          1 −𝛾
+                                                                                                     𝛿<        Φ(𝑠)                       (15)
+from the original reward of a goal-directed MDP, as potential-based                                         𝛾
+reward shaping cannot create this incentive.                                In negative potential functions this instead occurs in the form of
+   The goal-directed reward specification detailed in section 3.1         positive shaping rewards for small decreases 𝛿 in potential between
+therefore only allows for a difference of one between the smallest        consecutive states:
+and largest potential values. The on-step reward does not offer a                                 𝛾Φ(𝑠 ′ ) − Φ(𝑠) > 0                     (16)
+different reward for reaching a goal state. Consequently, it can result
+in the creation of incorrect shaped rewards when moving into a                                   𝛾 (Φ(𝑠) − 𝛿) − Φ(𝑠) > 0                     (17)
+terminal state. In this case, depending on the difference between the                                      𝛾 −1
+reward and the Q-values, the agent therefore is either incentivized                                    𝛿>       Φ(𝑠)                         (18)
+                                                                                                             𝛾
+to focus on terminating in any (previously explored) terminal state
+                                                                             As a result, it is in general impossible for continuous potential
+or disincentivized from terminating in any terminal state, including
+                                                                          functions to create both of the required shaping rewards correctly
+possible goal states.
+                                                                          at the same time and there will be some difference 𝛿 for which
+                                                                          the equations 6 and 7 will be violated. Additionally, the smallest
+5.2    Potential Shift                                                    value with correct positive or respectively negative shaping rewards
+The equations 6 to 8 show, that the effectiveness of PBRS depends         depends on the potential of the state the transition started in. Small
+not just on the potential function, but also on the external reward       improvements in potential are therefore more likely to be create
+and the initial Q-values. If the initial Q-values and the (mostly         incorrect incentives in states with a smaller potential value (e.g. at
+constant) original rewards are known, one could add a simple bias         the beginning of an episode) for positive potential functions and
+to the potential function to remove the dependence. We define the         in states with potentials closer to zero (e.g. close to the goal) for
+shifted potential function for any non-terminal state 𝑠 as:               negative potential functions.
+                                           𝑏                                 In Müller et al. [11], it was shown that the dependence on the
+                       Φ𝑏 (𝑠) = Φ(𝑠) +                            (12)    previous potential can be solved in a setting with a discrete potential
+                                         𝛾 −1
+                     (a) linear potential                  (b) exponential potential with 𝑒 = 8            (c) exponential potential with 𝑒 = 64
+
+
+Figure 2: Plots of the reward shaping F that will be added to the reward given the difference 𝛿 between the next potential and
+the previous potential with the hue representing the value of the previous potential. All plots are for 𝛾 = 0.75. For the plots of
+exponential PBRS the difference 𝛿 is defined as the difference in the original (linear) potential functions.
+
+
+function by employing an exponentially growing potential function                function could lead to the Q-values being either too large or too
+instead to guarantee correct exploration incentives.                             small to make effective use of the potential function. Ideally you
+   The advantage of exponentially growing potential functions is                 would not have to reset Q-values and should be able to make use of
+also shown in figure 2. It plots the shaping reward 𝐹 for the potential          your prior experiences, though we leave the details of how to still
+value difference 𝛿 between two consecutive states with respect                   guarantee effective convergence and obtain high sample efficiency
+to the potential value before the transition. Intuitively, the top-              for dynamically changing potential functions for future work.
+right and bottom-left quadrants are (with respect to the potential                  If we have (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 − 𝑟 ∞ ≠ 0 and the bias term is not chosen
+function) correctly incentivized transitions. Notably, larger values             correctly, the smallest supported difference 𝛿 with correct (dis-
+of the base of the exponent can support smaller potential differences            )incentivizations of transitions would then also still depend on
+𝛿.                                                                               the potential of the state before the transition. But the smallest
+   We therefore adapt the exponentially growing potential func-                  supported difference would scale with the logarithm of the potential,
+tion and set 𝑒 Φ(𝑠 ) = 𝑒 Φ(𝑠 )+𝛿 , where 𝛿 > 0 is the change of the
+                   ′
+                                                                                 which would still be beneficial over the linear scaling in linearly
+potential function when moving into the new state and where the                  growing potential functions.
+base 𝑒 > 1 is a hyper-parameter. This leads to the following set of
+requirements:
+                                                                                 6 EXPERIMENTS
+                       𝛿         Φ(𝑠 )
+             𝑟 ∞ + (𝛾𝑒 − 1)𝑒             > (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡             (19)         6.1 Algorithms and Hyperparameters
+                            𝛿    Φ(𝑠 )
+               𝑟 ∞ + (𝛾 − 𝑒 )𝑒           < (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡             (20)         6.1.1 Q-Learning. For the experiments on the Gridworld environ-
+                𝑟 ∞ + (𝛾 − 1)𝑒 Φ(𝑠 ) ≤ (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡                 (21)         ment we use a simple tabular Q-Learning agent. This allows to
+                                                                                 verify our theory in a simple setting on a well established model-
+   Notably, if (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 − 𝑟 ∞ = 0 (or if we include a constant               free RL algorithm without the additional complexity of function
+bias in the potential to match the difference) one can divide by the             approximation. We use a fixed exploration rate of 𝜖 = 0.05 and a
+previous potential 𝑒 Φ(𝑠 ) and therefore remove the dependency on                learning rate of 0.1.
+the value of the previous potential from the first three inequalities.
+The correct value of the shaped reward is then only dependent                    6.1.2 DQN. In the experiments on the Cart Pole and Mountain
+on the value of the change 𝛿 between two consecutive states. In                  Car environments we use DQN [9] as a representative algorithm
+this case it is possible to determine a smallest change between the              for deep RL methods. We utilize DQN as a proxy for Q-Learning in
+potential values of two consecutive states that will still correctly             deep RL, thereby circumventing the potential confounding effects
+bias the intermediate Q-value to be more or respectively less likely             of numerous additional design parameters. We use the implemen-
+to be picked in future action selections.                                        tation of Stable Baselines3 [13] for DQN including the default set
+   In practice, it would then intuitively also be possible to keep track         of hyperparameters for the algorithm.
+of the smallest observed difference in potential between consecutive                The exploration rate 𝜖 for DQN decays over the first 10,000 steps
+states and choose an appropriate base parameter 𝑒 dynamically. But               from 1 to 0.05. The learning starts after the first 1000 training steps
+changing the potential function while trying to still use the already            have been collected with a learning rate of 0.0001 and a batch
+(partially) converged Q-values would be a challenge for effective                size of 32. The maximum replay buffer size is set to 50,000. The
+PBRS. As seen before, the effectiveness of PBRS heavily depends                  experiments on the Cart Pole and Mountain Car environments with
+on the Q-values and continuing to learn with a changed potential                 the DQN use a decay factor of 𝛾 = 0.99.
+6.1.3 Potential Function Hyperparameter. For the reasons described          as possible even though the same requirement is also given indi-
+in section 5.3, we will use the exponentially growing potential func-       rectly by choosing a decay factor 𝛾 < 1. For our specific Gridworld
+tions for all experiments with the base parameter set to 𝑒 = 32.            environment the optimal policy is the same as when using the goal-
+Larger values for 𝑒 did not show any different results in our experi-       directed reward function as the goal state is the only state the agent
+ments.                                                                      can terminate in.
+                                                                                In this setting once again only one choice of bias can improve
+                                                                            the sample efficiency and lead to converge towards the optimal
+6.2    Environments and Results                                             policy within the limited number of training steps. But, the average
+6.2.1 Gridworld. In this environment the agent is tasked to navi-           performance over five separate repetitions show high variance in
+gate a discrete square grid. The agent starts in the top-left corner        training performance for the optimal choices of bias. The large bias
+of the grid and has to move into the goal state in the bottom-right         leads to large negative potential values which lead to large positive
+corner. Entering the goal state terminates the episode. Each episode        shaping rewards for any terminal state including when the episode
+has a maximum of 250 training steps. We experiment with two                 is truncated after a fixed number of steps. As a result, some runs get
+different reward functions for this environment that both lead to           stuck oscillating into the non-goal state the agent has truncated an
+the same task and optimal policy.                                           episode in before. The runs in this setting therefore either converge
+    The first reward function named goal-directed gives a reward of         very quickly or do not converge at all within the training budget.
+zero for every transition except when moving into the goal state                In theory over infinitely many training steps the agent would
+where the agent gets a reward of one. The second reward function            eventually execute sequences of random exploration actions that
+named on-step matches the common rationale of offering a negative           lead to the real goal-state often enough to be able to converge to
+reward for each step to get the agent to minimize its steps. With it        the optimal policy. This however can only happen over a longer
+the agent gets a reward of minus one for each step.                         training duration. Longer episodes could also help in this case as
+    For this environment we use the inverse of the Manhattan dis-           they improve the likelihood of finding the goal state instead of the
+tance to the goal as the potential function: Φ(𝑠) = −𝑑 (𝑠, 𝑠𝑔 ), which      episode being truncated in a non-goal state.
+is then normalized to be in the usual range of [0, 1]. The potential-           Notably, the dense non-zero rewards can implicitly create an
+based reward shaping will therefore be able to directly leverage a          optimistic Q-value initialization, which leads to more systematic
+perfect oracle of how to solve the task.                                    exploration and can therefore lead to faster convergence. As such,
+    This first set of experiments is used to validate our theoretical       some of the runs with an incorrect bias choice can be seen to im-
+results in section 5.2 regarding the choice of the bias as 𝑏 = −𝑅 +         prove their evaluation performance towards the end of the training.
+(1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 . Figure 3 shows the results for the experiments on the
+Gridworld environment for two different reward functions, goal-
+directed where 𝑅 = 0 and on-step where 𝑅 = −1, for three different          6.2.2 Cart Pole. In Cart Pole [1] the agent controls a cart with a
+initial Q-values (-1, 0, +1) with a decay factor 𝛾 = 0.95.                  pole attached to it that can slide across a track. The goal of the agent
+    The results for the goal-directed reward function are shown in          is to keep the pole upright (within a certain angle) and keep the
+the top row. The goal-directed reward is zero for all transitions           cart within a predefined interval for as long as possible. At every
+except when moving into the goal where the reward is one. The               time step the agent chooses which direction (left or right) to move
+results show that for each combination of initial Q-values 𝑄𝑖𝑛𝑖𝑡 and        the cart. Every time step gives a reward of one until one of the
+bias 𝑏 only the combination with a bias 𝑏 = (1 − 𝛾)𝑄𝑖𝑛𝑖𝑡 converges          task conditions is violated, upon which the episode is terminated.
+to the optimal policy within the 250,000 training steps. Choosing           Otherwise, the episode will be truncated after training 500 steps.
+the bias correctly leads to very quick convergence in this setting             The potential function for this environment is the inverse of the
+as the potential function is a perfect heuristic for solving the task.      observed pole angle: Φ(𝑠) = −|𝑎𝑛𝑔𝑙𝑒 (𝑠)|, which is then normalized
+The agent therefore just has to choose the optimal action in each           to be within [0, 1]. Both the position on the track and the angle of
+state randomly once before the respective Q-value is the largest            the pole are part of the observation space of the agent. The potential
+one. With the usual advantage-based action selection schemes (like          function therefore encodes an important part of how to solve the
+𝜖-greedy) the agent will therefore choose the optimal action when           task, but misses the additional limitation of staying within a fixed
+it reaches the same state in future iterations and exploit the task         range on the track.
+knowledge properly.                                                            In this experiment, we test the theory in section 5.2 for the choice
+    If the choice of bias does not fit the initial Q-value the evaluation   of the bias parameter 𝑏 in a deep RL setting with a constant +1
+performance does not improve within the training steps. The prob-           reward. Figure 4(a) plots the average evaluation performance for a
+lem for the convergence in these cases is the incorrect resulting           selection of bias values in the Cart Pole environment.
+positive or negative shaping rewards. In that case the agent will              When probing untrained DQNs with randomly sampled valid
+need to repeat all actions in all states multiple times to properly         states for Cart Pole the initial Q-values were usually in [−1, 1] with
+converge from the initial Q-values and the shaping signal can give          the exact distribution depending on the random network weight
+incorrect intermediate incentives which leads to the exploitation           initialization. But, we do not focus on matching the bias values to
+of sub-optimal actions by the agent.                                        possible initial Q-values as the Q-values for not visited states can
+    The second set of results for the on-step reward function is shown      change at any time during the training of the neural network. As
+in the bottom row. Negative on-step rewards are commonly used               such the Q-values for never before visited states might have already
+to directly indicate to an agent to reach terminal states as early          changed away from the initial Q-values.
+            (a) goal-directed, 𝑄𝑖𝑛𝑖𝑡 = -1                    (b) goal-directed, 𝑄𝑖𝑛𝑖𝑡 = 0                        (c) goal-directed, 𝑄𝑖𝑛𝑖𝑡 = +1
+
+
+
+
+              (d) on-step, 𝑄𝑖𝑛𝑖𝑡 = -1                          (e) on-step, 𝑄𝑖𝑛𝑖𝑡 = 0                              (f) on-step, 𝑄𝑖𝑛𝑖𝑡 = +1
+
+
+Figure 3: Gridworld results for the two different reward functions goal-directed and on-step. The figures in the top row show the
+results for the goal-directed reward function. The figures in the bottom row show the results for the on-step negative rewards.
+Each plot shows the length of the evaluation episodes for different values of the shifting bias 𝑏. Each graph showing the mean
+length of the ten evaluation runs with fixed exploration rate 𝜖 = 0.05 that were run every 250 training steps averaged over five
+separate training runs. Shaded areas showing the standard error of the mean.
+
+
+   The results show that the runs with a bias less than or equal to            its velocity at every time step. The potential function imperfectly
+zero are able to leverage the potential function to reliably converge          guides the agent into states where the velocity is maximized, which
+faster to a better policy than the agent without reward shaping. If            is needed to be able to reach the goal. But the agent will have to
+the bias is chosen greater than zero the evaluation performance                learn a policy which decreases its velocity whenever the cart has
+is consistently close to zero. As such our results for the potential           to switch directions to build enough momentum to reach the goal.
+shifting apply to the function approximation setting. Notably, in                  In this experiment we test the theory in section 5.2 for the choice
+this simple environment the choice of the actual bias value does not           of the bias parameter 𝑏 in a deep RL setting with a constant −1
+matter much besides the general trend, as the agent is already able            reward. Figure 4(b) shows the average evaluation performance of
+to learn well even without the additional information of reward                agents in the Mountain Car environment with differently shifted
+shaping.                                                                       potential functions compared with an agent without additional
+                                                                               reward shaping. For the same reason as in the Cart Pole experiment
+6.2.3 Mountain Car. In Mountain Car [10] the agent controls a
+                                                                               we do not test for the comparably small changes to the bias 𝑏 that
+car in a valley between two mountains with the goal of reaching
+                                                                               a compensation of the initial Q-values would create.
+the top of the right mountain. We use the environment definition
+                                                                                   In this environment only the two configurations with bias zero
+with discrete actions. The agent can choose to either accelerate
+                                                                               and one lead to a policy that is able to solve the task reliably. The
+to the left or to the right, or not to accelerate at the current time
+                                                                               bias of one leads to the reliable learning of the best performing
+step. As the task is to minimize the number of steps to reach the
+                                                                               policies. This matches our theoretical results in section 5.2 of using
+goal the agent is returned a reward of minus one for each step until
+                                                                               the bias term to correct for the constant negative on-step rewards
+the episode terminates. The episode is truncated after 200 training
+                                                                               in this environment. When randomly sampling initial Q-values for
+steps.
+   We use the absolute velocity of the cart as the potential function          valid states from untrained DQNs they tend to fall within [-1, 1].
+in this environment: Φ(𝑠) = |𝑣𝑒𝑙𝑜𝑐𝑖𝑡𝑦 (𝑠)|, which is then normal-              Our results therefore also indicate that the Q-values do not change
+ized into [0, 1]. The agent observes both its current position and
+                                  (a) Cart Pole                                                    (b) Mountain Car
+
+
+Figure 4: Results of Cart Pole and Mountain Car experiments for different values of the bias parameter 𝑏. Each plot showing
+the length of the evaluation episodes that were run every 500 steps averaged over five evaluation runs per training run and
+plotting the mean of ten separate training runs with the shaded area being the standard error of the mean.
+
+
+drastically in this environment. This environment is more suscepti-     REFERENCES
+ble to changes in bias than the Cart Pole environment, but matches       [1] Andrew G. Barto, Richard S. Sutton, and Charles W. Anderson. 1983. Neu-
+the expected behavior regarding the improved performance when                ronlike adaptive elements that can solve difficult learning control problems.
+                                                                             IEEE Transactions on Systems, Man, and Cybernetics SMC-13, 5 (1983), 834–846.
+correcting for the constant non-zero on-step rewards.                        https://doi.org/10.1109/TSMC.1983.6313077
+   Notably, the variance between the individual runs for the well        [2] Tim Brys, Anna Harutyunyan, Halit Bener Suay, Sonia Chernova, Matthew E.
+                                                                             Taylor, and Ann Nowé. 2015. Reinforcement Learning from Demonstration
+working choices of the bias 𝑏 is small. The issue of intermediate            through Shaping. In Proceedings of the 24th International Conference on Artificial
+convergence to sub-optimal terminal states seen for the optimal 𝑏            Intelligence (Buenos Aires, Argentina) (IJCAI’15). AAAI Press, 3352–3358.
+choices in the on-step Gridworld do not appear to also apply to the      [3] Sam Devlin and Daniel Kudenko. 2012. Dynamic potential-based reward shap-
+                                                                             ing. In International Conference on Autonomous Agents and Multiagent Systems,
+deep RL setting.                                                             AAMAS 2012, Valencia, Spain, June 4-8, 2012 (3 Volumes). IFAAMAS, 433–440.
+                                                                             http://dl.acm.org/citation.cfm?id=2343638
+7   CONCLUSION                                                           [4] Mahmoud Elbarbari, Florent Delgrange, Ivo Vervlimmeren, Kyriakos Efthymiadis,
+                                                                             Bram Vanderborght, and Ann Nowe. 2022. A framework for flexibly guiding
+We have introduced a framework of requirements for effective                 learning agents. Neural Computing and Applications (06 2022). https://doi.org/
+potential-based reward shaping and derived how the potential func-           10.1007/s00521-022-07396-x
+                                                                         [5] Marek Grześ. 2017. Reward Shaping in Episodic Reinforcement Learning. In
+tion must be structured to allow for effective reward shaping to             Proceedings of the 16th Conference on Autonomous Agents and MultiAgent Systems
+guide exploration.                                                           (São Paulo, Brazil) (AAMAS ’17). International Foundation for Autonomous
+                                                                             Agents and Multiagent Systems, Richland, SC, 565–573.
+   We have shown that a constant shift of the potential function in      [6] Marek Grzes and Daniel Kudenko. 2009. Theoretical and Empirical Analysis of
+potential-based reward shaping can help alleviate problems caused            Reward Shaping in Reinforcement Learning. In 2009 International Conference on
+by a mismatch between the original reward and the initial Q-values           Machine Learning and Applications. 337–344. https://doi.org/10.1109/ICMLA.
+                                                                             2009.33
+to improve the effectiveness of reward shaping in guiding the agent,     [7] Mohammadhosein Hasanbeig, Natasha Yogananda Jeppu, Alessandro Abate,
+and thus the sample efficiency of an RL agent. We have determined            Thomas F. Melham, and Daniel Kroening. 2021. DeepSynth: Automata Synthesis
+how to choose the value for a bias for this shift depending on the           for Automatic Task Segmentation in Deep Reinforcement Learning. In AAAI
+                                                                             Conference on Artificial Intelligence. https://api.semanticscholar.org/CorpusID:
+known or observed values for the rewards for each step as well as            211542062
+the initial Q-values. We empirically verified that this approach also    [8] Laëtitia Matignon, Guillaume J. Laurent, and Nadine Le Fort-Piat. 2006. Reward
+                                                                             Function and Initial Values: Better Choices for Accelerated Goal-Directed Rein-
+holds for function approximation in deep RL.                                 forcement Learning. In International Conference on Artificial Neural Networks.
+   We have shown the theoretical limitations of potential-based              https://api.semanticscholar.org/CorpusID:3448745
+reward shaping in terms of correctly assigning positive or negative      [9] Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Alex Graves, Ioannis
+                                                                             Antonoglou, Daan Wierstra, and Martin A. Riedmiller. 2013. Playing Atari
+shaping rewards for continuous potential functions when dealing              with Deep Reinforcement Learning. CoRR abs/1312.5602 (2013). arXiv:1312.5602
+with small changes in potential value between consecutive states.            http://arxiv.org/abs/1312.5602
+                                                                        [10] Andrew William Moore. 1990. Efficient Memory-based Learning for Robot Control.
+                                                                             Technical Report. University of Cambridge.
+ACKNOWLEDGMENTS                                                         [11] Henrik Müller, Lukas Berg, and Daniel Kudenko. 2025. Using incomplete and
+This work was supported by the Lower Saxony Ministry of Science              incorrect plans to shape reinforcement learning in long-sequence sparse-reward
+                                                                             tasks. Neural Computing and Applications (10 Jan 2025). https://doi.org/10.1007/
+and Culture (MWK), in the zukunft.niedersachsen program of the               s00521-024-10615-2
+Volkswagen Foundation (HybrInt).
+[12] Andrew Y. Ng, Daishi Harada, and Stuart J. Russell. 1999. Policy Invariance            Oh, Alekh Agarwal, Danielle Belgrave, and Kyunghyun Cho (Eds.). https:
+     Under Reward Transformations: Theory and Application to Reward Shaping. In             //openreview.net/forum?id=iCxRsZcVVAH
+     Proceedings of the Sixteenth International Conference on Machine Learning (ICML   [16] Caroline Wang, Garrett Warnell, and Peter Stone. 2023. D-Shape: Demonstration-
+     ’99). Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 278–287.                Shaped Reinforcement Learning via Goal-Conditioning. In Proceedings of the 2023
+[13] Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian Ernes-          International Conference on Autonomous Agents and Multiagent Systems (London,
+     tus, and Noah Dormann. 2021. Stable-Baselines3: Reliable Reinforcement Learn-          United Kingdom) (AAMAS ’23). International Foundation for Autonomous Agents
+     ing Implementations. Journal of Machine Learning Research 22, 268 (2021), 1–8.         and Multiagent Systems, Richland, SC, 1267–1275.
+     http://jmlr.org/papers/v22/20-1364.html                                           [17] Eric Wiewiora. 2003. Potential-Based Shaping and Q-Value Initialization are
+[14] Halit Bener Suay, Tim Brys, Matthew E. Taylor, and Sonia Chernova. 2016. Learn-        Equivalent. J. Artif. Intell. Res. 19 (2003), 205–208. https://doi.org/10.1613/JAIR.
+     ing from Demonstration for Shaping through Inverse Reinforcement Learning.             1190
+     In Proceedings of the 2016 International Conference on Autonomous Agents & Mul-   [18] Yuchen Wu, Melissa Mozifian, and Florian Shkurti. 2021. Shaping Rewards
+     tiagent Systems (Singapore, Singapore) (AAMAS ’16). International Foundation           for Reinforcement Learning with Imperfect Demonstrations Using Generative
+     for Autonomous Agents and Multiagent Systems, Richland, SC, 429–437.                   Models. In 2021 IEEE International Conference on Robotics and Automation (ICRA)
+[15] Hao Sun, Lei Han, Rui Yang, Xiaoteng Ma, Jian Guo, and Bolei Zhou. 2022.               (Xi’an, China). IEEE Press, 6628–6634. https://doi.org/10.1109/ICRA48506.2021.
+     Optimistic Curiosity Exploration and Conservative Exploitation with Linear             9561333
+     Reward Shaping. In Advances in Neural Information Processing Systems, Alice H.
+

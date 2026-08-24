@@ -1,0 +1,1517 @@
+                                                                                                                        TYPE Methods
+                                                                                                                        PUBLISHED10 February 2025
+                                                                                                                        DOI 10.3389/frobt.2024.1444188
+
+
+
+
+                                                     HPRS: hierarchical
+OPEN ACCESS                                          potential-based reward shaping
+EDITED BY
+Giovanni Iacca,
+University of Trento, Italy
+                                                     from task specifications
+REVIEWED BY
+Önder Tutsoy,                                        Luigi Berducci 1*† , Edgar A. Aguilar 2† , Dejan Ničković 2 and
+Adana Science and Technology
+University, Türkiye                                  Radu Grosu 1
+Erdi Sayar,                                          1
+Technical University of Munich, Germany              Cyber-Physical Systems Group, Computer Engineering, TU Wien, Vienna, Austria, 2 Center for Digital
+                                                     Safety and Security, AIT Austrian Institute of Technology GmbH, Vienna, Austria
+*CORRESPONDENCE
+Luigi Berducci,
+  luigi.berducci@tuwien.ac.at
+†
+ These authors have contributed equally to
+                                                     The automatic synthesis of policies for robotics systems through reinforcement
+this work and share first authorship
+                                                     learning relies upon, and is intimately guided by, a reward signal. Consequently,
+RECEIVED 05 June 2024
+ACCEPTED 23 December 2024
+                                                     this signal should faithfully reflect the designer’s intentions, which are often
+PUBLISHED 10 February 2025                           expressed as a collection of high-level requirements. Several works have been
+                                                     developing automated reward definitions from formal requirements, but they
+CITATION
+Berducci L, Aguilar EA, Ničković D and               show limitations in producing a signal which is both effective in training and
+Grosu R (2025) HPRS: hierarchical                    able to fulfill multiple heterogeneous requirements. In this paper, we define
+potential-based reward shaping from task
+                                                     a task as a partially ordered set of safety, target, and comfort requirements
+specifications.
+Front. Robot. AI 11:1444188.                         and introduce an automated methodology to enforce a natural order among
+doi: 10.3389/frobt.2024.1444188                      requirements into the reward signal. We perform this by automatically translating
+COPYRIGHT                                            the requirements into a sum of safety, target, and comfort rewards, where
+© 2025 Berducci, Aguilar, Ničković and Grosu.        the target reward is a function of the safety reward and the comfort
+This is an open-access article distributed
+under the terms of the Creative Commons
+                                                     reward is a function of the safety and target rewards. Using a potential-
+Attribution License (CC BY). The use,                based formulation, we enhance sparse to dense rewards and formally prove
+distribution or reproduction in other forums is      this to maintain policy optimality. We call our novel approach hierarchical,
+permitted, provided the original author(s) and
+the copyright owner(s) are credited and that
+                                                     potential-based reward shaping (HPRS). Our experiments on eight robotics
+the original publication in this journal is cited,   benchmarks demonstrate that HPRS is able to generate policies satisfying
+in accordance with accepted academic                 complex hierarchical requirements. Moreover, compared with the state of the
+practice. No use, distribution or reproduction
+is permitted which does not comply with
+                                                     art, HPRS achieves faster convergence and superior performance with respect
+these terms.                                         to the rank-preserving policy-assessment metric. By automatically balancing
+                                                     competing requirements, HPRS produces task-satisfying policies with improved
+                                                     comfort and without manual parameter tuning. Through ablation studies, we
+                                                     analyze the impact of individual requirement classes on emergent behavior. Our
+                                                     experiments show that HPRS benefits from comfort requirements when aligned
+                                                     with the target and safety and ignores them when in conflict with the safety
+                                                     or target requirements. Finally, we validate the practical usability of HPRS in
+                                                     real-world robotics applications, including two sim-to-real experiments using
+                                                     F1TENTH vehicles. These experiments show that a hierarchical design of task
+                                                     specifications facilitates the sim-to-real transfer without any domain adaptation.
+
+                                                     KEYWORDS
+
+                                                     robotics, robot learning, reinforcement learning, reward shaping, formal specifications
+
+
+                                                     1 Introduction
+                                                         Reinforcement learning (RL) is an increasingly popular method for training
+                                                     autonomous agents to solve complex tasks in sophisticated environments (Mnih et al.,
+                                                     2015; Lillicrap et al., 2016; Silver et al., 2017). At the core of RL lies the reward function,
+
+
+
+Frontiers in Robotics and AI                                              01                                                              frontiersin.org
+Berducci et al.                                                                                                         10.3389/frobt.2024.1444188
+
+
+
+
+a user-provided signal that guides the learning process by rewarding            • An additional specification layer, allowing to group sets of
+or penalizing the agent’s actions. As autonomous agents become                    requirements and define priorities among them.
+increasingly capable and are expected to operate in real-world                  • An automatic procedure for generating a reward, following the
+environments, they are asked to solve tasks with a growing number                 order relation among the different requirements.
+of requirements, each with different levels of importance and                   • A training pipeline with integrated domain adaptation to
+sometimes opposing objectives. Since the reward function must                     mitigate sim-to-real transfer.
+capture all the desired aspects of the agent’s behavior, significant
+research effort has been invested in reward shaping over the past                 The advantage of our approach is the seamless passage from
+years (Ng et al., 1999; Laud and DeJong, 2003).                               task specifications to learning optimal control policies that satisfy
+    There are two major challenges in defining meaningful rewards,            the associated requirements while relieving the engineer from the
+which are best illustrated with an autonomous-driving (AD)                    burden of manually shaping rewards.
+application. The first arises from mapping numerous requirements                  In the experimental evaluation, we investigate the following
+into a single scalar reward signal. In AD, there are more than                research questions (RQs):
+200 rules that need to be considered when assessing the course
+of action (Censi et al., 2019). The second challenge stems from the             • RQ1: How does HPRS compare with existing logic-based and
+highly non-trivial task of determining the relative importance of                 multi-objective shaping approaches in producing an effective
+these different requirements. In this realm, there are a plethora of              training signal for reinforcement learning?
+regulations ranging from safety and traffic rules to performance,               • RQ2: How do policies trained with HPRS effectively capture the
+comfort, legal, and ethical considerations.                                       hierarchical structure of task requirements?
+    In order to address these challenges and train the policy to                • RQ3: What is the influence of HPRS’s hierarchical structure
+tackle tasks composed by many heterogeneous requirements, we                      on the emergent behavior, particularly concerning the less
+introduce a novel framework which automatically defines the reward                prioritized comfort requirements?
+function from the user-defined formal requirements in a systematic              • RQ4: How does HPRS demonstrate practical usefulness in real-
+fashion. Although former approaches based on formal languages                     world robotics applications?
+define a task as the combination of safety and liveness formulas
+(Jothimurugan et al., 2019; Icarte et al., 2018), we introduce a                  We answer the RQs by evaluating HPRS on four continuous-
+specification language to describe a task as a composition of                 control benchmarks (cart-pole, lunar lander, bipedal walker classic,
+safety, target, and comfort requirements. This formulation captures           and hardcore) and four physics-simulated environments consisting
+a broad class of problems and induces a natural ordering among                of two autonomous driving scenarios (stand-alone and follow the
+requirements, according to the class of membership: safety has the            leader) and two robot locomotion tasks (ant and humanoid). Our
+highest priority, followed by target that guides goal achievement and,        experiments show competitive results compared to state-of-the-
+finally, comfort, which are secondary and optional requirements.              art approaches, outperforming logic-based approaches in terms of
+    In contrast to existing reward design approaches that rely on             training efficiency and alignment with the intended behavior and
+manual tuning or learning of reward models (Christiano et al.,                multi-objective approaches in terms of generality and robustness
+2017), we propose a fully automated approach based on formal                  to different parameterizations. Moreover, we deploy the trained
+task specifications. In particular, we leverage the partial order             policies on F1TENTH racecars (O’Kelly et al., 2020), demonstrating
+of requirements and the quantitative evaluation of each of                    the practical usability of the proposed approach in non-trivial real-
+them to derive a reward function that inherently captures                     world robotics systems.
+the interdependence between different classes of requirements.
+Unlike multi-objective approaches that produce Pareto-optimal
+solutions, the proposed requirement class prioritization induces
+                                                                              1.1 Contributions
+an unambiguous trajectory ranking. The HPRS shaping optimizes
+all the requirements simultaneously by combining them in one
+                                                                                  In this paper, we introduce HPRS for RL from a set of formal
+multivariate multiplicative objective. Moreover, we characterize
+                                                                              requirements, proposing a learning pipeline to produce control
+the proposed reward function as a potential-based signal, which
+                                                                              policies amenable to real-world robotics applications. An initial
+allows us to provide theoretical guarantees on HPRS soundness
+                                                                              draft of HPRS appeared in Berducci et al. (2021) and was used as
+(Ng et al., 1999). Finally, in contrast to logic-based approaches,
+                                                                              background material in Berducci and Grosu (2022).
+which adopt robustness to compute the reward on complete or
+                                                                                  Here, we extend the HPRS theory, implementation,
+partial transition sequences (Li et al., 2017; 2018; Balakrishnan and
+                                                                              experimental evaluation, and applicability as follows:
+Deshmukh, 2019), we provide a dense reward signal. In this manner,
+HPRS avoids delaying reward computation over time and mitigates                 1. We reframe the HPRS theory and associated proofs to general
+the temporal credit-assignment problem, where a deferred reward                    unconstrained MDP, including theorems and proofs of the
+is not efficiently propagated to the preceding transitions.                        main results.
+    Our approach builds on top of the following four major                      2. We implement HPRS in auto-shaping, the first library for
+components:                                                                        reward shaping from hierarchical formal task specifications,
+                                                                                   which is integrated with state-of-the-art frameworks
+  • An expressive formal specification language capturing classes of               (Raffin et al., 2019) and monitoring tools (Ničković and
+    requirements that often occur in control tasks.                                Yamaguchi, 2020).
+
+
+
+Frontiers in Robotics and AI                                             02                                                          frontiersin.org
+Berducci et al.                                                                                                                10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 1
+   Proposed optimization pipeline: the process begins with human experts formalizing the task requirements as a set of formal specifications. These
+   requirements are processed through an automatic procedure to define an MDP with a dense and informative reward signal that reflects the prioritized
+   hierarchy of requirements. This shaped MDP can then be used with any reinforcement learning algorithm to train an agent capable of performing the
+   prescribed task while adhering to the specified priorities.
+
+
+
+
+  3. We evaluate HPRS on a broader set of simulated tasks
+     with a large number of comfort requirements, presenting an
+     extended evaluation and ablation studies of the proposed
+     approach.
+  4. We present a training pipeline with domain adaptation
+     to deal with real-world uncertainties and added two real-
+     world experiments using F1TENTH racecars to showcase the
+     practical applicability.
+    The proposed framework in Figure 1 requires minimal
+user intervention in the specification phase and automates the                    FIGURE 2
+problem definition and policy optimization. To support the                        Ranking of behaviors for the driving example: the task is defined by
+robust transfer of the learned policy to real-world applications,                 safety, target, and comfort requirements, which together induce a
+                                                                                  ranking of trajectories: (red) the car crashes into the wall, violating the
+we integrate a domain randomization module (Tobin et al.,                         safety requirement. (blue) The car safely progresses toward lap
+2017), which generates a diverse but plausible set of training                    completion but exhibits unnecessary jerk, resulting in poor comfort.
+environments. The approach is proven to be effective in various                   (green) The car satisfies both safety and target requirements while
+                                                                                  also optimizing comfort. This illustrates the natural ranking based on
+benchmarks and capable of handling the transfer to real-world                     the requirements’ classes, with safety taking the highest priority,
+applications.                                                                     followed by target achievement and, lastly, comfort.
+
+
+
+1.2 Motivating example
+                                                                               real hardware because of actuator limitations. Figure 2 shows various
+    We motivate our work with an autonomous-driving task: a                    intended and unintended behaviors.
+car drives around a track delimited by walls by controlling                        In this example, it also becomes evident that some requirements
+its speed and steering angle. The car is considered to have                    must have precedence over others. We consider safety as one of those
+completed a lap when it drives around the track and reaches its                requirements that fundamentally constrain the policy behavior,
+starting position.                                                             such as a catastrophic collision against the walls. Therefore, we
+    The task has seven requirements: (1) the car shall never collide           interpret a safety violation as one compromising the validity of the
+against the walls; (2) the car shall complete one lap in bounded               entire episode. Lap completion (requirement 2) is also a unique
+time; (3) the car shall drive in the center of the track; (4) the car          requirement that represents the agent’s main objective, or target, and,
+shall maintain a speed above a minimum value; (5) the car shall                in essence, its whole reason to be. After the safety requirement, this
+maintain a speed below a maximum value; (6) the car shall drive with           comes next in the hierarchy of importance. Explicitly, it means that
+a comfortable steering angle; (7) the car shall send smooth control            we are willing to sacrifice the rest of the requirements (requirements
+commands to the actuators.                                                     3–7) in order to complete a collision-free lap around the track.
+    A moment of thought reveals that these requirements might                  These requirements are, therefore, soft constraints that should be
+interfere with each other. For example, a car always driving                   optimized as long as they do not interfere with safety and the target.
+above the minimum speed (requirement 4) while steering below                   We call them comfort.
+the maximum angle (requirement 6) would have a limited turn                        In summary, we pose the following research question in this
+curvature. Any track layout containing a turn with a curvature                 paper: is there a principled way to shape an effective reward
+larger than this limit would result in a collision, thus violating             that takes into account all the task requirements in the order
+requirement 2. Furthermore, if the policy drives with high-                    of importance mentioned above? In the rest of this paper, we
+frequency saturated actuation only (i.e., bang–bang), the resulting            will illustrate the necessary steps leading to a positive answer,
+behavior is uncomfortable for the passengers and not transferable to           considering the motivating example.
+
+
+
+Frontiers in Robotics and AI                                              03                                                                   frontiersin.org
+Berducci et al.                                                                                                           10.3389/frobt.2024.1444188
+
+
+
+
+2 Related work                                                                  This makes them difficult to integrate with contemporary RL
+                                                                                algorithms, which are developed under these assumptions. For
+    RL has emerged as a powerful framework for decision-                        these reasons, approaches that delay the credit assignment to
+making across diverse domains, including robotics. The design                   evaluate the complete (Li et al., 2017) or partial sequences of
+and specification of reward functions are critical for ensuring                 transitions (Balakrishnan and Deshmukh, 2019) have only partially
+that RL agents achieve the desired outcomes efficiently and safely.             mitigated the underlying problems. The specification of the task
+Consequently, a reward design has been extensively studied across               as a monolithic formula and the use of quantitative semantics
+various research communities. This section provides an overview                 suffer from poor usability in RL due to locality and masking of
+of key research directions addressing this challenge, including                 competing terms (Mehdipour et al., 2019). To overcome these
+reward shaping, RL with temporal logic, multi-objective RL, and                 issues, we define a task as the composition of different requirements
+formalization of hierarchically structured requirements. Moreover,              and develop an automatic methodology to provide a dense reward
+we highlight how our approach differs from the existing literature in           at every step. This approach is more in line with cumulative RL
+these areas.                                                                    formulations used in robotics and completely agnostic to the
+                                                                                learning algorithm.
+
+2.1 Reward shaping
+                                                                                2.3 Multi-objective RL
+     Specifying reward functions for decision-making algorithms
+is a long-studied problem in the RL community. A poorly                              Multi-objective RL (MORL) studies reinforce learning
+designed reward might not capture the actual objective and result               algorithms to optimize multiple and often conflicting objectives
+in problematic or inefficient behaviors (Amodei et al., 2016).                  (Roijers et al., 2013; Hayes et al., 2022). Several algorithms have
+Therefore, shaping the reward helps in effectively steering the                 been proposed to learn single or multiple policies (Liu et al.,
+RL agent toward favorable behaviors (Ng et al., 1999; Laud and                  2015; Tutsoy, 2021). There exist several techniques to combine
+DeJong, 2003). Reward shaping aims in improving the training                    multiple rewards into a single scalar value via scalarization, such
+efficiency of reinforcement learning by modifying the reward                    as linear or non-linear projections (Natarajan and Tadepalli, 2005;
+function (Eschmann, 2021; Devidze et al., 2021). A particularly                 Barrett and Narayanan, 2008; Van Moffaert et al., 2013). Other
+notable approach, which will be central in this work, is potential-             approaches formulate structured rewards by imposing or assuming
+based reward shaping (PBRS) (Ng et al., 1999). PBRS modifies                    a preference ranking on the objectives and finding an equilibrium
+the original reward using the difference of potential functions                 among them (Gábor et al., 1998; Shelton, 2001; Zhao et al., 2010;
+to accelerate learning. The characterization of potential as state-             Abels et al., 2019; Mehdipour et al., 2020). However, the problem
+dependent functions leads to preserving policy optimality (Ng et al.,           of specifying preferences and studying the tradeoff among different
+1999), and it has been later connected to the initialization of                 classes of requirements remain a challenge. To overcome this issue,
+Q-values (Wiewiora, 2003). PBRS continues to be particularly                    we exploit the natural interpretation of the requirement classes to
+effective in environments with sparse or delayed rewards, improving             impose an unambiguous interpretation of task satisfaction without
+convergence rates in tasks such as robotic control (Duan et al.,                the need to deal with Pareto-optimal solutions. From this task
+2016), and it represents a fundamental result of reinforcement                  semantics, we propose an automatic reward-shaping methodology
+learning theory (Sutton, 2018), based on which we are going to                  that enforces it into a scalar reward without requiring tedious
+develop our methodology.                                                        tuning of weights. Compared to widely adopted linear scalarizations
+                                                                                (Mehdipour et al., 2020; Brys et al., 2014), we adopt a multivariate
+                                                                                formulation to combine individual requirements in a multiplicative
+2.2 RL with temporal logic                                                      way (Russell and Norvig, 2020) to capture the inter-class dependence
+                                                                                of requirements. Therefore, instead of relying on the arbitrary
+     Temporal logic (TL) is a well-suited formalism for                         choice of weights for each requirement, we define a systematic
+specifying complex temporal behaviors in an unambiguous                         methodology to produce a reward signal. For completeness, in
+way. For this reason, several works adopt TL to specify reward                  the experimental phase, we compare our approach to various
+functions in RL. Although some works focus on multitasking                      instances of the multi-objective method adopted in Brys et al.
+specifications, advancing techniques for task decomposition                     (2014) and show the impact of having an arbitrary choice of
+(Jothimurugan et al., 2021; Toro Icarte et al., 2018; Camacho et al.,           static weights.
+2017; Jothimurugan et al., 2019), or study formulations that are
+tailored for formally specified tasks (Fu and Topcu, 2014; Jones et al.,
+2015; Icarte et al., 2018; Li et al., 2018), we consider the body               2.4 Hierarchically structured requirements
+of research closer to the problem of reward shaping from formal
+task specification. The main works develop methods to exploit the                   Partial ordering of requirements into a hierarchy has been
+quantitative semantics of signal temporal logic (STL) and its variants          proposed before in different settings. In this context, hierarchical
+to systematically derive a reward. STL quantitative semantics (Maler            refers to the structure of the task itself, where requirements are
+and Nickovic, 2004) are traditionally non-cumulative and non-                   prioritized based on their importance, and it differs from the
+Markovian since the evaluation depends on the entire trajectory.                meaning that hierarchical has in the literature on hierarchical
+
+
+
+
+Frontiers in Robotics and AI                                               04                                                          frontiersin.org
+Berducci et al.                                                                                                                10.3389/frobt.2024.1444188
+
+
+
+
+control framework (Barto and Mahadevan, 2003). The rulebook                   TABLE 1 Formalized requirements for driving example: the task is
+formalism uses a hierarchy of requirements for evaluating behaviors           formalized as a set of formulas. Req1 ensures that a minimum distance
+                                                                              from walls is maintained; Req2 specifies completing a lap; Req3
+produced by a planner (Censi et al., 2019) without addressing                 encourages tracking the center-line within tolerance; Req4–5
+                                                                              encourage maintaining a velocity within limits; Req6–7 encourage
+the problem of learning a control policy from it. More recent                 comfortable controls with small steering angles and smooth changes.
+works propose to synthesize a policy with optimal control and
+enforce hard constraints through CBF (Xiao et al., 2021) or with                Req id           Formula id              Formula
+receding horizon planning (Veer et al., 2023). However, although                Req1             φ1                      ensure dwalls (s) > 0
+they assume perfect knowledge of the environment dynamics
+and focus on planning for autonomous driving, our work, to                      Req2             φ2                      achieve L(s) = 1.0
+the best of our knowledge, is the first to use hierarchical task
+                                                                                Req3             φ3                      encourage dcenter (s) ≤ dcomf
+specifications with model-free reinforcement learning for robotics
+control. Complementary approaches use hierarchical specifications               Req4             φ4                      encourage v ≥ vmin
+with inverse RL (Puranic et al., 2021), learning dependencies among
+formal requirements from demonstrations. However, although they                 Req5             φ5                      encourage v ≤ vmax
+learn dependencies from data, we infer them from requirement
+                                                                                Req6             φ6                      encourage |α| ≤ αcomf
+classes and use them in reward shaping.
+                                                                                Req7             φ7                      encourage |a| ≤ Δa
+
+
+3 Methods
+    In this section, we present our main contribution: A method
+                                                                              formalize the one-time or the persistent achievement of a goal
+for automatically generating a reward-shaping function from a plant
+                                                                              within an episode, respectively. Finally, comfort requirements, of the
+definition and a set of safety, target, and comfort requirements. In
+                                                                              form encourage p, introduce the soft satisfaction of p, as often as
+order to make this method accessible, we first introduce a formal
+                                                                              possible, without compromising task satisfaction.
+language allowing formulation of the requirements mentioned
+                                                                                   Let τ = (s0 , a1 , s1 , a2 , …) denote an episode of |τ| = t steps, and let
+above. Our method performs the following steps:
+                                                                              𝕋 be the set of all such traces. Each requirement φ induces a Boolean
+                                                                              function σ: 𝕋 → 𝔹, evaluating whether an episode τ ∈ 𝕋
+  • Step 1: infers the priority among different requirements based
+                                                                              satisfies the requirement φ. We define the requirement satisfaction
+    on the class of membership and formulates a task as a partially
+                                                                              function σ as follows:
+    ordered set of requirements.
+  • Step 2: extends the plant definition to an MDP by adding a
+    sparse-reward signal to reflect task satisfaction and the episode
+                                                                                  σ (achieve p, τ)                     iff ∃i ≤ t s.t. f (si ) ≥ 0,
+    termination conditions.
+  • Step 3: enrich the reward with a continuous HPRS signal by                    σ (conquer p, τ)                     iff ∃i ≤ t s.t. ∀j ≥ i, f (sj ) ≥ 0,
+    hierarchically evaluating the individual requirements.                        σ (ensure p, τ)                      iff ∀i ≤ t s.t. f (si ) ≥ 0,
+
+    The resulting training signal can then be used by any RL                      σ (encourage p, τ)                   iff true.
+algorithm and integrated with domain adaptation to deal with sim-
+to-real transfer. We discuss and demonstrate its applicability in the
+experimental section.                                                             Example: let us consider the motivating example and formally
+                                                                              specify its requirements. The state s = (x, y, θ, v, θ)̇ consists of x, y, θ
+                                                                              for the car position and heading in global coordinates, and v and θ̇
+3.1 Requirement specification language                                        are the car speed and rotational velocities, respectively. The control
+                                                                              action is a = (ν, α), where ν denotes the desired speed and α denotes
+    We formally define a set of expressive operators to                       the steering angle.
+capture requirements that often occur in control problems.                        We first define (1) dwalls :S → ℝ, a distance function that returns
+Considering atomic predicates p ≐ f(s) ≥ 0 over observable                    the distance of the car to the closest wall; (2) L:S → [0, 1], a lap
+states s ∈ S, we extend existing task-specification languages                 progress function that maps the car position to the fraction of
+(e.g., SpectRL (Jothimurugan et al., 2021)) and define the                    track that has been driven from the starting position; (3) dcenter :S →
+requirements as follows:                                                      ℝ, a distance function that returns the distance of the car to the
+                                                                              centerline; (4) the maximum deviation from the centerline dcomf that
+   φ ≐ achieve p | conquer p | ensure p | encourage p.                        we consider tolerable; (5) the maximum steering angle αcomf that
+                                                                              we consider being comfortable to drive straight; (6) the minimum
+    Commonly, a task can be defined as a set of requirements from             and maximum speed vmin , vmax that define the speed limits; (7) the
+three basic classes: safety, target, and comfort. Safety requirements,        maximum tolerable change in controls Δa that we consider to be
+of the form ensure p, are associated with an invariant condition              comfortable. Then, the task can be formalized with the requirements
+p. Target requirements, of the form achieve p or conquer p,                   reported in Table 1.
+
+
+
+
+Frontiers in Robotics and AI                                             05                                                                      frontiersin.org
+Berducci et al.                                                                                                                        10.3389/frobt.2024.1444188
+
+
+
+
+3.2 A task as a partially ordered set of                                            3.3.1 Episodes
+requirements                                                                            An episode ends when its task satisfaction is decided either
+                                                                                    through a safety violation, timeout, or goal achievement. The goal
+    We formalize a task by a partially ordered set of formal                        achievement evaluation depends on the target operator adopted: for
+requirements, Φ, assuming that the target is unique and                             achieve p, the goal is achieved when visiting at time t ≤ T, a
+unambiguous. Formally, Φ = ΦS ⊎ ΦT ⊎ ΦC , such that                                 state st that satisfies p; for conquer p, the goal is achieved if there is
+                                                                                    a time i ≤ T such that p is satisfied for all si , i ≤ t ≤ T.
+      ΦS ≔ {φ     |     φ ≐ ensure p}
+      ΦC ≔ {φ      |    φ ≐ encourage p}                                            3.3.2 Base reward
+                                                                                        Given the task (Φ, ≺), we first define a sparse reward that
+      ΦT ≔ {φ     |     φ ≐ achieve p           ∨   φ ≐ conquer p}                  incentivizes achieving the goal. Let the property of the unique target
+                                                                                    requirement be p ≐ f(s) ≥ 0. Then,
+     The target requirement is required to be unique (|ΦT | = 1).
+     We use a very natural interpretation of importance among the
+                                                                                                                      {1           if f (s′ ) ≥ 0
+class of requirements, which considers decreasing importance from                                     R (s, a, s′ ) = {
+safety, to target, and to comfort requirements.                                                                         0          otherwise
+                                                                                                                      {
+     Formally, this natural interpretation of importance defines
+                                                                                        The rationale behind this choice is that we aim to teach the
+a (strict) partial order relation ≺ on Φ, which is defined as
+                                                                                    policy to reach the target and stay there as often as possible.
+follows:
+                                                                                    For achieve p, R maximizes the probability of satisfying p. For
+                                                                                    conquer p, there is an added incentive to reach the target as soon
+          φ ≺ φ′ iff (φ ∈ ΦS ∧ φ′ ∉ ΦS ) ∨ (φ ∈ ΦT ∧ φ′ ∈ ΦC )
+                                                                                    as possible and stay there until T.
+    The resulting pair (Φ, ≺) forms a partially ordered set of                          The associated MDP is, in principle, solvable with any RL
+requirements and defines our task. Extending the satisfaction                       algorithm. However, although the sparse base reward R can help
+semantics to a set, we consider a task accomplished when all of its                 solve simple tasks, where the target is easily achieved, it is completely
+requirements are satisfied, as follows:                                             ineffective in more complex control tasks.
+
+
+                        σ (Φ, τ) iff ∀φ ∈ Φ,    σ (φ, τ)                (1)
+                                                                                    3.4 Hierarchical potential-based reward
+     The priority among the class of requirements induces an                        shaping
+ordering on trajectories or rank (Veer et al., 2023). The intuition of
+episode rank based on our requirements is the following: an episode                      Here, we introduce the main contribution of this work, our
+fully satisfying all the classes of requirements has the highest rank               hierarchical potential-based reward shaping (HPRS). Introducing a
+(i.e., rank = 1) and an episode only satisfying safety and target has a             novel design to produce a dense reward signal based on the hierarchy
+lower rank but is still higher than an episode only satisfying safety;              of requirements, we aim to continuously provide feedback during
+finally, an episode violating all the classes of requirements has the               training, guiding the agent toward the task satisfaction.
+lowest rank (i.e., rank = 23 ).                                                          We assume the predicates p(s) ≐ f(s) ≥ 0 to be not
+                                                                                    trivially satisfied in all the states s; otherwise, they can be omitted
+Definition 1: Given an episode τ and a task specification (Φ, ≺),                   by the specification. Each signal is then bounded in [l, u] for l <
+where Φ = ΦS ⊎ ΦT ⊎ ΦC , we define the rank of the episode over N =                 0 < u. We also define the negatively saturated signal f − (s) =
+3 classes as follows:                                                                  min(0, f(s)) and the two following signals:
+                                          N−i
+                                                                                                                    f − (s)
+                       rank (Φ, τ) = 2N − ∑ σ (ΦCi , τ)                                            c (p, s) ≐ 1 −           , b (p, s) ≐ 1≥0 ( f (s)) ,
+                                          i=1                                                                          l
+                                                                                    where 1≥0 (⋅) is an indicator function of non-negative numbers. Both
+                                                                                    c and b are bounded in [0, 1], where 1 denotes the satisfaction
+                                                                                    of p and 0 denotes its largest violation. However, although c is a
+3.3 MDP formalization of a task                                                     continuous signal, b is discrete, with values in {0, 1}.
+                                                                                        Using the signals c and b, we now define the individual score r
+     We assume that the plant (environment controlled by an                         for each requirement φ ∈ Φ as follows:
+autonomous agent) is given as E = (S, S0 , A, P), where S is the
+set of states, S0 is the set of initial states, A is the set of actions, and                                     { b (p, s)        if φ ∈ ΦS
+                                                                                                      r (φ, s) = {                                  .                (2)
+P(s′ |s, a) is its dynamics, that is, the probability of reaching state s′                                       {
+                                                                                                                   c (p, s)        otherwise
+by performing action a in state s.
+     Given an episodic task (Φ, ≺) over a bounded time horizon T,                   Definition 2: Let (Φ, ≺) be a task specification. Then, the
+our goal is to automatically extend the environment E to a Markov                   hierarchical potential function is defined as follows:
+decision process (MDP) M = (S, S0 , A, P, R, T). To this end, we
+define R(s, a, s′ ), the reward associated with the transition from state                           Ψ (s) = ∑ ( ∏ r (φ′ , s)) ⋅ r (φ, s) .                           (3)
+s to s′ under action a, to satisfy (Φ, ≺).                                                                   φ∈Φ     φ′ :φ′ ≺φ
+
+
+
+
+Frontiers in Robotics and AI                                                   06                                                                         frontiersin.org
+Berducci et al.                                                                                                                                                        10.3389/frobt.2024.1444188
+
+
+
+
+    This potential function is a weighted sum over all requirement                                               The optimal action-value function Q⋆M satisfies the Bellman
+scores r(φ, s). The weight of r(φ, s) is the product of the scores r(φ′ , s)                                 equation, which, for the undiscounted episodic MDP considered in
+of all the requirements φ′ that are strictly more important than φ.                                          this work (i.e., discount γ = 1), can be written as follows:
+A visual representation of the signals composing the reward for our
+motivating example is depicted in Figure 3.                                                                          Q⋆M (s, a) = 𝔼s′∼P(⋅|s,a) [R (s, a, s′ ) + maxa′∈A Q⋆M (s′ , a′ )] .
+    Example: let us consider the motivating example and unpack                                                  We can manipulate the expression to recover a new action-value
+the potential term defined in Equation 3. For each of the seven                                              function that we define as ̂
+                                                                                                                                        Q(s, a):
+requirements, we define the score terms, as shown in Equation 2:
+                                                                                                                                         ̂ (s, a) = Q⋆ (s, a) − Ψ (s)
+                                                                                                                                         Q           M
+     r (φ1 , s) , r (φ2 , s) , r (φ3 , s) , r (φ4 , s) , r (φ5 , s) , r (φ6 , s) , r (φ7 , s) .
+
+    Let Φ = ΦS ⊎ ΦT ⊎ ΦC represent the set of requirements defining                                                    = 𝔼s′∼P(⋅|s,a) [R (s, a, s′ ) − Ψ (s) + maxa′∈A Q⋆M (s′ , a′ )]
+the task. We expand the inner terms of Equation 3, weighting each
+score term based on the scores of higher-priority requirements:                                                  = 𝔼s′ ∼P(⋅|s,a) [R (s, a, s′ ) + Ψ (s′ ) − Ψ (s′ ) − Ψ (s) + maxa′ ∈A Q⋆M (s′ , a′ )]
+
+                                    Ψφ1 (s) = r (φ1 , s) ,
+                                                                                                              = 𝔼s′ ∼P(⋅|s,a) [R (s, a, s′ ) + Ψ (s′ ) − Ψ (s) + maxa′ ∈A (Q⋆M (s′ , a′ ) − Ψ (s′ ))] (5)
+                              Ψφ2 (s) = r (φ1 , s) ⋅ r (φ2 , s) ,
+                                                                                                                     = 𝔼s′∼P(⋅|s,a) [R′ (s, a, s′ ) + maxa′∈A (Q⋆M (s′ , a′ ) − Ψ (s′ ))]
+            Ψφi (s) = r (φ1 , s) ⋅ r (φ2 , s) ⋅ r (φi , s) ,         ∀i = 3, …, 7.
+                                                                                                                                                                    ̂ (s′ , a′ ))] .
+                                                                                                                          = 𝔼s′∼P(⋅|s,a) [R′ (s, a, s′ ) + maxa′∈A (Q
+    Each term is weighted according to the task hierarchy semantics.
+Safety is the highest priority, so the potential for φ1 is unweighted.                                           The final result turns out to be the Bellman equation of M′ , and
+Target follows safety, so the potential for φ2 is weighted by                                                by the uniqueness of the optimal action-value function Q⋆M′ , we can
+safety. Comfort is the lowest priority, so the potentials for all                                            now prove that the optimal policy of M′ is still optimal for M.
+comfort requirements φi (i = 3, …, 7) are weighted by both safety
+and target. Finally, the overall potential is defined as the sum of the                                               π⋆M′ (s) ∈ argmax Q⋆M′ (s, a) = argmax Q⋆M (s, a) − Ψ (s) .
+                                                                                                                                      a∈A                        a∈A
+intermediate terms:
+                                                                                                                 Since Ψ(s) only depends on the state s, it does not affect the
+                                                                                                             action selection, thus completing the proof.
+   Ψ (s) = Ψφ1 (s) + Ψφ2 (s) + Ψφ3 (s) + Ψφ4 (s) + Ψφ5 (s) + Ψφ6 (s) + Ψφ7 (s) .
+
+
+                                                                                                             3.5 Rank-preserving policy-assessment
+    The potential is thus a multivariate signal that combines the scores                                     metric
+with multiplicative terms (Russell and Norvig, 2020), according to
+the ordering defined in the task (Φ, ≺). A linear combination of                                                  Comparing the performance and behaviors emergent by
+scores, as typical in multi-objective scalarization, would assume                                            training with different rewards needs an external, unbiased
+independence among objectives and would not be expressive                                                    assessment metric because each reward formulation has its own
+enough to capture their interdependence (Russell and Norvig, 2020).                                          scale. To this end, we introduce a rank-preserving policy-assessment
+Crucially, the weights dynamically adapt at every step as well,                                              metric (PAM) F, capturing the logical satisfaction of various
+according to the satisfaction degree of the requirements.                                                    requirements and evaluating the episode according to the task
+                                                                                                             satisfaction.
+Corollary 1: The optimal policy for the MDP M′ , where its reward
+                                                                                                                  The rank defined in Definition 1 does not capture any
+R′ is defined with HPRS as
+                                                                                                             preferences between episodes satisfying the same class of
+                     R′ (s, a, s′ ) = R (s, a, s′ ) + Ψ (s′ ) − Ψ (s)                             (4)        requirements. According to our task semantics, we prefer
+                                                                                                             the episode with more frequent satisfaction of the comfort
+is also an optimal policy for the MDP M with reward R.                                                       requirements. We formalize it in the definition of the PAM F
+     This corollary shows that HPRS preserves the policy optimality                                          that we use to monitor the learning process and compare HPRS
+for the considered undiscounted episodic setting. It follows by the                                          to state-of-the-art approaches.
+fact that Ψ:S → ℝ is a potential function that is proved to                                                       Let Φ = ΦS ⊎ ΦT ⊎ ΦC be the set of requirements defining the
+preserve the policy optimality (Ng et al., 1999). For completeness,                                          task. Then, we define F as follows:
+we report the proof of this standard result in the following.                                                                                    1            1
+     Proof: consider the MDP M = (S, S0 , A, P, R, T), and let                                                            F (Φ, τ) = σ (ΦS , τ) + σ (ΦT , τ) + σavg (ΦC , τ) ,                           (6)
+                                                                                                                                                 2            4
+M′ be the MDP obtained by transforming the reward with the
+                                                                                                             where σ(Φ, τ) ∈ {0, 1} is the satisfaction function evaluated over
+hierarchical potential shaping described in Equation 4.
+                                                                                                             Φ and τ. We also define a time-averaged version for any comfort
+     Let π⋆M denote the optimal policy for M, which maximizes the
+                                                                                                             requirement φ = encourage f(s) ≥ 0 as follows:
+optimal action-value function Q⋆M as follows:
+                                                                                                                                                          |τ|
+                                                                                                                                                             1≥0 ( f (si ))
+                             π⋆M (s) ∈ arg max Q⋆M (s, a) .                                                                             σavg (φ, τ) = ∑                     .                            (7)
+                                              a∈A                                                                                                        i=1     |τ|
+
+
+
+Frontiers in Robotics and AI                                                                            07                                                                              frontiersin.org
+Berducci et al.                                                                                                                             10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 3
+   Hierarchical potential-based reward shaping: Simulation of a car driving a full lap (H) showing trajectory (dashed line) and key timesteps (numbered
+   boxes): (0) approaching a turn, (1) entering a turn, (2) passing an obstacle, (3) exiting a turn, and (4) final straight. (A–C) Robustness signals for the (A)
+   safety, (B) target, and (C) comfort requirements. (D–F) Potentials using the hierarchical weights based on membership class. (G) Sum of rewards for
+   sparse and our HPRS reward. The following patterns emerge: safety is consistently maintained at 1. Target is incrementally achieved. Comfort is
+   satisfied as long as it does not conflict with safety and target. The comfort signal decreases near turns and obstacles, and its contribution in the reward
+   increases with target. The overall training signal is much more dense than the sparse base reward.
+
+
+
+
+    Its set-wise extension computes the set-based average.                          where r0 , r1 , r2 are non-negative constants. The decomposition
+                                                                                    considers that all the classes before k are evaluated in the same
+Theorem 1: Given a task (Φ, ≺), the defined metric F preserves the                  way for τ1 and τ2 , summing up to a constant term r0 ; the k-th
+episode rank such that                                                              class is evaluated 1 for τ1 and 0 for τ2 , and all successive classes of
+                                                                                    requirements account r1 and r2 for τ1 and τ2 , respectively.
+       rank (Φ, τ1 ) < rank (Φ, τ2 )     ⇒       F (Φ, τ1 ) > F (Φ, τ2 ) .              Removing the common term r0 , it remains to prove that
+
+      Proof: To prove that the metric F is a rank-                                                                           1 k−1
+                                                                                                                    r2 <           + r1 .
+preserving function (Veer et al., 2023), let us consider any episodes                                                        2
+τ1 , τ2 , for which rank(Φ, τ1 ) < rank(Φ, τ2 ) with respect to the task                We use the fact that for any τ, σ(Φ, ⋅) ∈ [0, 1] and σavg (Φ, ⋅) ∈ [0, 1]
+specification (Φ, ≺).                                                               to upperbound r2 as follows:
+      Let k be the first class of requirement, for which σ(ΦCk , τ1 ) >                         N−1                                                    N
+σ(ΦCk , τ2 ). We can decompose the episode evaluations in Equation                                   1 i−1                 1 N−1                        1 i−1
+                                                                                          r2 = ∑           σ (ΦCi , τ2 ) +       σavg (ΦC , τ2 ) < ∑          .
+                                                                                                     2                     2                            2
+6 as follows:                                                                                  i=k+1                                              i=k+1
+
+                                                                                        Finally, we expand the geometric series as follows:
+                                            1 k−1
+                        F (Φ, τ1 ) = r0 +         + r1 ,
+                                            2                                                     N          1  k 1      N
+                                                                                                      1 i−1 2 − 2                1 k−1     1N   1 k−1
+                                                                                                 ∑         =                 =         (1 − ) <       ,
+                          F (Φ, τ2 ) = r0 + 0 + r2 ,                                            i=k+1
+                                                                                                      2        1− 1  2
+                                                                                                                                 2         2    2
+
+
+
+Frontiers in Robotics and AI                                                   08                                                                       frontiersin.org
+Berducci et al.                                                                                                            10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 4
+   Policy assessment metric: example of a learning curve evaluated using the policy assessment metric (PAM). The curve is divided into three distinct
+   intervals, each corresponding to different levels of task satisfaction: safety only, safety with target but poor comfort, and safety with target and
+   maximum comfort. We use PAM as the evaluation metric because it effectively captures and distinguishes the quality of agent behavior across multiple
+   objectives.
+
+
+
+
+where the last step follows by the fact that (1 − 12 ) < 1,
+                                                                  N
+                                                                               4.1 Task specification
+fulfilling the proof.
+     Since this metric is going to be adopted in the subsequent                    The task is specified using the declarative language
+experimental section, we depict the levels of requirements’                    described in Section 3.2. The users define a list of requirements,
+satisfaction in Figure 4 to highlight the rank-preserving nature of            variables (V) and constants (C), and the partially ordered sets are
+PAM. Moreover, the following corollary formalizes the quantitative             inferred from their classes. Specifications for standard environments
+relations that follow from the construction of the PAM F and the               are provided as YAML files.
+semantics of the task satisfaction defined in Equation 1.
+
+Corollary 2: Consider a task (Φ, ≺) and an episode τ. Then, the
+following relations hold for F:
+                                                                               4.2 Parsing and online preprocessing
+
+                       F (Φ, τ) ≥ 1.0 ↔ σ (ΦS , τ) ,                               We use Lark to translate the task specification from textual form
+                                                                               to a parse tree, according to the specified requirement grammar.
+                                                                               During each step of the environment, the task monitor computes
+                        F (Φ, τ) ≥ 1.5 ↔ σ (Φ, τ) .
+                                                                               the variables defined in the task specification from the simulation
+                                                                               state. These observable quantities are then passed to the backend for
+                                                                               reward signal computation.
+4 Auto-shaping library
+    We implemented the proposed HPRS in the auto-shaping                       4.3 Shaping library
+library. The library is implemented in Python for automatic
+reward generation based on declarative task specifications. It                     The backend component evaluates requirement specifications
+wraps the given environment to calculate rewards by evaluating                 based on defined semantics and is responsible for computing the
+the task requirements, according to the defined hierarchy. The                 reward signal. The library incorporates various automatic shaping
+library, depicted in Figure 5, comprises three components: (1)                 methods derived from formal task specifications, including those
+the task specification, (2) a frontend to parse the specification              described in the experimental phase.
+and monitor the environment, and (3) a backend that computes                       For methods based on STL monitoring, the library uses the
+the reward.                                                                    RTAMT monitoring tool (Ničković and Yamaguchi, 2020), which
+
+
+
+Frontiers in Robotics and AI                                              09                                                              frontiersin.org
+Berducci et al.                                                                                                                 10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 5
+   Auto-shaping library: architecture of auto-shaping, a software library designed for automatic reward shaping from hierarchical task specifications.
+   The library accepts the environment and a formal task specification, which define the operational context and the desired behavior. It consists of a
+   parser to interpret task specifications, a monitor to track agent performance, and various shaping techniques, including the proposed HPRS. The library
+   adopts standard RL interfaces for easy integration with existing training libraries, facilitating automatic reward shaping for formal task specifications.
+
+
+
+
+implements infinity-norm and filtering quantitative semantics. The                and multiple cars, respectively; and two locomotion tasks with ant
+library design focused on usability and compatibility with existing               and humanoid legged-robots. In each use case, we formalize a set of
+RL frameworks. It is implemented as a wrapper compatible with the                 requirements Φ = ΦS ⊎ ΦT ⊎ ΦP and derive their partially ordered
+gymnasium API (Towers et al., 2023) and follows the standardized                  set (Φ, ≺).
+interaction between the agent and the environment. This design                         To demonstrate that our reward-shaping methodology is general
+choice ensures compatibility with various RL frameworks and access                and completely agnostic by the underlying training algorithm,
+to state-of-the-art algorithm implementations without requiring                   we conduct experiments using SAC from Raffin et al. (2019)
+custom implementations. Examples are provided using stable-                       and PPO from Mittal et al. (2023), which are two stable and widely
+baselines3 (Raffin et al., 2019) and CleanRL (Huang et al.,                       adopted implementations.
+2022). We believe that this library simplifies the process of                          For SAC, we tune the algorithm hyperparameters under the
+generating reward signals in RL by automating the evaluation                      original environment and reward, starting from the configuration
+of hierarchical requirements from formal task specification. Its                  in rl-zoo3 (Raffin, 2020). For PPO, we use the hyperparameters
+compatibility with popular RL frameworks enhances its usability                   as reported in Mittal et al. (2023) because they were already
+and applicability, standing out as the first library providing a                  tuned for the tasks used in the experiments. We adopt the
+unified framework for reward shaping from hierarchical task                       same configuration for each environment, and during training,
+specifications.                                                                   we evaluate the performance of the policy at fixed intervals with
+                                                                                  respect to the aggregated PAM F and scores for each individual
+                                                                                  class. The details regarding the training and specific algorithm’s
+5 Experimental results                                                            hyperparameters are reported in Table 2.
+
+
+5.1 Experimental setup
+                                                                                  5.2 Use cases
+    To evaluate HPRS, we employ state-of-the-art implementations
+of RL algorithms on eight use cases: the cart-pole with an obstacle;                  In the remainder of the presentation, we organize the
+the lunar lander with an obstacle; the bipedal walker both in the                 experiments based on the type of environments into classic-
+classic and hardcore versions; two customs driving tasks with single              control environments and physics-simulated environments. Here, we
+
+
+
+Frontiers in Robotics and AI                                                 10                                                                frontiersin.org
+Berducci et al.                                                                                                   10.3389/frobt.2024.1444188
+
+
+
+
+TABLE 2 Training configuration and hyperparameters for the simulated environments.
+
+                                                           CP                  LL            BW                   BW (hardcore)
+
+                                                   Training and evaluation configuration
+
+                        Episode timeout                    400                 600           500                        500
+
+                           Total steps                     1e6                1.5e6          2e6                        3e6
+
+                     Evaluation frequency                  1e4                 1e4           1e4                        1e4
+
+              Number of evaluation episodes                 10                 10             10                         10
+
+                                                                 Hyperparameters
+
+                           Algorithm                       SAC                SAC            SAC                        SAC
+
+                          Discount γ                       0.99               0.99           0.99                       0.99
+
+                         Learning rate                    0.0003             0.0003         0.0003                     0.0003
+
+                           Buffer size                     5e4                 3e5           1e6                        1e6
+
+                        Learning starts                    1e2                 1e4           1e2                        1e2
+
+                           Batch size                       64                 256           256                        256
+
+                    Soft-update coefficient τ             0.005               0.01          0.005                       0.005
+
+                       Critic architecture               [256,256]          [400, 300]     [256,256]                  [256,256]
+
+                  Policy-network architecture            [256,256]          [400, 300]     [256,256]                  [256,256]
+
+                                                              SD                 FLV                 ANT                       HUM
+
+                                                   Training and evaluation configuration
+
+                         Episode timeout                      300                 300                  960                       960
+
+                            Total steps                       1e6                 1e6                  1.3e8                    2.6e8
+
+                      Evaluation frequency                    1e4                 1e4                  8e6                       8e6
+
+                  Number of evaluation episodes                  10                 10                  30                        30
+
+                                                                 Hyperparameters
+
+                            Algorithm                        SAC                 SAC                   PPO                      PPO
+
+                            Discount γ                        0.99               0.99                  0.99                      0.99
+
+                          Learning rate                     0.0003              0.0003               0.0005                     0.0005
+
+                            Buffer size                       3e5                 3e5                  1.3e5                    1.3e5
+
+                         Learning starts                      1e2                 1e2                    -                        -
+
+                            Batch size                        256                 256                  32e3                     32e3
+
+                     Soft-update coefficient τ               0.005               0.005                   -                        -
+
+                        Critic architecture                [256,256]           [256,256]        [400, 200, 100]          [400, 200, 100]
+
+                   Policy-network architecture             [256,256]            [64, 64]        [400, 200, 100]          [400, 200, 100]
+
+
+
+
+Frontiers in Robotics and AI                                           11                                                         frontiersin.org
+Berducci et al.                                                                                                                 10.3389/frobt.2024.1444188
+
+
+
+
+TABLE 3 Formalized requirements for all the tasks.                                  TABLE 3 (Continued) Formalized requirements for all the tasks.
+
+  Task       Req id      Formula id       Formula                                    Task      Req id      Formula id        Formula
+
+              Req1             φ1         conquer d(s, G) = 0                                    Req1            φ1          achieve L(s) = 1.0
+
+              Req2             φ2         ensure |x| ≤ xlim                                      Req2            φ2          ensure dwalls (s) > 0
+
+  CP          Req3             φ3         ensure |θ| ≤ θfall                                     Req3            φ3          ensure dlead (s) > 0
+
+              Req4             φ4         ensure d(s, O) > 0                         FLV         Req4            φ4          encourage dlead (s) ≥ dlead
+                                                                                                                                                    min, comf
+
+
+              Req5             φ5         encourage |θ| ≤ θbalance                               Req5            φ5          encourage dlead (s) ≤ dlead
+                                                                                                                                                    max, comf
+
+
+              Req1             φ1         conquer d(s, G) = 0                                    Req6            φ6          encourage |α| ≤ αcomf
+
+              Req2             φ2         ensure d(s, O) ≥ 0                                     Req7            φ7          encourage |a| ≤ Δa
+
+  LL          Req3             φ3         ensure |x| ≤ xlim                                      Req1            φ1          achieve d(s, G) = 0
+
+              Req4             φ4         encourage |θ| ≤ θcomf                                  Req2            φ2          ensure hbody > hmin
+
+              Req5             φ5         encourage |θ|̇ ≤ θ̇comf                                Req3            φ3          encourage v ≥ vmin
+                                                                                     ANT
+              Req1             φ1         achieve d(s, G) = 0                                    Req4            φ4          encourage |θgoal | ≤ θcomf
+
+              Req2             φ2         ensure d(s, O) > 0                                     Req5            φ5          encourage ‖a‖2 ≤ acomf
+
+              Req3             φ3         encourage |θ| ≤ θcomf                                  Req6            φ6          encourage pjoint ≤ plim
+  BW
+              Req4             φ4         encourage |θ|̇ ≤ θ̇comf                                Req1            φ1          achieve d(s, G) = 0
+
+              Req5             φ5         encourage |x|̇ ≥ vmin                                  Req2            φ2          ensure hbody > hmin
+
+              Req6             φ6         encourage |y|̇ ≤ ẏcomf                                Req3            φ3          encourage v ≥ vmin
+
+              Req1             φ1         ensure dwalls (s) > 0                      HUM         Req4            φ4          encourage |θgoal | ≤ θcomf
+
+              Req2             φ2         achieve L(s) = 1.0                                     Req5            φ5          encourage ‖a‖2 ≤ acomf
+
+              Req3             φ3         encourage dcenter (s) ≤ dcomf                          Req6            φ6          encourage pjoint ≤ plim
+
+  SD          Req4             φ4         encourage v ≥ vmin                                     Req7            φ7          encourage gvert ≥ tup
+
+              Req5             φ5         encourage v ≤ vmax
+
+              Req6             φ6         encourage |α| ≤ αcomf
+                                                                                    continuous force to the cart, allowing the left and right movements
+              Req7             φ7         encourage |a| ≤ Δa
+                                                                                    of the cart-pole with different velocities. In order to reach the goal
+                                           (Continued on the following page)        and satisfy the target requirement, the cart-pole must perform an
+                                                                                    uncomfortable and potentially unsafe maneuver: since moving a
+                                                                                    perfectly balanced pole would result in a collision with the obstacle,
+                                                                                    the cart-pole must lose balancing and pass below it.
+describe the benchmark tasks we used to conduct the experimental                        We formulate three safety requirements and one target and
+evaluation following this organization.                                             one comfort requirement, which are defined using the following
+                                                                                    constants: (1) G—the coordinates of the goal, (2) O—the area
+5.2.1 Classic-control environments                                                  that is occupied by the obstacle, (3) xlim —the limit of the world,
+   We present the tasks defined over standard classic-control                       (4) θ fall —the limit of the angle of the pole, and (5) θbalance —the
+benchmarks. Table 3 reports all the requirements formalized in the                  maximum angle that we consider as balancing.
+proposed specification language for each of the use cases.
+                                                                                    5.2.1.2 Lunar lander (LL) with obstacle
+5.2.1.1 Cart-pole (CP) with obstacle                                                     It consists of a variation in the original lunar lander
+    A pole is attached to a cart that moves between a left and a right              environment, where the agent controls a lander with the objective
+limit within a flat and frictionless environment. Additionally, the                 to land at the pad with coordinates (0,0). We add an obstacle to the
+environment has a target area within the limits and a static obstacle               environment in the vicinity of the landing pad, which makes the
+standing above the track. The system is controlled by applying a                    landing task harder because, during the navigation, the agent has to
+
+
+
+Frontiers in Robotics and AI                                                   12                                                                   frontiersin.org
+Berducci et al.                                                                                                           10.3389/frobt.2024.1444188
+
+
+
+
+avoid it to reach the pad. Landing outside of the pad is also possible             We formulate one safety, one target, and four comfort
+but at the cost of not achieving the task. We allow continuous actions         requirements, using the following constants: (1) G—the coordinates
+to control the lander engine.                                                  of the goal, (2) hmin —the minimum height of the torso under which
+    We formulate two safety, one target, and two comfort                       the robot is considered to fall down, (3) vmin —the desired minimum
+requirements, which are defined using the following constants:                 speed in the direction of the goal, (4) θcomf —the tolerable deviation
+(1) G—the coordinates of the landing area, (2) O—the area that                 of the robot heading to the goal, (5) acomf —the upperbound on the
+is occupied by the static obstacle, (3) xlim —the limit of the world,          action norm to encourage energy-efficient gaits, and (6) plim —the
+(4) θcom f —the maximum comfortable angle, and (5) θ̇com f —the                limit in joint position.
+maximum comfortable angular velocity.
+                                                                               5.2.2.4 Humanoid (HUM)
+5.2.1.3 Bipedal walker (BW)                                                        The task is the same as the ant, but the robot is a more complex
+     The robot’s objective is to move forward toward the end of the            bipedal robot that resembles a human figure. The goal is to control
+field without falling. We consider two variants of this case study: the        the torque applied to 17 joints to walk toward a target while
+classical one with the flat terrain and the hardcore one with holes            maintaining balance.
+and obstacles.                                                                     We formulate one safety, one target, and five comfort
+     We consider the same task specification for both the versions,            requirements. In addition to the quantities introduced in the ant,
+consisting of one safety, one target, and four comfort requirements            we defined a comfort requirement on gvert , which is the projection
+to encourage keeping the hull balance and avoiding oscillations.               of the base up vector onto the vertical axis. To encourage an upright
+To formalize the task described, we define the following constants:            posture, we reward it to be above tup .
+(1) O—the set of coordinates occupied by the static obstacle, (2)
+θcom f —the maximum comfortable angle, (3) θ̇com f —the maximum
+comfortable angular velocity, and (4) ẏcom f —the maximum                     5.3 Reward baselines
+comfortable vertical velocity.
+                                                                                   We implemented HPRS as in Equation 4. To answer RQ1 and
+5.2.2 Physics-simulated environments                                           RQ2, we compared it with the original reward defined by experts
+    We present the tasks defined over environments using advanced              in each environment, which is indicated as Shaped, and three
+physics-based simulators. In particular, we simulated driving tasks            additional baselines from state-of-the-art work:
+in PyBullet (Erwin and Yunfei, 2016) and robotics locomotion tasks
+in Isaac-Sim (NVIDIA, 2023). Table 3 reports all the requirements                • TLTL (Li et al., 2017) specifies tasks in a bounded (truncated)
+formalized in the proposed specification language for each of                      LTL variant equipped with an infinity-norm quantitative
+the use cases.                                                                     semantics (Maler and Nickovic, 2004). The task specification
+                                                                                   is a conjunction of the task requirements, and its quantitative
+5.2.2.1 Safe driving (SD)                                                          evaluation of the episode is used as an episodic return.
+    The task consists of a car driving in a closed-loop track by end-              We employ the state-of-the-art RTAMT monitoring tool to
+to-end control of the speed and steering angle. The details of this use            compute the episode robustness (Ničković and Yamaguchi,
+case are presented as a motivating example in Section 1.2.                         2020). We choose this baseline because it represents the most
+                                                                                   natural way to adopt formal task specifications to shape a
+5.2.2.2 Follow leading vehicle (FLV)                                               reward signal, directly adopting logic quantitative semantics
+     It consists of the extension with a non-controllable leading                  as a return.
+vehicle, which the car aims to safely follow, keeping a comfortable              • BHNR (Balakrishnan and Deshmukh, 2019) specifies tasks
+distance to it. The agent does not access the full state but only the              in a fragment of signal temporal logic (STL) consisting of
+most-recent observations from LiDAR, noisy velocity estimates, and                 safety and liveness formulas. However, since the infinity-
+previous controls. The safety requirements are extended to consider                norm quantitative semantics adopted in STL and TLTL faces
+the collision with the leading vehicle, and the comfort requirements               locality and masking (Mehdipour et al., 2020) due to episodic
+consider the control requirements and encourage the car to keep a                  evaluation and min/max operators, respectively, the authors
+comfortable distance without any constraints on the car speed.                     propose an alternative formulation. BHNR adopts a filtering
+     We formulate two safety, one target, and four comfort                         semantics (Rodionova et al., 2016) and uses a sliding-window
+requirements. To specify them, we build on the quantities                          approach to produce more frequent feedback to the agent.
+introduced in the safe driving task and the one described in                       At each step, it uses the quantitative semantics to evaluate a
+the example. We additionally defined the following comfort                         sequence of H states. We choose this baseline because it still
+requirements: encouraging a small steering angle (α), smooth                       adopts a formal language to specify the task while mitigating
+controls (|a|), and the agent to keep a distance between                           some of the limitations of prior logic-based approaches.
+[dlead     , dlead
+  min,com f max,com f
+                      ].                                                         • MORL (Brys et al., 2014) implements the multi-objectivization
+                                                                                   of the task and solves the multi-objective problem by linear
+5.2.2.3 Ant (ANT)                                                                  scalarization. Treating each requirement as an objective, it
+    The robot is a four-legged robot that moves in a plane. The goal               independently evaluates them and linearly combines the
+consists of reaching a goal position, and the ant has control of its               individual rewards. We choose this baseline to benchmark
+eight joints to efficiently walk forward while maintaining stability.              against a standard multi-objective approach, and it allows us
+
+
+
+Frontiers in Robotics and AI                                              13                                                           frontiersin.org
+Berducci et al.                                                                                                            10.3389/frobt.2024.1444188
+
+
+
+
+     to analyze the impact of using the adaptive weighting scheme              achieves task completion. This observation highlights the weakness
+     proposed in HPRS. To further assess the sensitivity to the choice         of these approaches when dealing with many requirements because
+     of weights, we consider two variants: uniform weights MORL                the dominant requirement could mask out the others, even if
+     (unif.), where we use a unit weight for each requirement (i.e.,           normalized adequately to the signal domain.
+     w = 1), and decreasing weights MORL (decr.), where safety is                  Multi-objective approaches are confirmed to be sensitive to
+     more important than the target and the target is more important           weight selection. Their performance is competitive in some of the
+     than comfort. In the latter, we decrease the weight by halving            tasks, but they perform poorly in more complex tasks, such as the
+     them for each class (i.e., w = 1.0 for safety, w = 0.5 for target,        bipedal walker.
+     and w = 0.25 for comfort).                                                    Finally, the shaped reward results in policies capturing the
+                                                                               desired behavior, confirming the good reward shaping proposed
+                                                                               in the original environments. However, considering the current
+5.4 Experimental evaluation                                                    training budget, HPRS produces a more effective learning signal,
+                                                                               resulting in better-performing policies. Although logic-based
+5.4.1 Comparison with baselines                                                shaping approaches, such as TLTL and BHNR, consistently
+     We compare HPRS with the above baselines to answer RQ1.                   underperformed compared to shaped rewards and multi-objective
+We empirically assess the training performance in terms of training            shaping (MORL) demonstrates decreasing performance in tasks
+efficiency and alignment with the desired requirements.                        with long horizons, our proposed HPRS method consistently
+     For a sound and unbiased comparison and for accounting to                 demonstrates stable performance across all specified tasks.
+the different reward ranges of the baselines, we use the PAM F
+defined in Section 3.5. F allows categorizing each episode τ as (1)
+satisfying safety if F(Φ, τ) ≥ 1, (2) satisfying safety and target             5.4.3 Ablation study on the hierarchical task
+if F(Φ, τ) ≥ 1.5, and (3) additionally maximizing comfort if                   structure
+F(Φ, τ) is close to 1.75. We emphasize that F is not used for training.            We evaluate the impact of individual requirements on the
+Hence, it should not be used to evaluate the convergence of the RL             hierarchical structure of HPRS to understand their contribution on
+algorithm in the training process.                                             the emergent behavior and answer RQ3.
+     Figures 6, 7 show that HPRS has superior performance,                         We focus on the comfort requirements that have the least
+as indicated by faster convergence to task-satisfying policies                 priority and, thus, the minor influence on the value of the
+reaching the same (and often better) level of performance of the               final reward. Specifically, we study how the comfort requirements
+shaped reward in all the tasks. The other approaches are not                   improve the observed comfort. We set up an ablation experiment on
+competitive to learn a policy for tasks with a high number of                  them and compare the performance of the resulting policies.
+requirements.                                                                      Table 5 reports the evaluation for policies trained with
+                                                                               (+comfort) and without (-comfort) comfort requirements.
+5.4.2 Offline evaluation of the learned behaviors                                  As in the offline evaluation, we collect 50 episodes for
+     Regardless of the utility of a custom sound evaluation metric,            each seed and compute the ratio of satisfaction of comfort
+capturing complex behaviors and evaluating the satisfaction of                 requirements over each episode, according to the time-average
+the hierarchical structure of requirements with a single scalar                defined in Equation 7.
+remains challenging. For this reason, to answer RQ2, we perform                    In all the tasks, introducing comfort requirements positively
+an extensive offline evaluation by comparing the policies (agents)             impacts the evaluation. Although some of the requirements are
+trained with HPRS against those trained by using the other                     almost always satisfied by both configurations, the satisfaction of
+baseline rewards. Furthermore, we provide evidence of the emergent             other requirements significantly improves once comfort rules are
+behaviors in the submitted video.                                              introduced, which is denoted by an increase in the mean satisfaction
+     We evaluate each trained policy in 50 random episodes for a total         and a reduction in its standard deviation. In particular, in the driving
+of 500 episodes for each task. Table 4 reports the success rate for            tasks, the smaller steering magnitude and smoother transition
+incremental sets of safety (S), safety and target (S + T), and safety,         between consecutive controls make the policy amenable to transfer
+target, and comfort (S + T + C).                                               to real-world, as demonstrated in the next section.
+     The results show that policies learned with HPRS consistently
+complete the task in most evaluations, proving their ability in
+trading-off the different requirements and reaching the same level
+of performance of handcrafted rewards despite being automatically              6 Real-world demonstration
+derived from declarative specifications. Although other baselines
+struggle in capturing the correct objective and do not show                        In this section, we answer RQ4 and describe the real-world
+consistent performance across different domains, we highlight                  experiments conducted to validate the usability of HPRS on robotics
+that HPRS is < 5% close to the best-performing approach in                     systems. Specifically, we trained driving policies with HPRS and
+all the tasks.                                                                 evaluated their performance in a real-world setting using 1/10th-
+     Logic-based approaches, such as TLTL and BHNR, consider                   scaled vehicles of the F1TENTH series (O’Kelly et al., 2020).
+the task as a unique specification and result in policies that either          F1TENTH provides an affordable yet sophisticated platform for
+eagerly maximize the progress toward the target, resulting in unsafe           development, encompassing all the necessary hardware and software
+behaviors, or converge to an over-conservative behavior that never             components of an autonomous driving car.
+
+
+
+Frontiers in Robotics and AI                                              14                                                             frontiersin.org
+Berducci et al.                                                                                                              10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 6
+   Training in classic-control environments: performance for various reward-shaping techniques, including logic-based (TLTL, BHNR, and HPRS),
+   multi-objective (MORL(unif.) and MORL(dec.)), and engineered design (shaped). We report (row 1) the rank-preserving PAM, (rows 2–4) the scores for
+   individual classes of requirements, and (row 5) the success rate of the overall task. Performance are reported as mean (solid curve) and the standard
+   deviation (shadow) over 10 seeds.
+
+
+
+
+Frontiers in Robotics and AI                                               15                                                               frontiersin.org
+Berducci et al.                                                                                                              10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 7
+   Training in physics-simulated environments: performance for various reward-shaping techniques, including logic-based (TLTL, BHNR, and HPRS),
+   multi-objective (MORL(unif.) and MORL(dec.)), and engineered design (shaped). We report (row 1) the rank-preserving PAM, (rows 2–4) the scores for
+   individual classes of requirements, and (row 5) the success rate of the overall task. Performance are reported as mean (solid curve) and the standard
+   deviation (shadow) over 10 seeds.
+
+
+
+
+Frontiers in Robotics and AI                                               16                                                               frontiersin.org
+Berducci et al.                                                                                                                10.3389/frobt.2024.1444188
+
+
+
+
+TABLE 4 Offline evaluation of trained agents: we evaluate the agents trained with different reward-shaping techniques, collecting 50 different
+simulations for each agent, starting from the same initial conditions. We report (S) the rate of episodes with all safety requirements satisfied, (S + T) the
+rate of episodes where both safety and target requirements are met, and (S + T + C) the rate for safety and target weighted by the satisfaction of comfort
+requirements. Results within < 5% of the best-performing reward shaping are marked, indicating comparable performance.
+
+  Environment                            Reward                              S                            S+T                           S+T+C
+
+                                                                     Succ.Rate (%)                  Succ.Rate (%)                   Succ.Rate (%)
+
+                                         Shaped                             0.87                           0.78                              0.75
+
+                                         TLTL                               0.31                           0.00                              0.00
+
+                                         BHNR                               0.00                           0.00                              0.00
+  Cart-pole
+                                         MORL (unif.)                       0.94                           0.90                             0.87
+
+                                         MORL (decr.)                       0.88                           0.78                              0.75
+
+                                         HPRS(ours)                         0.92                           0.87                             0.84
+
+                                         Shaped                             0.98                           0.72                              0.72
+
+                                         TLTL                               0.92                           0.00                              0.00
+
+                                         BHNR                               0.51                           0.49                              0.49
+  Lunar lander
+                                         MORL (unif.)                       0.91                           0.91                             0.90
+
+                                         MORL (decr.)                       0.94                           0.91                             0.91
+
+                                         HPRS(ours)                         0.91                           0.91                             0.89
+
+                                         Shaped                             0.99                           0.99                             0.51
+
+                                         TLTL                               0.96                           0.45                              0.27
+
+                                         BHNR                               0.21                           0.00                              0.00
+  Bipedal walker
+                                         MORL (unif.)                       0.40                           0.40                              0.19
+
+                                         MORL (decr.)                       0.43                           0.43                              0.20
+
+                                         HPRS(ours)                         0.96                           0.96                             0.48
+
+                                         Shaped                             0.84                           0.29                              0.17
+
+                                         TLTL                               0.98                           0.00                              0.00
+
+                                         BHNR                               0.55                           0.00                              0.00
+  Bipedal walker (hardcore)
+                                         MORL (unif.)                       0.07                           0.03                              0.02
+
+                                         MORL (decr.)                       0.06                           0.03                              0.02
+
+                                         HPRS(ours)                         0.85                           0.85                             0.44
+
+                                         Shaped                             0.74                           0.74                              0.20
+
+                                         TLTL                               0.38                           0.32                              0.10
+
+                                         BHNR                               0.00                           0.00                              0.00
+  Safe driving
+                                         MORL (unif.)                       0.99                           0.69                             0.32
+
+                                         MORL (decr.)                       0.96                           0.75                             0.35
+
+                                         HPRS(ours)                         0.97                           0.73                             0.33
+
+                                                                                                                                (Continued on the following page)
+
+
+
+
+Frontiers in Robotics and AI                                                 17                                                                 frontiersin.org
+Berducci et al.                                                                                                                 10.3389/frobt.2024.1444188
+
+
+
+
+TABLE 4 (Continued) Offline evaluation of trained agents: we evaluate the agents trained with different reward-shaping techniques, collecting 50
+different simulations for each agent, starting from the same initial conditions. We report (S) the rate of episodes with all safety requirements satisfied, (S
++ T) the rate of episodes where both safety and target requirements are met, and (S + T + C) the rate for safety and target weighted by the satisfaction of
+comfort requirements. Results within < 5% of the best-performing reward shaping are marked, indicating comparable performance.
+
+  Environment                        Reward                                S                              S+T                          S+T+C
+
+                                                                   Succ.Rate (%)                     Succ.Rate (%)                  Succ.Rate (%)
+
+                                     Shaped                               0.97                              0.97                           0.34
+
+                                     TLTL                                 0.94                              0.12                           0.06
+
+                                     BHNR                                 0.31                              0.00                           0.00
+  Follow leading vehicle
+                                     MORL (unif.)                         0.74                              0.73                           0.35
+
+                                     MORL (decr.)                         0.82                              0.81                           0.37
+
+                                     HPRS(ours)                           1.00                              0.99                           0.46
+
+                                     Shaped                               0.96                              0.96                           0.23
+
+                                     TLTL                                 0.97                              0.0                            0.00
+
+                                     BHNR                                 0.43                              0.0                            0.00
+  Ant
+                                     MORL (unif.)                         0.85                              0.73                           0.44
+
+                                     MORL (decr.)                         0.94                              0.07                           0.05
+
+                                     HPRS (ours)                          0.90                              0.90                           0.44
+
+                                     Shaped                               0.99                              0.99                           0.23
+
+                                     TLTL                                 0.99                              0.00                           0.00
+
+                                     BHNR                                 0.0                               0.00                           0.00
+  Humanoid
+                                     MORL (unif.)                         0.88                              0.00                           0.00
+
+                                     MORL (decr.)                         0.95                              0.00                           0.00
+
+                                     HPRS (ours)                          0.99                              0.74                           0.28
+
+
+
+
+6.1 Training                                                                         turns, resembling the (scaled) layout of the track used in the head-
+                                                                                     to-head final of the F1TENTH Autonomous Grand-Prix 2021 in
+    To train the driving policies, we used the racecar_gym                           Prague. The TRT track, on the other hand, is characterized by long
+environment (Brunnbauer et al., 2022), which builds on the Bullet                    straightaways and 90-degree curves, and we keep it as a reference
+physics simulator (Erwin and Yunfei, 2016). The environment                          from the simulation environment (Brunnbauer et al., 2022). By
+provides a realistic 3D simulation of the F1TENTH vehicles,                          training on both tracks, we enforce robustness to variations in
+including their sensor suite and actuation capabilities. In particular,              track design and layout. For the follow lead vehicle task, we trained
+the agent observes sensor readings from LiDAR and velocity and                       and deployed the policy on the GM-C (13.50, m) track, which is a
+controls the car by setting a target velocity and steering angle. To                 modified version of the GM track that includes a lead vehicle for the
+account for the lack of full-state observability, we stacked the most                ego vehicle to follow.
+recent k observations and actions (k = 3). The training tracks, shown                    During training, we sampled the track and the car pose at
+in Figure 8, were physically created at our laboratory facilities. The               random. To train a policy that was robust to environmental
+tracks were then mapped with Cartographer SLAM (Hess et al.,                         mismatch between simulation and real-world settings, we
+2016) and imported into the simulator to closely mimic the real-                     performed domain randomization (Tobin et al., 2017) of the
+world environment.                                                                   simulation parameters. This involved randomizing the values of
+    For the safe driving task, we trained the policy on both the                     various simulation parameters, including the noise characteristics
+GM (21.25, m) and TRT (51.65, m) tracks and deployed it in the                       of the sensors and the gains of the actuators. The randomization
+GM track. The GM track is a narrow track with multiple tight                         intervals are reported in Table 6. This approach helped the policy
+
+
+
+
+Frontiers in Robotics and AI                                                    18                                                             frontiersin.org
+Berducci et al.                                                                                                                         10.3389/frobt.2024.1444188
+
+
+
+
+TABLE 5 Ablation on comfort requirements: we evaluate the agents                         TABLE 5 (Continued) Ablation on comfort requirements: we evaluate
+trained with HPRS using the full hierarchy of requirements (+Comfort)                    the agents trained with HPRS using the full hierarchy of requirements
+and the hierarchy excluding comfort (-Comfort). The satisfaction of                      (+comfort) and the hierarchy excluding comfort (-comfort). The
+comfort requirements uses the time-averaged satisfaction (Equation 5).                   satisfaction of comfort requirements uses the time-averaged
+The results report mean and standard deviation over 50 evaluation                        satisfaction (Equation 5). The results report mean and standard deviation
+episodes for each agent.                                                                 over 50 evaluation episodes for each agent.
+
+                                +Comfort                     -Comfort                                                    +Comfort                -Comfort
+
+  Cart-pole                          σavg                         σavg                     Humanoid
+
+  Keep the balance                1.00 ± 0.00                  1.00 ± 0.00                 Forward velocity               0.01 ± 0.03               0.0 ± 0.0
+
+  Lunar lander                                                                             Heading to target              0.65 ± 0.23              0.37 ± 0.32
+
+  Hull angle                      0.99 ± 0.05                  0.99 ± 0.02                 Upright posture                0.50 ± 0.20              0.35 ± 0.31
+
+  Hull angular velocity           0.97 ± 0.07                  0.98 ± 0.05                 Action norm                    0.76 ± 0.22              0.42 ± 0.22
+
+  Bipedal walker                                                                           Joints within limits           0.10 ± 0.09               0.0 ± 0.0
+
+  Hull angle                      0.80 ± 0.17                  0.33 ± 0.27
+
+  Hull angular velocity           1.00 ± 0.00                  0.99 ± 0.01               generalize well to real-world settings, where the exact values of these
+                                                                                         parameters may differ from those in the simulator.
+  Vertical oscillation            0.98 ± 0.01                  0.91 ± 0.11
+
+  Horizontal velocity             0.95 ± 0.01                  0.92 ± 0.03
+                                                                                         6.2 Deployment
+  Bipedal walker hardcore
+                                                                                             To validate the performance of our trained policies in a
+  Hull angle                      0.70 ± 0.13                  0.29 ± 0.14
+                                                                                         real-world setting, we used 1/10th-scaled vehicles from the
+  Hull angular velocity           1.00 ± 0.00                  0.99 ± 0.01               F1TENTH series (O’Kelly et al., 2020). The hardware platform
+                                                                                         consisted of an off-the-shelf Traxxas Ford Fiesta ST race car chassis,
+  Vertical oscillation            0.83 ± 0.06                  0.75 ± 0.09               which was actuated by a brushless DC electric motor and controlled
+                                                                                         by a VESC 6 MkIV electronic speed controller. We used a Hokuyo
+  Horizontal velocity             0.94 ± 0.05                  0.81 ± 0.10
+                                                                                         UST-10LX 2D LiDAR sensor to sense distances to surrounding
+  Safe driving                       σavg                         σavg                   obstacles and walls. This sensor has a field of view of 270° and
+                                                                                         can scan up to 10 m with high precision. We also read a noisy
+  Keep the center                 0.39 ± 0.12                  0.33 ± 0.10               estimate of the vehicle’s velocity directly from the VESC. All model
+                                                                                         inputs, including the LiDAR scan, VESC data, and last actions, were
+  Min velocity                    0.48 ± 0.21                  0.89 ± 0.06
+                                                                                         normalized to lie within the range ±1.
+  Max velocity                    0.99 ± 0.01                  0.36 ± 0.14                   We integrated the trained agent into a ROS node within the
+                                                                                         F1TENTH software setup, with speed and steering commands
+  Comfortable steering            0.27 ± 0.08                  0.08 ± 0.04               passed to the auxiliary nodes from the F1TENTH software stack.
+                                                                                         These nodes automatically computed the motor RPM and servo
+  Smooth control                  0.70 ± 0.07                  0.32 ± 0.07
+                                                                                         position. To account for differences in sensor rates and policy
+  Follow leading vehicle                                                                 inference between the simulated and real-world environments, we
+                                                                                         ran a control loop at a frequency of 10 Hz on an NVIDIA Jetson
+  Min distance                    0.55 ± 0.22                  0.85 ± 0.16               Xavier NX embedded computing platform. At each iteration, we
+                                                                                         collected the most recent readings from the sensors, prepared the
+  Max distance                    0.90 ± 0.08                  0.61 ± 0.18
+                                                                                         data, and performed inference.
+  Comfortable steering            0.23 ± 0.05                  0.15 ± 0.04                   We tested the performance of our trained policies by deploying
+                                                                                         them in real-world scenarios. Figure 9 shows a successful
+  Smooth control                  0.78 ± 0.09                  0.41 ± 0.11               deployment of our safe-driving task, where the car smoothly drives
+                                                                                         along the track. We also demonstrate the car’s ability to safely follow
+  Ant
+                                                                                         a leading vehicle while maintaining a comfortable distance. The
+  Forward velocity                0.00 ± 0.00                  0.04 ± 0.06               video attached to this submission shows these behaviors in action.
+
+  Heading to target               0.62 ± 0.23                  0.27 ± 0.20
+
+  Action norm                     0.59 ± 0.21                  0.02 ± 0.02
+                                                                                         7 Discussion and limitations
+  Joints within limits            0.55 ± 0.20                  0.01 ± 0.01                  We have presented a principled approach for shaping rewards
+                                                                                         from a set of partially ordered formalized requirements and
+                                                (Continued on the following page)
+
+
+
+Frontiers in Robotics and AI                                                        19                                                               frontiersin.org
+Berducci et al.                                                                                                                  10.3389/frobt.2024.1444188
+
+
+
+
+   FIGURE 8
+   Racing tracks used for training and deployment of the driving agent.
+
+
+
+
+TABLE 6 Domain randomization parameters: randomization intervals for physical parameters were used during training to improve sim-to-real transfer
+of the trained agent. For each parameter, the interval specifies the range of values sampled from the given distribution. These randomizations create
+diverse training environments, enabling the agent to transfer better in real-world scenarios.
+
+  Component                       Physical parameter                         Randomization interval                      Units           Distribution
+
+  Actuator                             Steering multiplier                              [0.5, 0.75]                         -                Uniform
+
+  Actuator                             Velocity multiplier                               [20, 25]                           -                Uniform
+
+  Actuator                             Maximum velocity                                  [3.5, 4.0]                        m/s               Uniform
+
+  Sensor                             Velocity noise (std dev)                           [0.01, 0.05]                       m/s               Uniform
+
+
+
+
+   FIGURE 9
+   Real-world demonstration of deployment on an F1TENTH car: Successful deployment of a policy trained with HPRS on a real-world F1TENTH car,
+   completing a full lap of the racetrack. The overlay depicts the sequence of car poses, illustrating the car’s trajectory throughout the lap. The inset
+   image (top-left) shows the layout of the racetrack used in this experiment.
+
+
+
+
+Frontiers in Robotics and AI                                                 20                                                                 frontiersin.org
+Berducci et al.                                                                                                          10.3389/frobt.2024.1444188
+
+
+
+
+demonstrated its practical usability in simulated and real-                        The idea of automatically shaping rewards from specifications
+world applications. Here, we consider a few limitations to                     possessing an evaluation procedure is general and agnostic to the
+the proposed approach that are worth considering for future                    plant and the RL algorithm adopted. We demonstrate this in the
+work.                                                                          experiments by training with different RL algorithms and showing
+     First, the continuous potential function definition relies on             that HPRS, despite being automatic and based on declarative
+well-shaped signals in the requirements, as is usually the case in             specifications, can achieve performance comparable to engineered
+continuous control tasks. However, in systems with hybrid dynamics             solutions shaped by experts. We believe that our approach can bring
+and discrete jumps, this may not hold. Despite advancements in the             many benefits when learning policies for autonomous agents from
+exploration strategy for RL, discrete and sparse signals inherently            a set of well-defined rules with well-known priorities. There is,
+complicate exploration.                                                        nevertheless, sufficient room to consider variants of this approach.
+     Second, addressing a high number of conflicting requirements              The choice of the specification language and its semantics are
+remains an open challenge. We handle this by assigning priorities              flexible, and any representation of requirements equipped with
+among requirements, yielding positive results for up to seven                  an evaluation function for observed behaviors can be used for
+requirements across diverse applications. This demonstrates the                hierarchical reward shaping. In this paper, we focused on unbounded
+applicability of the proposed methodology, reducing the number                 temporal operators defined over episodic tasks.
+of design choices that must be made for each problem. However,                     In subsequent work, we intend to consider more expressive
+the problem of scalarization remains a fundamental issue in multi-             operators and study the formalization of requirements beyond
+objective optimization research.                                               safety, progress, and comfort, such as the ethical, legal, and
+     Furthermore, we validate our approach by deploying the                    performance objectives.
+trained policy on hardware in two autonomous driving tasks.
+However, the transfer from simulation to hardware is a well-
+known challenge, extending beyond our study. To address                        Data availability statement
+this, we close the simulation-to-real mismatch using a physics
+simulator with realistic noisy LiDAR and velocity sensors. We                     Publicly available datasets were analyzed in this study.
+match control frequency to hardware capabilities and train a                   These data can be found at: Experiments repo: https://github.
+robust policy with domain randomization of physics parameters.                 com/edalexAguilar/reward_shaping. Experiments logs: https://
+Despite these efforts, sim-to-real transfer remains challenging                zenodo.org/records/7075333. Auto-shaping Library: https://github.
+and requires expertise for accurate modeling of the system                     com/luigiberducci/auto-shaping.
+parameters.
+     Finally, we re-implemented the baselines for compatibility with
+the latest RL frameworks. When striving for fidelity to original
+formulations and keeping the implementation close to the existing
+                                                                               Author contributions
+codebases, the absence of a unified framework poses challenges for
+                                                                                   LB: conceptualization, formal analysis, investigation,
+full reproducibility. For this reason, we release the auto-shaping
+                                                                               methodology, software, visualization, writing–original draft,
+library to promote a reusable and transparent approach to foster
+                                                                               and writing–review and editing. EA: conceptualization, formal
+research on reward design and alignment in the training of AI
+                                                                               analysis, investigation, methodology, visualization, writing–original
+technologies.
+                                                                               draft, and writing–review and editing. DN: conceptualization,
+                                                                               supervision, and writing–review and editing. RG: conceptualization,
+8 Conclusion                                                                   supervision, and writing–review and editing.
+
+
+     This paper introduced HPRS, a novel, hierarchical, potential-
+based reward-shaping method and tool for tasks (Φ, ≺), consisting of           Funding
+a partially ordered set of safety, target, and comfort requirements. We
+conducted experiments on eight continuous-control benchmarks,                      The author(s) declare that financial support was received for the
+comparing HPRS to many reward-shaping techniques, including                    research, authorship, and/or publication of this article. This work
+logic-based, multi-objective, and engineered solutions. In the                 has received funding from the EU’s Horizon 2020 research and
+experiments, we show that HPRS performs well in a large variety                innovation program under grant No 956123 and from the Austrian
+of tasks. Moreover, conducting extensive offline evaluation and                FFG ICT of the Future program under grant No 880811. LB was
+ablation on the hierarchy of requirements, we show that the                    supported by the Doctoral College Resilient Embedded Systems.
+multivariate reward with adaptive weights based on priorities                  This research was partially funded by A-IQ Ready (Chips JU, grant
+enhances comfort without compromising the satisfaction of                      agreement No. 101096658).
+safety and target requirements, unlike other approaches which
+fail to capture the interdependence among different classes of
+requirements. Finally, we demonstrated the real-world applicability            Acknowledgments
+of HPRS through two sim-to-real experiments on driving
+benchmarks using F1TENTH vehicles, showcasing smooth                               The authors thank Axel Brunnbauer for contributing in the early
+autonomous vehicle control.                                                    stage of this work. The authors acknowledge TU Wien Bibliothek for
+
+
+
+Frontiers in Robotics and AI                                              21                                                          frontiersin.org
+Berducci et al.                                                                                                                                                  10.3389/frobt.2024.1444188
+
+
+
+
+financial support through its Open Access Funding Program. The                                           Publisher’s note
+authors declare that they have used generative artificial intelligence,
+specifically ChatGPT (GPT-4o mini) to improve language and                                                   All claims expressed in this article are solely those of the
+readability. After using this tool, the authors reviewed and edited                                      authors and do not necessarily represent those of their affiliated
+the content as needed and take full responsibility for the content of                                    organizations, or those of the publisher, the editors and the
+the publication. Figure 1 has been designed using resources from                                         reviewers. Any product that may be evaluated in this article, or claim
+Flaticon.com.                                                                                            that may be made by its manufacturer, is not guaranteed or endorsed
+                                                                                                         by the publisher.
+
+Conflict of interest
+                                                                                                         Supplementary material
+    The authors declare that the research was conducted in
+the absence of any commercial or financial relationships                                                     The Supplementary Material for this article can be found
+that could be construed as a potential conflict of                                                       online at: https://www.frontiersin.org/articles/10.3389/frobt.2024.
+interest.                                                                                                1444188/full#supplementary-material
+
+
+
+References
+  Abels, A., Roijers, D., Lenaerts, T., Nowé, A., and Steckelmacher, D. (2019). “Dynamic                   Fu, J., and Topcu, U. (2014). “Probably approximately correct MDP learning and
+weights in multi-objective deep reinforcement learning,” in International conference on                  control with temporal logic constraints,” in Robotics: science and systems X. Editors
+machine learning (PMLR), 11–20.                                                                          D. Fox, L. E. Kavraki, and H. Kurniawati (Berkeley, USA: University of California).
+                                                                                                         doi:10.15607/RSS.2014.X.039July 12-16, 2014
+  Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., and Mané, D. (2016).
+Concrete problems in ai safety. ArXiv abs/1606.06565                                                        Gábor, Z., Kalmár, Z., and Szepesvári, C. (1998). “Multi-criteria reinforcement
+                                                                                                         learning,” in Proceedings of the Fifteenth International Conference on Machine
+  Balakrishnan, A., and Deshmukh, J. V. (2019). “Structured reward
+                                                                                                         Learning (ICML 1998), July 24-27, 1998. Editor J. W. Shavlik (Madison, Wisconsin,
+shaping using signal temporal logic specifications,” in 2019 IEEE/RSJ
+                                                                                                         USA: Morgan Kaufmann), 197–205.
+International Conference on Intelligent Robots and Systems (IROS), 3481–3486.
+doi:10.1109/IROS40897.2019.8968254                                                                          Hayes, C. F., Rădulescu, R., Bargiacchi, E., Källström, J., Macfarlane, M., Reymond,
+                                                                                                         M., et al. (2022). A practical guide to multi-objective reinforcement learning and
+   Barrett, L., and Narayanan, S. (2008). “Learning all optimal policies with multiple
+                                                                                                         planning. Aut. Agents Multi-Agent Syst. 36, 26. doi:10.1007/s10458-022-09552-y
+criteria,” in Proceedings of the 25th international conference on Machine learning, 41–47.
+                                                                                                           Hess, W., Kohler, D., Rapp, H., and Andor, D. (2016). “Real-time loop closure in
+  Barto, A. G., and Mahadevan, S. (2003). Recent advances in
+                                                                                                         2d lidar slam,” in 2016 IEEE International Conference on Robotics and Automation
+hierarchical reinforcement learning. Discrete event Dyn. Syst. 13, 341–379.
+                                                                                                         (ICRA), 1271–1278.
+doi:10.1023/a:1025696116075
+                                                                                                            Huang, S., Dossa, R. F. J., Ye, C., Braga, J., Chakraborty, D., Mehta, K., et al. (2022).
+  Berducci, L., Aguilar, E. A., Ničković, D., and Grosu, R. (2021). Hierarchical
+                                                                                                         Cleanrl: high-quality single-file implementations of deep reinforcement learning
+potential-based reward shaping from task specifications. arXiv preprint
+                                                                                                         algorithms. J. Mach. Learn. Res. 23, 1–18.
+arXiv:2110.02792
+                                                                                                            Icarte, R. T., Klassen, T., Valenzano, R., and McIlraith, S. (2018). “Using
+  Berducci, L., and Grosu, R. (2022). “Safe policy improvement in constrained markov
+                                                                                                         reward machines for high-level task specification and decomposition in
+decision processes,” in Leveraging applications of formal methods, verification and
+                                                                                                         reinforcement learning,” in International Conference on Machine Learning (PMLR),
+validation. Verification principles: 11th international symposium, ISoLA 2022, rhodes,
+                                                                                                         2107–2116.
+Greece, october 22–30, 2022, proceedings, Part I (Springer), 360–381.
+                                                                                                            Jothimurugan, K., Alur, R., and Bastani, O. (2019). “A composable specification
+   Brunnbauer, A., Berducci, L., Brandstaetter, A., Lechner, M., Hasani, R., Rus, D., et al.
+                                                                                                         language for reinforcement learning tasks,”. Advances in neural information processing
+(2022). “Latent imagination facilitates zero-shot transfer in autonomous racing,” in 2022
+                                                                                                         systems. Editors H. Wallach, H. Larochelle, A. Beygelzimer, F. d’ Alché-Buc, E. Fox, and
+international conference on robotics and automation (ICRA) (IEEE Press), 7513–7520.
+                                                                                                         R. Garnett (Curran Associates, Inc.), 32.
+doi:10.1109/ICRA46639.2022.9811650
+                                                                                                            Jothimurugan, K., Bansal, S., Bastani, O., and Alur, R. (2021). Compositional
+   Brys, T., Harutyunyan, A., Vrancx, P., Taylor, M. E., Kudenko, D., and Nowé, A.
+                                                                                                         reinforcement learning from logical specifications. Corr. abs/2106, 13906.
+(2014). “Multi-objectivization of reinforcement learning problems by reward shaping,”
+in 2014 international joint conference on neural networks (IJCNN) (IEEE), 2315–2322.                        Laud, A., and DeJong, G. (2003). “The influence of reward on the speed of
+                                                                                                         reinforcement learning: an analysis of shaping,” in Proceedings of the 20th International
+  Camacho, A., Chen, O., Sanner, S., and McIlraith, S. A. (2017). “Non-markovian
+                                                                                                         Conference on Machine Learning (AAAI Press), 440–447.
+rewards expressed in ltl: guiding search via reward shaping,” in SOCS.
+                                                                                                           Li, X., Ma, Y., and Belta, C. (2018). “A policy search method for temporal logic
+  Censi, A., Slutsky, K., Wongpiromsarn, T., Yershov, D. S., Pendleton, S., Fu, J. G.
+                                                                                                         specified reinforcement learning tasks,” in 2018 annual American control conference
+M., et al. (2019). “Liability, ethics, and culture-aware behavior specification using
+                                                                                                         (ACC), 240–245.
+rulebooks,” in International Conference on Robotics and Automation, ICRA 2019,
+Montreal, QC, Canada, 8536–8542. doi:10.1109/icra.2019.8794364May 20-24, 2019                               Li, X., Vasile, C.-I., and Belta, C. (2017). “Reinforcement learning with temporal logic
+                                                                                                         rewards,” in 2017 IEEE/RSJ International Conference on Intelligent Robots and Systems
+  Christiano, P. F., Leike, J., Brown, T., Martic, M., Legg, S., and Amodei, D. (2017).
+                                                                                                         (IROS), 3834–3839. doi:10.1109/IROS.2017.8206234
+Deep reinforcement learning from human preferences. Adv. neural Inf. Process. Syst. 30.
+                                                                                                           Lillicrap, T. P., Hunt, J. J., Pritzel, A., Heess, N., Erez, T., Tassa, Y., et al.
+   [Dataset] Jones, A., Aksaray, D., Kong, Z., Schwager, M., and Belta, C. (2015). Robust
+                                                                                                         (2016). “Continuous control with deep reinforcement learning,” in 4th International
+satisfaction of temporal logic specifications via reinforcement learning
+                                                                                                         Conference on Learning Representations, ICLR 2016, San Juan, Puerto Rico, May 2-4,
+  Towers, M., Terry, J. K., Kwiatkowski, A., Balis, J. U., Cola, G. d., Deleu, T., et al. (2023).        2016, Conference Track Proceedings. Editors Y. Bengio, and Y. LeCun
+Gymnasium. doi:10.5281/zenodo.8127026
+                                                                                                           Liu, C., Xu, X., and Hu, D. (2015). Multiobjective reinforcement learning:
+  Devidze, R., Radanovic, G., Kamalaruban, P., and Singla, A. (2021). Explicable reward                  a comprehensive overview. IEEE Trans. Syst. Man, Cybern. Syst. 45, 385–398.
+design for reinforcement learning agents. Adv. neural Inf. Process. Syst. 34, 20118–20131.               doi:10.1109/TSMC.2014.2358639
+  Duan, Y., Chen, X., Houthooft, R., Schulman, J., and Abbeel, P. (2016).                                   Maler, O., and Nickovic, D. (2004). “Monitoring temporal properties of continuous
+“Benchmarking deep reinforcement learning for continuous control,” in International                      signals,” in Formal techniques, modelling and Analysis of timed and fault-tolerant systems.
+conference on machine learning (JMLR), 1329–1338.                                                        Editors Y. Lakhnech, and S. Yovine (Berlin, Heidelberg: Springer Berlin Heidelberg),
+                                                                                                         152–166.
+  Erwin, C., and Yunfei, B. (2016). Pybullet a python module for physics simulation for
+games. PyBullet.                                                                                           Mehdipour, N., Vasile, C.-I., and Belta, C. (2019). “Arithmetic-geometric mean
+                                                                                                         robustness for control from signal temporal logic specifications,” in 2019 American
+  Eschmann, J. (2021). Reward function design in reinforcement learning. Reinf. Learn.
+                                                                                                         Control Conference (ACC), 1690–1695. doi:10.23919/ACC.2019.8814487
+Algorithms Analysis Appl., 25–33. doi:10.1007/978-3-030-41188-6_3
+
+
+
+
+Frontiers in Robotics and AI                                                                        22                                                                             frontiersin.org
+Berducci et al.                                                                                                                                              10.3389/frobt.2024.1444188
+
+
+
+
+  Mehdipour, N., Vasile, C.-I., and Belta, C. (2020). Specifying user preferences                       Russell, S., and Norvig, P. (2020). Artificial intelligence: a modern approach. 4th
+using weighted signal temporal logic. IEEE Control Syst. Lett. 5, 2006–2011.                          Edition. Pearson.
+doi:10.1109/lcsys.2020.3047362
+                                                                                                        Shelton, C. (2001). “Balancing multiple sources of reward in reinforcement learning,”.
+  Mittal, M., Yu, C., Yu, Q., Liu, J., Rudin, N., Hoeller, D., et al. (2023). Orbit: a unified        Advances in neural information processing systems. Editors T. Leen, T. Dietterich, and V.
+simulation framework for interactive robot learning environments. IEEE Robotics                       Tresp (MIT Press), 13.
+Automation Lett. 8, 3740–3747. doi:10.1109/LRA.2023.3270034
+                                                                                                        Silver, D., Schrittwieser, J., Simonyan, K., Antonoglou, I., Huang, A., Guez, A., et al.
+   Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G.,                  (2017). Mastering the game of go without human knowledge. nature 550, 354–359.
+et al. (2015). Human-level control through deep reinforcement learning. nature 518,                   doi:10.1038/nature24270
+529–533. doi:10.1038/nature14236
+                                                                                                        Sutton, R. S. (2018). Reinforcement learning: an introduction. MIT Press.
+   Natarajan, S., and Tadepalli, P. (2005). “Dynamic preferences in multi-criteria
+                                                                                                         Tobin, J., Fong, R., Ray, A., Schneider, J., Zaremba, W., and Abbeel, P. (2017). Domain
+reinforcement learning,” in Proceedings of the 22nd international conference on
+                                                                                                      randomization for transferring deep neural networks from simulation to the real world
+Machine learning, 601–608. doi:10.1145/1102351.1102427
+                                                                                                      in 2017 IEEE/RSJ international conference on intelligent robots and systems (IROS)
+   Ng, A. Y., Harada, D., and Russell, S. (1999). “Policy invariance under reward                     (IEEE), 23–30.
+transformations: theory and application to reward shaping,” in Proceedings of
+                                                                                                        Toro Icarte, R., Klassen, T. Q., Valenzano, R., and McIlraith, S. A. (2018). “Teaching
+the Sixteenth International Conference on Machine Learning (Morgan Kaufmann),
+                                                                                                      multiple tasks to an rl agent using ltl,” in Proceedings of the 17th International
+278–287.
+                                                                                                      Conference on Autonomous Agents and MultiAgent Systems, 452–461.
+    Ničković, D., and Yamaguchi, T. (2020). “Rtamt: online robustness monitors from
+                                                                                                         Tutsoy, O. (2021). Pharmacological, non-pharmacological policies and mutation: an
+stl,” in International symposium on automated Technology for verification and Analysis
+                                                                                                      artificial intelligence based multi-dimensional policy making algorithm for controlling
+(Springer), 564–571.
+                                                                                                      the casualties of the pandemic diseases. IEEE Trans. Pattern Analysis Mach. Intell. 44,
+ NVIDIA (2023). Isaac sim - robotics simulation and synthetic data generation.                        9477–9488. doi:10.1109/tpami.2021.3127674
+NVIDIA.
+                                                                                                        Van Moffaert, K., Drugan, M. M., and Nowé, A. (2013). “Scalarized multi-
+  O’Kelly, M., Zheng, H., Karthik, D., and Mangharam, R. (2020). F1tenth: an open-                    objective reinforcement learning: novel design techniques,” in 2013 IEEE symposium
+source evaluation environment for continuous control and reinforcement learning.                      on adaptive dynamic programming and reinforcement learning (ADPRL), 191–199.
+Proc. Mach. Learn. Res. 123.                                                                          doi:10.1109/ADPRL.2013.6615007
+  Puranic, A. G., Deshmukh, J. V., and Nikolaidis, S. (2021). Learning from                             Veer, S., Leung, K., Cosner, R. K., Chen, Y., Karkus, P., and Pavone, M. (2023).
+demonstrations using signal temporal logic in stochastic and continuous domains. IEEE                 “Receding horizon planning with rule hierarchies for autonomous vehicles,” in IEEE
+Robotics Automation Lett. 6, 6250–6257. doi:10.1109/LRA.2021.3092676                                  International Conference on Robotics and Automation, ICRA 2023, London, UK, May
+                                                                                                      29 - June 2, 2023 (IEEE), 1507–1513. doi:10.1109/ICRA48891.2023.10160622
+  Raffin, A. (2020). Rl baselines3 zoo. Available at: https://github.com/DLR-RM/rl-
+baselines3-zoo.                                                                                         Wiewiora, E. (2003). Potential-based shaping and q-value initialization are
+                                                                                                      equivalent. J. Artif. Intell. Res. 19, 205–208. doi:10.1613/jair.1190
+   Raffin, A., Hill, A., Ernestus, M., Gleave, A., Kanervisto, A., and Dormann, N. (2019).
+Stable baselines3. Available at: https://github.com/DLR-RM/stable-baselines3.                            Xiao, W., Mehdipour, N., Collin, A., Bin-Nun, A. Y., Frazzoli, E., Tebbens, R. D.,
+                                                                                                      et al. (2021). “Rule-based optimal control for autonomous driving,” in Proceedings
+  Rodionova, A., Bartocci, E., Nickovic, D., and Grosu, R. (2016). “Temporal
+                                                                                                      of the ACM/IEEE 12th International Conference on Cyber-Physical Systems,
+logic as filtering,” in Proceedings of the 19th International Conference on
+                                                                                                      143–154.
+Hybrid Systems: Computation and Control, 11–20. doi:10.1145/2883817.
+2883839                                                                                                  Zhao, Y., Chen, Q., and Hu, W. (2010). “Multi-objective reinforcement learning
+                                                                                                      algorithm for mosdmp in unknown environment,” in 2010 8th world congress
+  Roijers, D. M., Vamplew, P., Whiteson, S., and Dazeley, R. (2013). A survey of multi-
+                                                                                                      on intelligent control and automation, 3190–3194. doi:10.1109/WCICA.2010.
+objective sequential decision-making. J. Artif. Int. Res. 48, 67–113. doi:10.1613/jair.3987
+                                                                                                      5553980
+
+
+
+
+Frontiers in Robotics and AI                                                                     23                                                                           frontiersin.org
+

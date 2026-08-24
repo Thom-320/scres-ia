@@ -1,0 +1,166 @@
+{
+  "schema_version": "paper2_candidate_family_ledger_v1",
+  "generated_date": "2026-07-13",
+  "phase": "historical_2_theory_first_screen",
+  "governing": false,
+  "superseded_by": "research/paper2_exhaustive_search/approach_registry.json",
+  "status_semantics": "Historical brainstorming labels only. No ACTIVE-like row in this file authorizes implementation, screening or learning; the governing approach registry and prelearner contract control current state.",
+  "necessary_conjunction": {
+    "description": "A family is ACTIVE only if it can satisfy ALL of: (P) persistent latent state; (L) leading observable NOT redundant with current inventory; (C) action with intertemporal commitment cost; (B) binding shared resource; (M) canonical-metric ret_excel payoff for reacting; (R) frequent ranking reversals (no constant dominates); (F) avoids the GSA-proven concentration/fairness trap (headroom must NOT come from starving a node); (G) Garrido-defensible (thesis-native or PI-validated extension). It must also NOT reduce to a BLOCKED route.",
+    "gsa_constraint": "Program-I headroom GSA proved that in the spatial-allocation contract, only surge_mult and commonality move H_obs, and they do so via the worst-CSSU concentration artifact (OOS worst_cssu_fill_delta -0.13 vs -0.02 guardrail). lead/persistence/r22_prob/signal_q are INERT (mu_star=0). Therefore any new family must create headroom through a NON-spatial-concentration mechanism, or it reproduces the G/I failure.",
+    "blocked_route_reduction_test": "A family that reduces to buffer sizing / shift capacity / dispatch rates / emergency reserve / D1 rationing / DRA-1 reallocatable CSSU / DRA-2 finite convoy single-destination / F mitigation portfolio / G spatial commitment / H belief rescue / I risk-magnitude/signal-quality scaling / J serial-line maintenance / K counterfactual perishability / K2 holding-cost replenishment / K3 budgeted replenishment is BLOCKED."
+  },
+  "families": [
+    {
+      "id": "F1_censored_demand_lost_sales",
+      "mechanism": "Unobserved (censored) demand beyond stockout creates a belief state; an active reporting/ordering action acquires information. Lost-sales inventory with lead times has proven adaptive-over-static value (Huh et al. 2009; Zhang et al. 2020).",
+      "physical_actuator": "Order-up-to decision on the replenishment pipeline; optional active demand-sensing action.",
+      "necessary_conjunction": {"P": "PASS - censored demand is a latent belief state", "L": "PASS - stockout/censoring events are observable, the censored quantity is not", "C": "PASS - pipeline order commits inventory for the lead time", "B": "PASS - transport/assembly capacity", "M": "PASS - lost orders hit ret_excel via the lost-order guardrail", "R": "PASS - lost-sales lit proves ranking reversals", "F": "PASS - not a spatial concentration mechanism", "G": "CONDITIONAL - thesis backorders (cap 60); true censoring is a researcher extension"},
+      "blocked_route_reduction": "Does NOT reduce to K2/K3: K2/K3 assumed fully observed demand. The hidden-demand state is materially new.",
+      "garrido_question": "In the real MFSC, when the theatre cannot receive rations (CSSU down, LOC cut), is the unmet demand recorded as a number, or is only the existence of a stockout known? Does the supply battalion ever learn the true quantity that was needed? (Thesis §6.5 assumes backordering; Chapter 8 flags demand-pattern changes as a limitation.)",
+      "comparator_obligation": "belief DP over censored-demand posterior; posterior base-stock/(s,S); Goldberg-style constant-order (asymptotically optimal for large lead times); all full-horizon order calendars; MPC with pipeline state",
+      "main_threat": "If the MFSC records every requested order quantity even under stockout, censoring is false and this reduces to K2/K3 (closed).",
+      "tier": 2,
+      "status": "HISTORICAL_PENDING_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido confirms demand quantity is genuinely unobserved under certain disruption modes; OR a toy two-product lost-sales DP shows ret_excel H_obs LCB95 > 0.01 under equal resources without concentration."
+    },
+    {
+      "id": "F2_admission_abandonment",
+      "mechanism": "Queue admission/priority control with exogenous abandonment.",
+      "blocked_route_reduction": "REDUCES TO D1 (backorder priority, closed). Thesis backorders late orders (cap 60, SPT); no operational abandonment exists. Adding abandonment = demand shedding = shed-to-win (forbidden).",
+      "status": "BLOCKED",
+      "evidence_to_change_status": "Garrido confirms physical mission deadlines with explicit rejection authority and a lost-demand ledger (not backorder). Currently absent."
+    },
+    {
+      "id": "F3_lateral_transshipment",
+      "mechanism": "Lateral CSSU-to-CSSU transfer with transport delay.",
+      "blocked_route_reduction": "DOMINATED by central resupply (SB-to-CSSU) when transfer time >= direct time and same lift is consumed. No thesis-native lateral lane.",
+      "status": "BLOCKED",
+      "evidence_to_change_status": "Garrido confirms a lateral lane that is faster than central resupply, uses distinct local lift, or activates only after central dispatch is locked. Currently absent."
+    },
+    {
+      "id": "F4_regime_dependent_lead_time_imperfect_route_obs",
+      "mechanism": "Transport lead time depends on route degradation state (R22 LOC disruption), and the route status is imperfectly observed (POMDP). A dispatch commits a convoy into an uncertain-duration degradation.",
+      "physical_actuator": "Convoy dispatch on a degraded-vs-clear route; route choice when alternates exist.",
+      "necessary_conjunction": {"P": "PASS - LOC degradation persists (R22 recovery Exp(24h))", "L": "PASS (if imperfect) - route status partially observed via last-known + elapsed time, not directly", "C": "PASS - convoy committed for round-trip duration", "B": "PASS - finite convoys", "M": "PASS - ret_excel via order attendance", "R": "CONDITIONAL - dispatch-now vs wait reverses based on degradation belief", "F": "PASS - not spatial concentration per se", "G": "CONDITIONAL - R22 is thesis-native; imperfect route observation is researcher extension"},
+      "blocked_route_reduction": "CLOSE TO DRA-2b but materially different IF the observation contract changes: DRA-2b observed convoy/route state directly. Imperfect route-regime observation (belief over R22 status) is a genuinely new information source.",
+      "garrido_question": "When a LOC is hit by R22, does the supply battalion know immediately that it is cut, or does the disruption manifest as a delayed/missing convoy arrival (information only from the absence of an expected event)?",
+      "main_threat": "If route status is observable in real-time, this reduces to DRA-2b (closed). The entire value hinges on imperfect observation.",
+      "tier": 2,
+      "status": "HISTORICAL_REDUCES_TO_DRA2_UNLESS_NEW_MECHANISM",
+      "evidence_to_change_status": "Toy POMDP branching shows H_obs > 0 under imperfect route observation that collapses to ~0 under perfect observation (null-cell falsification)."
+    },
+    {
+      "id": "F5_advance_capacity_reservation",
+      "mechanism": "Reserve finite shared lift capacity ahead of observable buildup, with irrevocable commitment for a dwell.",
+      "blocked_route_reduction": "BLOCKED on transport facts - no finite shared lift, activation lead, dwell, or cancellation semantics in thesis.",
+      "status": "BLOCKED_PENDING_PI",
+      "evidence_to_change_status": "Garrido confirms finite shared lift fleet with activation lead and irrevocable dwell. Currently no such resource is modeled."
+    },
+    {
+      "id": "F6_multi_echelon_information_lag",
+      "mechanism": "Add reporting lag between echelons.",
+      "blocked_route_reduction": "BLOCKED by information monotonicity: O_lag subset O_current => J*(O_lag) <= J*(O_current). Adding lag to G/H cannot create value.",
+      "status": "BLOCKED",
+      "evidence_to_change_status": "None - mathematical impossibility under unchanged physics/actions."
+    },
+    {
+      "id": "F7_alarm_maintenance_new_failure_mode",
+      "mechanism": "An alarm signal predicts a catastrophic station failure whose downstream inventory cannot cover; a finite crew with travel commitment must repair before failure.",
+      "blocked_route_reduction": "REDUCES TO J (serial-line maintenance, closed) UNLESS the failure mode has ret_excel consequence at least 74.72x J's best screened restricted-oracle effect (0.0001338324), before observable-conversion and guardrail losses.",
+      "necessary_conjunction": {"P": "PASS - wear/degradation", "L": "PASS - alarm is a precursor not encoded by inventory", "C": "PASS - crew travel/repair commitment", "B": "PASS - finite crew", "M": "CONDITIONAL - must be ret_excel not just service", "R": "CONDITIONAL", "F": "PASS", "G": "CONDITIONAL - needs a validated catastrophic failure mode"},
+      "main_threat": "J's best screened restricted-oracle effect was 0.0001338324. The 0.01 gate is 74.72x larger even before observable-conversion and guardrail losses. A new failure mode must be Garrido-defensible and supply that order of endpoint liveness.",
+      "tier": 2,
+      "status": "HISTORICAL_REDUCES_TO_J_UNLESS_NEW_SIGNED_OFF_FAILURE",
+      "evidence_to_change_status": "Identify a thesis-native failure mode (e.g., prolonged R3 black-swan, cascading R11+R21) whose alarm-predicted avoidance yields ret_excel H_PI > 0.01."
+    },
+    {
+      "id": "F8_multi_product_substitution",
+      "mechanism": "21 real ration types compressed to 1 in the thesis (Chapter 8 explicitly flags this). Multiple products with shared assembly/ingredient capacity, product-specific demand, and approved substitution. Ranking reversals arise from product-specific demand-pipeline positions under a shared production resource.",
+      "physical_actuator": "Production line assignment to product type per batch; substitution authorization when primary is stocked out.",
+      "necessary_conjunction": {"P": "PASS - product-specific demand regimes persist", "L": "PASS - product-specific inventory is NOT redundant with aggregate inventory (the key new observable)", "C": "PASS - a production batch commits the line for the batch duration", "B": "PASS - shared assembly/ingredient capacity", "M": "PASS - ret_excel via fulfillment (substitution counts only if approved)", "R": "PASS - substitution literature proves ranking reversals under shared capacity", "F": "PASS - headroom from product-mix, not spatial concentration", "G": "CONDITIONAL - thesis Ch 8 anchors the 21->1 compression as a real limitation; but shares/BOM/substitution need Garrido facts"},
+      "blocked_route_reduction": "Does NOT reduce to any closed route. Every closed lane assumed a single homogeneous product. This is materially new physical + informational structure.",
+      "garrido_questions": ["What are the real 21 ration types and their approximate demand shares?", "Do they share a bill of materials, or do some require distinct ingredients/components?", "Is substitution between ration types operationally authorized (e.g., climate-compatible swap), and by what rule?", "Are there setup/changeover times between product types on the assembly line?", "Do different ration types have different weight/volume affecting transport capacity?"],
+      "comparator_obligation": "every full-horizon product-mix calendar; robust mix; approved-substitution doctrine; product-specific base-stock; min-cost network-flow allocation; rolling MILP; exact two-product DP",
+      "main_threat": "If products are perfectly substitutable with identical BOM/rate and no setup, the product-choice dimension collapses to the aggregate replenishment family already tested in K2/K3. This does not prove one particular aggregate base-stock policy globally dominates. New value requires a validated setup commitment, BOM contention, partial substitutability or another material product distinction.",
+      "tier": 1,
+      "status": "HISTORICAL_PENDING_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido provides product shares + BOM/substitution/setup facts; OR a toy two-product DP with shared capacity and setup cost shows ret_excel H_obs LCB95 > 0.01."
+    },
+    {
+      "id": "F9_event_driven_dispatch_cadence",
+      "mechanism": "Decisions at actual convoy-availability epochs rather than weekly boundaries.",
+      "blocked_route_reduction": "REDUCES TO DRA-2 (finite convoy, closed) UNLESS the event-driven cadence itself creates ranking reversals that the weekly cadence cannot represent.",
+      "main_threat": "A weekly-decision DRA-2 already captures hold/dispatch. Event-driven cadence is a decision-right refinement, not a new mechanism.",
+      "tier": 2,
+      "status": "HISTORICAL_REDUCES_TO_DRA2_UNLESS_NEW_MECHANISM",
+      "evidence_to_change_status": "Show a state where the optimal event-triggered action differs from the optimal weekly action in a way that changes ret_excel ranking."
+    },
+    {
+      "id": "F10_finite_fleet_multi_destination_positioning",
+      "mechanism": "A finite fleet of vehicles with persistent location (a vehicle sent to destination A is en-route and unavailable for destination B until it returns). Multiple destinations compete simultaneously for the finite fleet. This is materially richer than DRA-2 (single-destination hold/dispatch).",
+      "physical_actuator": "Assign integer vehicles to destinations each dispatch epoch; vehicle location and return-ETA persist.",
+      "necessary_conjunction": {"P": "PASS - vehicle location persists across epochs (the strongest physical-authority candidate)", "L": "PASS - vehicle location + return ETA + per-destination backlog are observable and NOT redundant with inventory", "C": "PASS - dispatching commits the vehicle for the full round-trip cycle", "B": "PASS - finite fleet is the binding shared resource across destinations", "M": "PASS - ret_excel via which destination gets served", "R": "PASS - when two CSSUs need a vehicle and one is available, the assignment depends on current + future backlogs at each", "F": "PASS IF the action is 'which destination to serve' not 'concentrate on one' - the key is that a finite fleet FORCES a choice but a smart policy can balance over time, unlike a static allocation", "G": "CONDITIONAL - finite fleet is operationally real (the thesis takes vehicle availability for granted, Ch 6.5 assumption); persistent positioning + multi-destination competition is a researcher extension requiring Garrido sign-off"},
+      "blocked_route_reduction": "MATERIALLY NEW vs DRA-2: DRA-2 was single-destination binary HOLD/DISPATCH on Op8. Multi-destination finite fleet with persistent vehicle location is a different (richer) contract. Does NOT reduce to DRA-2 unless only one destination is ever competitive.",
+      "garrido_questions": ["How many vehicles/convoys does the supply battalion actually have for Op10 (SB-to-CSSU) and Op12 (CSSU-to-theatre)?", "Is a vehicle sent to CSSU-A unavailable for CSSU-B until it returns, and what is the round-trip time?", "Can a vehicle be rerouted mid-trip, or is the destination fixed at dispatch?", "Are convoy resources shared across Op8/Op10/Op12, or separate fleets per leg?"],
+      "comparator_obligation": "fixed-route doctrine (each vehicle has a fixed beat); round-robin; MaxWeight/MaxPressure queueing rule; threshold policies on per-destination backlog; full-horizon vehicle-assignment calendars; network-flow/MILP assignment; DP over the joint (location, backlog) state if small",
+      "main_threat": "A fixed round-robin or MaxWeight queueing rule may capture most value (these are strong classical comparators). The neural increment may be absent. But P2-A (adaptive control over the best open-loop) could still hold if the ranking reverses based on vehicle position.",
+      "tier": 1,
+      "status": "HISTORICAL_PENDING_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido confirms finite multi-vehicle fleet with persistent location + round-trip commitment; AND a toy two-destination finite-fleet DP shows ret_excel H_obs LCB95 > 0.01 under MaxWeight comparator (not just constants)."
+    },
+    {
+      "id": "F11_shared_repair_crew_disaggregated",
+      "mechanism": "Finite shared repair crew across disaggregated Op5-Op7 stations.",
+      "blocked_route_reduction": "REDUCES TO J (closed). J's maintenance ret_excel ceiling was ~0.0001. Disaggregation adds a scheduling dimension but if the underlying maintenance value is tiny, disaggregating won't cross 0.01.",
+      "status": "BLOCKED",
+      "evidence_to_change_status": "Materially new failure mode identified (see F7). Otherwise reparam of J."
+    },
+    {
+      "id": "F12_inspection_throughput_tradeoff",
+      "mechanism": "Op7 inspection effort consumes line or inspector capacity and changes detection, rework, and escaped-defect consequences under a persistent quality regime.",
+      "blocked_route_reduction": "BLOCKED_DOMAIN_FACT. The thesis does contain R14 quality physics: Binomial defects at p=.03/.08 and return of a detected item to Op6; it does not specify 100% detection. The current DES treats every generated defect as detected. What is absent is a controllable inspection action, effort-to-sensitivity/specificity curve, field-escape consequence, persistent lot regime, and pre-action signal. Scaling R14 alone reduces to the closed buffer/shift routes.",
+      "current_kernel_ceiling": {"h_pi": 0.0, "h_obs": 0.0, "reason": "inspection action absent"},
+      "necessary_ranking_reversal": "Simplified screen only: assume normalized throughput, no false positives, immediate unit-yield recovery and qualified output (1-delta)(1-p+p*s). Then delta must satisfy T(.03)<=delta<T(.08), T(p)=p(s_H-s_L)/(1-p+p*s_H); with s_L=0 and s_H=1 this is 0.03<=delta<0.08. This is not a general inspection theorem.",
+      "status": "BLOCKED_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido supplies Op7 sampling authority, effort/sensitivity/specificity, persistent lot-state and leading-signal facts, rework/escape consequences, and an AQL guardrail. Exogenous per-unit/lot defect draws must be CRN-coupled; latent defective = inspected TP + inspected FN + uninspected defective, and latent conforming = inspected TN + inspected FP + uninspected conforming."
+    },
+    {
+      "id": "F13_component_specific_r13_kit_balancing",
+      "mechanism": "With one frozen finished-ration type and no output-product choice/substitution, component-specific R13 shortages make the limiting item among rm1...rm12 state dependent; a capacity-limited Op4 load or expedition allocates conserved lift among complementary inputs before Op5 commitment.",
+      "blocked_route_reduction": "BLOCKED_DOMAIN_FACT. The current DES aggregates all raw materials and applies R13 as a common Op2 delay; Op4 has no component-load action or finite shared lift. This is distinct from finished-ration DRA2 and from output product mix.",
+      "current_kernel_ceiling": {"h_pi": 0.0, "h_obs": 0.0, "reason": "component state and Op4 load-composition action absent"},
+      "necessary_ranking_reversal": "For K(x,p)=min_i floor((x_i+p_i)/b_i), two equal-resource loads a,b are live only if K(x,p+y_a) differs from K(x,p+y_b), and the kit-limiting component changes over a material share of observable states.",
+      "status": "BLOCKED_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido confirms named component/supplier delays, component on-hand and pipeline observability, BOMs, capacity-limited mixed-load Op4 authority, payload/return constraints, minimum lots and any permitted substitution or expedition resource."
+    },
+    {
+      "id": "F14_r14_detected_lot_disposition",
+      "mechanism": "With inspection/detection frozen and defect quantity observed before action, choose hold/rework versus scrap-and-replace while preserving quality and original-risk attribution; the action cannot change sampling, sensitivity or specificity.",
+      "blocked_route_reduction": "BLOCKED_DOMAIN_FACT. The thesis mandates return to Op6 and the current constructor mode is not a sequential action. Under current equal-rate, unit-yield rework, rework saves raw material and weakly dominates discard.",
+      "current_kernel_ceiling": {"h_pi": 0.0, "h_obs": 0.0, "reason": "sequential lot-disposition action absent"},
+      "necessary_ranking_reversal": "Reduced shadow-cost screen only: D_reduced(s)=lambda_C(s)(h_r/y_r-h_n)-lambda_R(s)b, with lambda_C in canonical-value/line-hour, lambda_R in canonical-value/material-unit, h_r rework line-hours, y_r rework yield, h_n replacement-production hours and b replacement material units. Under this reduced model, a sign change is necessary. It omits lead, hold, disposal, repeat-defect and deadline effects; a licensed contract needs a complete D_total(s). Current same-rate unit-yield physics makes rework weakly dominate discard on qualified service/material use.",
+      "status": "BLOCKED_DOMAIN_FACT",
+      "evidence_to_change_status": "Garrido confirms that disposition is discretionary and supplies defect-known timing, rework duration/capacity/yield, replacement lead/material, partial-lot release, disposal cost, acceptance constraints, and persistent R14 attribution."
+    }
+  ],
+  "tier_summary": {
+    "historical_tier_1_candidates": ["F8_multi_product_substitution", "F10_finite_fleet_multi_destination_positioning"],
+    "historical_tier_2_candidates": ["F1_censored_demand_lost_sales", "F4_regime_dependent_lead_time_imperfect_route_obs", "F7_alarm_maintenance_new_failure_mode", "F9_event_driven_dispatch_cadence"],
+    "blocked": ["F2_admission_abandonment", "F3_lateral_transshipment", "F5_advance_capacity_reservation", "F6_multi_echelon_information_lag", "F11_shared_repair_crew_disaggregated", "F12_inspection_throughput_tradeoff", "F13_component_specific_r13_kit_balancing", "F14_r14_detected_lot_disposition"],
+    "historical_candidate_count": 6,
+    "count_blocked": 8,
+    "charter_minimum_8_families_screened": "PASS - 14 families screened (6 historical active/pending-domain labels, 8 blocked); current live registry governs final status and has no executable candidate other than the unresolved M/T/R bound."
+  },
+  "decision_rule_for_next_phase": "The two tier-1 families (F8 multi-product, F10 finite-fleet) get cheap upper-bound (affected-order UCB / resource-restricted H_PI relaxation) calculations on a minimal toy contract BEFORE any full-DES implementation. If the ceiling is below 0.01 on the toy, close them. If above, proceed to exact branching and the full G0-G9 gate chain. Both are currently blocked on Garrido operational facts (product shares/BOM; fleet size/round-trip), so the cheap-bound toy must use a plausible envelope and include a null-physics cell.",
+  "open_garrido_questions_compiled": [
+    "F1: Is unmet demand quantity genuinely unobserved under any disruption mode, or is the full requested quantity always recorded?",
+    "F4: Is R22 LOC disruption observable in real-time at dispatch, or only inferable from missing convoy arrivals (imperfect observation)?",
+    "F7: Is there a station failure mode whose consequence is an order of magnitude larger than the R11 workstation breakdown (~2h repair)?",
+    "F8: What are the 21 real ration types, their demand shares, BOM commonality, substitution rules, and setup/changeover times?",
+    "F10: How many vehicles does the battalion have for Op10/Op12, what is the round-trip time, can a vehicle be rerouted mid-trip, and are fleets shared across legs?",
+    "F12: Is Op7 inspection variable; what are effort, sensitivity/specificity, persistence/signal, escaped-defect consequence and AQL facts?",
+    "F13: Does R13 identify delayed rm1...rm12 components, and may finite Op4 lift prioritize or expedite named components?",
+    "F14: After an R14 detection, is lot disposition discretionary; what are rework versus replacement time, yield, material, quality and risk-attribution rules?"
+  ]
+}

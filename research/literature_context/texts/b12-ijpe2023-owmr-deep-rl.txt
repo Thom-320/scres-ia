@@ -1,0 +1,937 @@
+Deep Reinforcement Learning for One-Warehouse Multi-
+Retailer inventory management
+Citation for published version (APA):
+Kaynov, I., van Knippenberg, M., Menkovski, V., van Breemen, A., & van Jaarsveld, W. (2024). Deep
+Reinforcement Learning for One-Warehouse Multi-Retailer inventory management. International Journal of
+Production Economics, 267, Article 109088. https://doi.org/10.1016/j.ijpe.2023.109088
+
+
+
+
+Document license:
+CC BY
+
+
+DOI:
+10.1016/j.ijpe.2023.109088
+
+
+Document status and date:
+Published: 01/01/2024
+
+
+Document Version:
+Publisher’s PDF, also known as Version of Record (includes final page, issue and volume numbers)
+
+
+Please check the document version of this publication:
+• A submitted manuscript is the version of the article upon submission and before peer-review. There can be
+important differences between the submitted version and the official published version of record. People
+interested in the research are advised to contact the author for the final version of the publication, or visit the
+DOI to the publisher's website.
+• The final author version and the galley proof are versions of the publication after peer review.
+• The final published version features the final layout of the paper including the volume, issue and page
+numbers.
+Link to publication
+
+
+
+
+General rights
+Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+       • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+       • You may not further distribute the material or use it for any profit-making activity or commercial gain
+       • You may freely distribute the URL identifying the publication in the public portal.
+
+If the publication is distributed under the terms of Article 25fa of the Dutch Copyright Act, indicated by the “Taverne” license above, please
+follow below link for the End User Agreement:
+www.tue.nl/taverne
+
+Take down policy
+If you believe that this document breaches copyright please contact us at:
+openaccess@tue.nl
+providing details and we will investigate your claim.
+
+
+
+
+Download date: 24. Aug. 2026
+                                                                Int. J. Production Economics 267 (2024) 109088
+
+
+                                                                   Contents lists available at ScienceDirect
+
+
+                                           International Journal of Production Economics
+                                                            journal homepage: www.elsevier.com/locate/ijpe
+
+
+
+
+Deep Reinforcement Learning for One-Warehouse Multi-Retailer inventory
+management
+Illya Kaynov a,b , Marijn van Knippenberg a , Vlado Menkovski a , Albert van Breemen b ,
+Willem van Jaarsveld c ,∗
+a
+    Department of Mathematics and Computer Science, Eindhoven University of Technology, Netherlands
+b VBTI, Zwaanstraat 31e, Eindhoven, 5651 CA, Netherlands
+c Department of Industrial Engineering and Innovation Sciences, Eindhoven University of Technology, Netherlands
+
+
+
+
+ARTICLE                 INFO                               ABSTRACT
+
+Keywords:                                                  The One-Warehouse Multi-Retailer (OWMR) system is the prototypical distribution and inventory system. Many
+Multi-echelon inventory control                            OWMR variants exist, e.g. demand in excess of supply may be completely back-ordered, partially back-ordered,
+Deep Reinforcement Learning                                or lost. Prior research has focused on the study of heuristic reordering policies such as echelon base-stock levels
+Allocation policies
+                                                           coupled with heuristic allocation policies. Constructing well-performing policies is time-consuming and must
+                                                           be redone for every problem variant. By contrast, Deep Reinforcement Learning (DRL) is a general purpose
+                                                           technique for sequential decision making that has yielded good results for various challenging inventory
+                                                           systems. However, applying DRL to OWMR problems is nontrivial, since allocation involves setting a quantity
+                                                           for each retailer: The number of possible allocations grows exponentially in the number of retailers. Since
+                                                           each action is typically associated with a neural network output node, this renders standard DRL techniques
+                                                           intractable. Our proposed DRL algorithm instead inferences a multi-discrete action distribution which has
+                                                           output nodes that grow linearly in the number of retailers. Moreover, when total retailer orders exceed the
+                                                           available warehouse inventory, we propose a random rationing policy that substantially improves the ability
+                                                           of standard DRL algorithms to train good policies because it promotes the learning of feasible retailer order
+                                                           quantities. The resulting algorithm outperforms general-purpose benchmark policies by ∼ 1−3% for the lost
+                                                           sales case and by ∼ 12−20% for the partial back-ordering case. For complete back-ordering, the algorithm
+                                                           cannot consistently outperform the benchmark.
+
+
+
+1. Introduction                                                                                 placement of goods at the locations in the supply chain. There are
+                                                                                                two competing objectives, namely low inventory costs and high order
+    Supply Chain Management (SCM) is responsible for efficiently deliv-                         satisfaction. On the one hand, inventory optimization aims to reduce
+ering goods and services from suppliers to consumers. A typical supply                          inventory-related expenses such as holding costs. On the other hand,
+chain may include multiple stages (echelons) of locations through                               ensuring a sufficient amount of goods is essential for achieving high
+which the goods move from the supplier to the consumer. The supplier                            service levels; surplus inventory helps to shield businesses from market
+may, for example, be a manufacturer of spare parts or raw materials,                            uncertainties and satisfy customer demand. Accordingly, the efficient
+while the consumer can be a machine at a production facility or a                               automation of replenishment decisions is a common goal for many
+customer at a retail shop. Since supply chains involve multiple locations
+                                                                                                businesses.
+spread geographically, efficient decisions about positioning goods in
+                                                                                                    This study focuses on a well-known periodic-review inventory prob-
+time and space are crucial for competitive advantage (Mentzer et al.,
+                                                                                                lem, widely known as the One-Warehouse Multi-Retailer (OWMR) sys-
+2001). The overall increase in the demand for goods and the highly
+                                                                                                tem. In this problem, a warehouse pools inventory ordered from an
+competitive markets force companies to adopt innovative approaches to
+                                                                                                external supplier for later distribution between multiple retailers. Each
+supply chain management strategies to ensure cost-efficient availability
+of products.                                                                                    period, decisions are made regarding the amount of items to order and
+    A key objective within supply chain management is inventory opti-                           how to distribute the items from the warehouse to the various retailers.
+mization. The goal of inventory optimization is to find the best possible                       The OWMR problem is studied extensively and has many real-world
+
+
+     ∗ Corresponding author.
+       E-mail address: w.l.v.jaarsveld@tue.nl (W. van Jaarsveld).
+
+https://doi.org/10.1016/j.ijpe.2023.109088
+Received 28 October 2022; Received in revised form 23 October 2023; Accepted 25 October 2023
+Available online 11 November 2023
+0925-5273/© 2023 The Author(s). Published by Elsevier B.V. This is an open access article under the CC BY license (http://creativecommons.org/licenses/by/4.0/).
+I. Kaynov et al.                                                                                       International Journal of Production Economics 267 (2024) 109088
+
+
+applications. A range of variants arise in practice, e.g. demand in excess         and the corresponding order quantities are sampled independently.
+of supply may be back-ordered, lost, or partially back-ordered and par-            This allows for simultaneous decision making across all nodes in the
+tially lost; demand may have continuous or discrete distributions, etc.            system by performing only one forward pass on the neural network.
+In general, the problem is challenging due to its combinatorial complex-           Total shipments to retailers are however restricted by the available
+ity and the dependencies between inventory locations. As a result, exact           inventory at the warehouse, and the order quantities resulting from
+solution methods are available only for a handful of problem variants              the neural network may exceed that amount. In the literature on
+under restrictive assumptions, and the focus of prior studies has been             OWMR systems, it is common to ration the orders placed by individ-
+mostly on heuristic policies and numerical methods (de Kok et al.,                 ual stock-points, e.g. with the goal of minimizing imbalances. While
+2018). However, constructing well-performing policies is a difficult and           clever rationing may improve a given ordering policy, we find that it
+time-consuming task that must be redone for every problem variant. As              hampers the learning of a good ordering policy: It seems to promote
+a consequence, well-performing policies are lacking for ill-researched             over-ordering. To instead incentivize the learning of exact mappings
+problem variants. For example, the case where demand is completely                 from states to feasible actions, we propose to allocate sequentially.
+backlogged has received a lot of attention (cf. de Kok et al. (2018); for          That is, we ship the individual amounts in full if possible, where a
+policies and results for that case see e.g. Axsäter et al. (2002), Marklund        randomization process is applied to determine the sequence in which
+and Rosling (2012)), while the partial back-ordering and lost sale cases           retailer shipments are executed each period. We find that this provides
+have received comparatively little attention, even though partial back-            incentive for the model not to over-estimate the order quantity, which
+ordering ‘‘is an accurate description of customer behavior for many                in turn leads to substantially better policies.
+retail items’’ (Nahmias and Smith, 1994), while lost sales are common                  To apply DRL to the problem, we first formulate it as a Markov
+for many seasonal items (Li et al., 2021).                                         Decision Process. To subsequently train the neural network, we adopt
+    Deep Reinforcement Learning (DRL) is a general purpose technique               the Proximal Policy Optimization (PPO) algorithm (Schulman et al.,
+for sequential decision making that is promising for inventory control,            2017), a popular policy gradient Reinforcement Learning (RL) method.
+as underlined by a study by Gijsbrechts et al. (2022) that finds that              We present results across 14 instances with up to 11 stock-points. To
+the A3C algorithm yields competitive policies for three challenging                underline the general applicability of the developed approach while
+inventory problems, including the dual sourcing problem and the single             testing the DRL performance vis-a-vis relevant benchmarks, we include
+location lost sales inventory problem. Deep Reinforcement Learning is              instances with complete back-ordering, with partial back-ordering, and
+equally promising for the OWMR problem. Advances in deep learning                  with lost sales. As benchmarks, we adopt echelon base-stock policies
+have established the remarkable ability of Deep neural networks to                 with two representative general-purpose rationing/allocation policies
+process multi-dimensional inputs. Since neural networks commonly                   in case of shortage at the warehouse. Without hyper-parameter tuning,
+represent policies in DRL (cf. Boute et al., 2021), this flexibility may           we train policies that respectively outperform the benchmark by 1−3%
+enable DRL to accurately learn good OWMR policies, since the optimal               (for lost sales), outperform the benchmark by 10−20% (for partial lost
+OWMR policy is dependent not only on the inventory position of                     sales), and that are outperformed by the benchmark by a 0−3% mar-
+the stock-points, but also on the vector of outstanding orders for all             gin (for complete back-ordering). Our results demonstrate the added
+stock-points. Moreover, applications of neural networks and deep rein-             value of DRL also for the important class of multi-action inventory
+forcement learning have been shown to yield around 10% cost savings                problems, especially for model variants where it is difficult to construct
+compared to heuristic benchmarks for OWMR problems with partial                    appropriate heuristics. The developed approach may be more generally
+back-ordering (Gijsbrechts et al., 2022; Van Roy et al., 1997). These              applicable to multi-echelon supply chains beyond the OWMR problem,
+results have been obtained using algorithms that assume symmetric                  as ideas underlying its development are quite generic.
+OWMR instances, i.e., problems where the lead-time, cost parameters,                   The remainder of this paper is structured as follows. We review the
+and demand distribution are the same for all retailers.                            literature in Section 2. Section 3 introduces and formalizes the OWMR
+    We contribute DRL algorithms and performance tests for several                 model, and presents our PPO approach for multi-echelon decision
+variants of general OWMR systems, i.e., including systems where retail-            making. We report results of our numerical experiments in Section 4,
+ers have differing demand distributions, lead-times, and cost parame-              and conclude in Section 5.
+ters. General OWMR systems are multi-action inventory systems: each
+period, they require an action for each stock-point, i.e., for the ware-           2. Literature
+house and each retailer. Typically, applications of DRL to multi-action
+inventory systems have assigned one output node of the neural network                 We first discuss literature on multi-echelon distribution systems,
+to each combination of actions (Boute et al., 2021). For example, to               with a focus on periodic review One-Warehouse Multi-Retailer systems
+apply A3C to the dual sourcing inventory problem, Gijsbrechts et al.               (OWMR). We then discuss key literature on DRL, with a focus on studies
+(2022) assign an output node to each combination of an order for the               that apply DRL to inventory problems.
+slow source and an order for the fast source. Similarly, Vanvuchelen
+et al. (2020) apply DRL to the joint replenishment problem, and let each           Inventory management for multi-echelon inventory problems
+output node correspond to the probability that a certain combination of
+orders is placed by the two coordinating companies, forming a so-called                Various classifications can be applied to multi-echelon inventory
+discrete action distribution. When applied to a general supply chain, e.g. a       problems. The number of echelons and the network topology are the
+OWMR problem with 𝐾 locations, this would require the last layer of                most important factors; see de Kok et al. (2018) for a typology and
+the neural network to have 𝐴𝐾 outputs, where 𝐴 are the available order             extensive review on multi-echelon inventory systems.
+quantities. Indeed, each combination of orders for every location would                Multi-echelon systems are typically difficult to analyze because of
+be an action, which becomes prohibitive for larger 𝐾. Symmetric OWMR               the dependence between locations. Uncapacitated serial systems under
+systems, i.e., systems where all retailers have identical parameters,              full backlogging form an exception: For those systems base-stock poli-
+facilitate the dynamic specification of a single order-up-to level for all         cies are optimal, and the optimal base-stock policy an be identified
+retailers, thereby side-stepping this issue (cf. Gijsbrechts et al., 2022;         using dynamic programming, working backwards through the network
+Van Roy et al., 1997).                                                             topology (Clark and Scarf, 1960). Under similar assumptions, pure
+    Our proposed approach tackles the underlying problem using a                   assembly systems form a second exception; these can be reduced to an
+multi-discrete action distribution, which allows for the reduction of the          equivalent serial system (Rosling, 1989) and analyzed accordingly. For
+size of the last layer to 𝐴 × 𝐾. The output of a neural network forms              divergent systems, however, the common practice is to use approxi-
+several probability distributions, one for each stock-point individually,          mation methods, where the underlying dynamic program is relaxed by
+
+                                                                               2
+I. Kaynov et al.                                                                                         International Journal of Production Economics 267 (2024) 109088
+
+
+one or more manipulations (relaxations, restrictions, projections, cost              has gained significant attention (Boute et al., 2021), mostly because
+approximations; (Geoffrion, 1970)). Our focus is on the OWMR inven-                  DRL is a general purpose technology that can be applied to a wide range
+tory system, which is a prototypical multi-echelon divergent inventory               of problems with limited adjustments. Apart from the two early works
+system under periodic review with constant positive lead times between               mentioned above, notable works include applications to joint ordering
+the nodes and stochastic demand on the retailers.                                    problems (Vanvuchelen et al., 2020) and capacitated lot sizing (van
+    The balance assumption (see Clark and Scarf, 1960; Eppen and                     Hezewijk et al., 2022).
+Schrage, 1981) is the most common relaxation technique for divergent                     To scale DRL applications to real-life problems, it is crucial to ad-
+inventory systems; it works in the context of complete back-ordering.                dress current limitations on applying multi-action/multi-echelon mod-
+Assuming balanced inventories leads to a complete characterization                   els (see Boute et al., 2021, for extensive discussions), and this topic is
+of the optimal policy, that can even be extended to multi-echelon                    the subject of another recent paper: (Vanvuchelen and Boute, 2022)
+systems (Diks and De Kok, 1998). The assumption effectively relaxes                  propose the use of continuous output nodes to efficiently represent
+the physical constraints of strictly positive allocation quantities and has          policies for multi-echelon joint replenishment problems. Their work un-
+various interpretations, such as allowing negative allocation quantities,            derlines increasing interest in multi-echelon DRL, while their approach
+lateral transshipment between retailers, and permitting the inventory’s              and problem are rather different from the developments in the work
+immediate return to the warehouse with no delay. These interpretations               presented here. Pirhooshyaran and Snyder (2020) and Wang and Hong
+lead to the same result: the retailers’ inventory positions become irrel-            (2023) are also related to our work, in the sense that methods are
+evant, and the allocation decisions are based solely on the warehouse                proposed that utilize neural networks and simulation to solve large-
+echelon stock. The balance assumption may be rather effective in some                scale inventory systems. However, these studies consider stationary
+cases, but effectiveness is dependent on the system parameters (Doğru                base-stock policies, and their aim is to find scalable algorithms for
+et al., 2009). Despite the balance assumption being widely used to                   identifying close-to-optimal base-stock levels for each node. In contrast,
+derive close to optimal policies, it may not be suitable when the                    we apply DRL to seek dynamic policies, i.e. state-dependent base-stock
+retailers are prone to imbalance (Axsäter, 2015), and several works                  levels.
+have provided analytic insights into distribution systems without the                    Applications of DRL to divergent multi-echelon systems are rather
+balance assumption, which in turn have yielded improved allocation                   scarce, we are aware of only two examples: (1) the application of neuro-
+heuristics (e.g. Axsäter et al., 2002; Marklund and Rosling, 2012).                  dynamic programming (Bertsekas and Tsitsiklis, 1996) for OWMR (Van
+    Alternatively, the policy space could be restricted to a more con-               Roy et al., 1997), and (2) Asynchronous Advantage Actor-Critic (A3C)
+venient policy class. In this case, the goal is to find a best performing            (Mnih et al., 2016) on dual sourcing, lost sales, and OWMR prob-
+policy in this policy class, either with respect to the original problem             lems (Gijsbrechts et al., 2022). Both papers report an approximate 10%
+or its approximation. Some of the most common policy classes are the                 improvement over base-stock policies, but sidestep the issue that multi-
+base-stock policies (Park, 1998; de Kok et al., 2018). Base-stock policies           action systems pose by crucially relying on the assumption that the
+refer to reorder point policies that follow a rule: if the (echelon) inventory       OWMR system is symmetric (cf. Section 1), i.e., that all retailers are
+position falls below a reorder point, an order is placed to raise the (ech-          identical.
+elon) inventory level to a specified order-up-to level. Therefore, in this               In our paper, we directly address the issue that each period requires
+case, the optimization objective is to find the policy parameters: reorder           the simultaneous selection of replenishment quantities for all stock
+point and order-up-to level. Since such a policy is fully determined                 locations. Our neural network inferences multi-discrete action distri-
+by a few parameters, it makes cost estimations far simpler. Numerous                 butions, and is paired with a randomized sequential allocation rule to
+papers provide methods to discover policy parameters or calculate the                ensure effective learning. Our approach represents the first application
+associated costs (e.g. Van der Heijden et al., 1997; Huh et al., 2016;               of DRL for general OWMR systems, and it yields competitive results. It
+Gayon et al., 2016).                                                                 is also a step towards applying DRL to larger supply chains.
+    A limitation of most prior studies on OWMR systems is their as-
+sumption of complete back-ordering, even while lost sales and partial                3. Methods
+back-ordering occur frequently in practice. It would be desirable to
+have a more generic approach that does not lean on such assumptions,                     The One-Warehouse Multi-Retailer (OWMR) system that is the focus
+and additionally can be easily adapted to the numerous variations                    of this study is a key example of a supply chain network. We intro-
+of the OWMR systems that appear in practice. Deep Reinforcement                      duce supply chain networks and the OWMR system in Section 3.1.
+Learning may offer such an approach.                                                 To apply Deep Reinforcement Learning (DRL), these systems must be
+                                                                                     formalized as Markov Decision Processes (MDPs). MDPs are introduced
+Deep reinforcement learning                                                          in Section 3.2 and used to formalize OWMR problems in Section 3.3.
+                                                                                     In Section 3.4, we discuss our multi-echelon DRL algorithm, while
+    In the past years, Deep Reinforcement Learning (DRL) stands out as               general-purpose benchmarks for the OWMR system are introduced in
+a general framework that facilitates the solving of complex sequential               Section 3.6.
+decision-making problems (Bertsekas, 2019). Due to its computational
+requirements it is mostly used in combination with simulation. DRL                   3.1. Multi-echelon inventory models
+utilizes Reinforcement Learning to solve a temporal credit assignment
+problem and Deep Neural Networks for compressing the state represen-                     A supply chain network delivers goods from the supplier of the raw
+tation. DRL has already advanced the state-of-the-art on a multitude                 materials to the final consumer. A node in a multi-echelon supply chain
+of challenging domains. Some of the most notable examples include                    network is a location that can hold inventory. See Fig. 1 for a schematic
+playing Atari 2600 games directly from pixels (Bellemare et al., 2013),              depiction of an inventory system consisting of a single node/location.
+performing continuous robotic control (Schulman et al., 2017), and                       Supply chain networks consist of a number of locations. Downstream
+winning against human champions in complex strategic games such as                   locations face customer demand, while other locations face internal
+GO and Chess (Silver et al., 2017) and the team-based video game Dota                demand, i.e., demand originating from other nodes. The most upstream
+2 (Berner et al., 2019).                                                             nodes receive goods from external suppliers, while other (intermediate
+    Early DRL applications in supply chain management include work                   and downstream) nodes receive goods from their direct predecessors
+on the beer game (Oroojlooyjadid et al., 2022) and application of the                in the network. Supply chain networks may be studied in a periodic
+A3C algorithm to three challenging inventory problems (Gijsbrechts                   review setting: In each period 𝑡 ∈ N, first the inventory level and
+et al., 2022). In recent years, application of DRL to inventory problems             pipeline of all nodes is reviewed, and replenishment orders are placed
+
+                                                                                 3
+I. Kaynov et al.                                                                                                      International Journal of Production Economics 267 (2024) 109088
+
+
+                                                                                               3.2. Markov decision process
+
+                                                                                                   For the application of Reinforcement Learning, the OWMR problem
+                                                                                               needs to be formulated as a Markov Decision Process (MDP); these are
+Fig. 1. Depiction of a single node/location inventory system with positive lead-time.          briefly introduced next. Mathematically, an MDP is represented as a
+The squares represent the pipeline inventory, i.e., the inventory that has been ordered
+                                                                                               tuple (, 𝐴, , 𝑅, 𝛾), where:
+but that did not yet arrive at the location, which is represented by the circle. In each
+period, an order is placed in the leftmost square of the pipeline. When the system
+                                                                                                   •  - state space
+transitions to the next time-step, the goods located in each of these squares move to
+the square to their right until they reach the final location. Thus, after a lead time             •  - action space
+delay of 𝐿 periods, the goods are delivered at the store and can be used to satisfy the            • (𝑆𝑡+1 |𝑆𝑡 , 𝐴𝑡 ) - transition probability from state 𝑆𝑡 ∈  to state
+customer demand.                                                                                     𝑆𝑡+1 ∈  when taking action 𝐴𝑡 ∈ .
+                                                                                                   • (𝑆𝑡 , 𝐴𝑡 , 𝑆𝑡+1 ) - reward associated with state (transitions) and
+                                                                                                     actions.
+accordingly. Subsequently, orders shipped a lead-time earlier for the                              • 𝛾 ∈ [0, 1] - discount factor that controls the influence of future
+various nodes arrive at those nodes. Then the replenishment orders are                               rewards. While training, we set 𝛾 < 1; for evaluation we adopt
+processed, taking into account that actual shipments are constrained                                 average cost, i.e., 𝛾 = 1.
+by the availability of inventory at corresponding predecessor nodes.
+After shipment quantities are determined, the shipped orders enter the                              The Reinforcement Learning agent observes a state 𝑆𝑡 ∈  and
+pipeline. At the end of each period, customer demand is processed, and                         produces an action 𝐴𝑡 ∈  that feeds back into the environment. The
+costs are incurred. Note that the pipeline corresponding to each node                          environment transitions to 𝑆𝑡+1 ∈  and emits a scalar reward 𝑅𝑡 =
+(see Fig. 1) serves to keep track of orders that have shipped towards a                        (𝑆𝑡 , 𝐴𝑡 , 𝑆𝑡+1 ). This loop continues indefinitely, or until the episode
+node but did not arrive there yet.                                                             terminates, e.g. after 𝑇 time-steps. The sequence of states, actions,
+    The focus of this paper is on the OWMR system. It has 𝐾 nodes/                             and rewards constitutes a rollout or a trajectory of the policy. Every
+locations. Locations 1, … , 𝐾 − 1 represent the retailers, and face cus-                       trajectory accumulates rewards from the environment 𝐑 = 𝛴𝑡=1     𝑇 𝛾𝑡𝑅 .
+                                                                                                                                                                      𝑡
+tomer demand. All retailers receive goods from node/location 0, re-                                 The objective is discovering a policy 𝜋 ∶  ×  →  that specifies
+ferred to as the warehouse. Fig. 2 depicts the OWMR system.                                    the actions to take in each state; following policy 𝜋 implies that (𝐴𝑡 =
+    Inventory pooling at the warehouse brings multiple benefits. Risk                          𝑎|𝑆𝑡 ) = 𝜋(𝑆𝑡 , 𝑎). We seek to maximize the expected cumulative reward
+pooling is a key advantage: note that the surplus inventory at one                             𝐑. We can express this objective in terms of finding an optimal policy
+retailer cannot compensate for a shortage at another. Therefore, by
+                                                                                               𝜋 ∗ ∈ argmax𝜋 E[𝐑|𝜋] that involves solving the recursive optimality
+pooling inventory at the warehouse we effectively postpone the time at
+                                                                                               equations (Bellman, 1953). In the case where a neural network rep-
+which we need to allocate inventory to specific retailers. Additionally,
+                                                                                               resents a policy, the goal is formulated as finding the parameters 𝜃 of
+holding inventory at the warehouse is typically less expensive than
+                                                                                               the policy 𝜋𝜃 that maximize the expected cumulative sum of rewards,
+holding it at the retailers. This creates two opposing incentives. On
+                                                                                               i.e., 𝜃 ∈ argmax𝜃 E [𝐑|𝜋].
+the one hand, the warehouse should allocate as much to the retailers
+as possible to reduce potential shortages. On the other hand, positive
+on-hand inventory at the warehouse can be beneficial if the inventory                          3.3. MDP formulation of one-warehouse multi-retailer systems
+levels among the retailers become unbalanced. In that case, the ware-
+house can address the imbalance by shipping additional inventory to                                 For any supply chain network, let 𝐾 denote the number of nodes,
+those retailers that are low on inventory, relative to the other retailers.                    and index the nodes from 0 to 𝐾 − 1. Actions are vectors 𝐴𝑡 =
+    The stochastic demand at the retailers is realized every period and                        (𝑎0 (𝑡), 𝑎1 (𝑡), … , 𝑎𝐾−1 (𝑡)). Denote by 𝑞𝑖 (𝑡) the order that will arrive in
+satisfied with on-hand inventory. Each unit of demand represents a                             period 𝑡 in node 𝑖. Recall that orders arrive after a lead-time; we denote
+customer request for products. In case the on-hand inventory at a                              the lead-time for node 𝑖 by 𝐿𝑖 which implies that the order placed in
+retailer is not sufficient to fully satisfy the demand at that retailer, a
+                                                                                               period 𝑡 is denoted by 𝑞𝑗 (𝑡 + 𝐿𝑖 ). (We assume that 𝐿𝑖 is integer, i.e., the
+shortage occurs. We consider three possible models regarding customer
+                                                                                               lead-time is a multiple of the review period; see Bijvank and Johansen
+behavior in case of shortages:
+                                                                                               (2012) for a discussion of the limitations of this assumption.) The state
+    1. Complete back-ordering. Unmet demand at the retailers is back-                          of the system is comprised of the state of each of the nodes in the
+       logged. Backlogged demand is satisfied as soon as the items be-                         system. The state observed for node 𝑖 ∈ [0, 1, … , 𝐾 − 1] at the start
+       come available at the retailer. This customer behavior model un-                        of period 𝑡 consists of the inventory level 𝐼𝑖 (𝑡) and the pipeline vector
+       derlies most studies of multi-echelon inventory systems, mainly                         𝑄𝑖 (𝑡) of outstanding shipments due to arrive in periods 𝑡, … , 𝑡 + 𝐿𝑖 − 1,
+       because of mathematical tractability (see de Kok et al., 2018).                         i.e., 𝑄𝑖 (𝑡) = (𝑞𝑖 (𝑡 + 𝐿𝑖 − 1), … , 𝑞𝑖 (𝑡)). The state of the network is then
+    2. Lost sales. Unmet demand is lost and a full penalty cost is                             given by 𝑆𝑡 = (𝐼0 (𝑡), 𝑄0 (𝑡), 𝐼1 (𝑡), 𝑄1 (𝑡), … , 𝐼𝐾−1 (𝑡), 𝑄𝐾−1 (𝑡)), thus |𝑆𝑡 | =
+                                                                                               ∑𝐾−1
+       incurred; this customer behavior model is for example common                               𝑖=0 (𝐿𝑖 + 1).
+       for seasonal items, see e.g. Li et al. (2021) for a real-life example.                       The order of events for period 𝑡 is as follows:
+    3. Partial lost sales (see e.g. Nahmias and Smith, 1994). When there
+       is insufficient inventory, with probability 1 − 𝑝em demand is                               1. Determine action 𝐴𝑡 based on state 𝑆𝑡 .
+       immediately lost and a lost sales penalty is incurred. With prob-                           2. Shipments 𝑞𝑖 (𝑡) arrive, and orders 𝑎𝑖 (𝑡) are processed to yield
+       ability 𝑝em , a customer agrees to an emergency shipment from                                  shipments 𝑞𝑖 (𝑡 + 𝐿𝑖 ) that will arrive in period 𝑡 + 𝐿𝑖 .
+       the warehouse. If warehouse inventory is sufficient, demand is                              3. External and internal demands are processed by the correspond-
+       immediately satisfied, otherwise demand is lost and a penalty is                               ing nodes, and costs are incurred.
+       incurred.
+                                                                                                   Accordingly, processing an action for a node 𝑖 involves assigning
+    Note that the warehouse faces internal demand that originates from                         it to the first position of the pipeline 𝑄𝑖 (𝑡), receiving the order in the
+the orders placed by the retailers. Its inventory may not be sufficient to                     last pipeline position, and shifting the remaining orders in the pipeline
+satisfy the orders from all retailers. In that case, not all orders can be                     forward, see Fig. 3 for an illustration.
+shipped, and to distribute the available inventory an allocation strategy                          For a OWMR system, we assign index 0 to the warehouse, while
+is required; we discuss details in Section 3.6.                                                indices 1, … , 𝐾 − 1 correspond to the 𝐾 − 1 retailers. We next detail the
+
+                                                                                           4
+I. Kaynov et al.                                                                                                          International Journal of Production Economics 267 (2024) 109088
+
+
+
+
+                                                      Fig. 2. Illustration of the nodes and pipeline inventories for the OWMR system.
+
+
+                                                                                                 correspond to (3) for the lost sales case. Costs still equal 𝐶𝑗 (𝑡) = 𝑝𝑗 𝑗 (𝑡)+
+                                                                                                 ℎ𝑗 𝐼𝑗 (𝑡), but 𝑗 (𝑡) = max(𝐷𝑘 (𝑡) − 𝑞𝑘 (𝑡) − 𝐼𝑘 (𝑡) − 𝐸𝑘 (𝑡), 0) to account for the
+                                                                                                 emergency shipment. Note that we do not incur costs for the emergency
+                                                                                                 shipments, which brings our model in line with earlier studies (Van Roy
+                                                                                                 et al., 1997; Gijsbrechts et al., 2022). Also, (1) turns to:
+                                                                                                                                  ∑
+                                                                                                                                  𝐾−1
+                                                                                                                                        (                     )
+                                                                                                 𝐼0 (𝑡 + 1) = 𝐼0 (𝑡) + 𝑞0 (𝑡) −          𝑞𝑗 (𝑡 + 𝐿𝑗 ) + 𝐸𝑗 (𝑡)                       (6)
+                                                                                                                                  𝑗=1
+
+                                                                                                      We next briefly discuss the processing of the orders 𝑎𝑖 (𝑡) for 𝑖 ∈
+Fig. 3. Example of the evolution of the state for single node system with lead time                                      ∑
+                                                                                                 {1, … , 𝐾 − 1}. When 𝐾−1   𝑖=1 𝑎𝑖 (𝑡) ≤ 𝐼0 (𝑡) + 𝑞0 (𝑡), then sufficient inventory
+𝐿 = 3 and zero demand.
+                                                                                                 is available to ship all orders and accordingly 𝑞𝑗 (𝑡 + 𝐿𝑗 ) = 𝑎𝑗 (𝑡) for all
+                                                                                                                                  ∑
+                                                                                                 retailers. Conversely, when 𝐾−1     𝑖=1 𝑎𝑖 (𝑡) > 𝐼0 (𝑡) + 𝑞0 (𝑡) the inventory at
+                                                                                                 the warehouse is insufficient. In that case, an allocation policy that
+dynamics for that system. Since retailers order from the warehouse, the
+                                                                                                 takes the orders as input decides upon the final shipment quantities
+inventory level of the warehouse is first updated as follows:
+                                                                                                 𝑞𝑗 (𝑡+𝐿𝑗 ). In particular, internal orders that cannot be satisfied in full are
+                                 ∑
+                                 𝐾−1
+                                                                                                 processed, and in doing so they are effectively reduced to an amount
+𝐼0 (𝑡 + 1) = 𝐼0 (𝑡) + 𝑞0 (𝑡) −         𝑞𝑗 (𝑡 + 𝐿𝑗 )                                   (1)
+                                                                                                 that can be shipped in full. The approach for doing so will be discussed
+                                 𝑗=1
+                                                                                                 in more detail in Section 3.5.
+(Recall that 𝑞𝑗 (𝑡 + 𝐿𝑗 ) denotes orders shipped to retailer 𝑗 in period 𝑡.)                          To apply DRL, it is common to adopt pragmatic or analytic upper
+For the inventory update of the retailers, we must distinguish between                           bounds for the orders placed by RL agents (cf. Boute et al., 2021). We
+various models of customer behavior. The complete backlogging case                               adopt such an approach in the present paper. In particular, the initial
+yields the following update:                                                                     upper bound for retailer actions corresponds to the 99.9th percentile of
+𝐼𝑗 (𝑡 + 1) = 𝐼𝑗 (𝑡) + 𝑞𝑗 (𝑡) − 𝐷𝑗 (𝑡)                                                 (2)        per-period demand, and the lower bound equals 0. For the warehouse,
+                                                                                                 the upper bound is based on system demand instead. The procedure
+In the case of lost sales, the retailers’ inventory levels cannot be                             then trains the PPO agent and simulates a trajectory with the trained
+negative, thus:                                                                                  agent. If the agent chooses actions that lie on the boundary of the search
+𝐼𝑗 (𝑡 + 1) = max(0, 𝐼𝑗 (𝑡) + 𝑞𝑗 (𝑡) − 𝐷𝑗 (𝑡))                                         (3)        space, limits are adapted and another agent is trained, etc.
+
+Let 𝐿𝑗 (𝑡) denote the amount of lost demand in period 𝑡, then:                                   3.4. Deep reinforcement learning for multi-echelon decision making
+𝑗 (𝑡) = max(0, 𝐷𝑗 (𝑡) − 𝑞𝑗 (𝑡) − 𝐼𝑗 (𝑡))                                             (4)
+                                                                                                     PPO (Schulman et al., 2017) is a policy gradient method that
+A momentary reward is calculated as the negative of all the costs                                enhances the well-known REINFORCE algorithm (Williams, 1992). It
+incurred during the time-step 𝑡 at all locations. Each retailer incurs                           does so by incorporating elements from the Trust Region Policy Op-
+holding costs and backlogging or penalty costs depending on the cus-                             timization (TRPO), importance sampling, and value methods. TRPO
+tomer behavior model; the warehouse incurs only holding costs. Denote                            ensures a monotonic policy improvement by leveraging second-order
+holding costs for the warehouse in period 𝑡 by 𝐶0 (𝑡) = ℎ0 𝐼0 (𝑡), where ℎ𝑖                      optimization methods (Schulman et al., 2015). PPO achieves similar
+is the holding costs for node 𝑖. Denote by 𝐶𝑗 (𝑡) the costs for retailer                         results by clipping the optimization objective (see Schulman et al.,
+𝑗 for period 𝑡: For lost sales we find 𝐶𝑗 (𝑡) = 𝑝𝑗 𝑗 (𝑡) + ℎ𝑗 𝐼𝑗 (𝑡), with                      2017, for details). Unlike REINFORCE, however, PPO reuses training
+𝑝𝑗 the lost sales penalty. For complete backlogging we find 𝐶𝑗 (𝑡) =                             data multiple times. In combination with a value function used to
+𝑝𝑗 max(−𝐼𝑗 (𝑡), 0)+ℎ𝑗 max(𝐼𝑗 , 0), with 𝑝𝑗 the per-period backlogging costs.                     improve the training stability, PPO is characterized by stable training
+The total reward per period becomes:                                                             with good wall-time performance.
+       (𝐾−1         )                                                                                It has been reported that an expensive hyper-parameter tuning
+         ∑
+𝑅𝑡 = −        𝐶𝑗 (𝑡)                                                    (5)                      process is required for achieving good performance on inventory op-
+           𝑗=0                                                                                   timization problems (Gijsbrechts et al., 2022). PPO has empirically
+    For the partial backlogging case, retailer dynamics are as in the                            shown to be less sensitive towards hyper-parameter tuning. Addition-
+lost sales case. Denote the inventory available at the warehouse for                             ally, PPO was chosen to perform stochastic inventory optimization tasks
+                                                                 ∑
+emergency shipments in period 𝑡 by 𝐽0 (𝑡) = 𝐼0 (𝑡)+𝑞0 (𝑡)− 𝐾−1    𝑗=1 𝑞𝑗 (𝑡+𝐿𝑗 ),
+                                                                                                 due to its good convergence properties and good sample complexity.
+and denote the emergency shipment to retailer 𝑗 by 𝐸𝑗 (𝑡). Retailer                              Moreover, an efficient implementation is available from the RLlib
+demands are handled one by one in the order of their indices. For                                library (Liang et al., 2018), which is used in this work.
+                                                                    ∑
+retailer 𝑘, inventory remaining for emergencies equals 𝐽0 (𝑡)− 𝑘−1     𝑗=1 𝐸𝑗 (𝑡).
+                                                                                                     Our MDP formulation of the OWMR system has a multi-dimensional
+If 𝐷𝑘 (𝑡) − 𝑞𝑘 (𝑡) − 𝐼𝑘 (𝑡) > 0 then with probability 𝑝em an emergency                           action space in order to provide individual control over the replen-
+                                                                  ∑
+shipment with size 𝐸𝑘 (𝑡) = max(𝐷𝑘 (𝑡) − 𝑞𝑘 (𝑡) − 𝐼𝑘 (𝑡), 𝐽0 (𝑡) − 𝑘−1
+                                                                    𝑗=1 𝐸𝑗 (𝑡)) is               ishment decisions, which enables us to solve asymmetric problem in-
+initiated. In other cases 𝐸𝑗 (𝑡) = 0. Inventory dynamics for the retailers                       stances, i.e., instances with non-identical retailers. A common approach
+
+                                                                                             5
+I. Kaynov et al.                                                                                                         International Journal of Production Economics 267 (2024) 109088
+
+
+                                                                                                  When the actions outputted by the neural network violate (7), then
+                                                                                              the shipments 𝑞𝑗 (𝑡+𝐿𝑗 ) must be lower than the orders 𝑎𝑗 (𝑡). To this end,
+                                                                                              the order quantities will be reduced to the amount that the warehouse
+                                                                                              can deliver, but since there are multiple retailers there are multiple
+                                                                                              ways to achieve this. This raises two questions: (1) how to adjust the
+                                                                                              actions to become feasible and (2) how to communicate to the RL agent
+                                                                                              that these actions were not feasible. Question 1 can be resolved by
+                                                                                              adopting an allocation rule (cf. Section 3.3). A proportional allocation
+                                                                                              rule is attractive because it is intuitive and general-purpose. It can be
+                                                                                              formalized as follows:
+                                                                                                             ⎢      𝐼0 (𝑡) + 𝑞0 (𝑡) ⎥⎥
+Fig. 4. Simplified visualization of the actor-network for a case with 2 retailers, each       𝑞𝑖 (𝑡 + 𝐿𝑖 ) = ⎢𝑎𝑖 (𝑡) ∑                                                              (8)
+                                                                                                             ⎢          𝐾−1          ⎥
+with 2 possible actions: Placing an order of 0 and placing an order of 1. Dashed arrows                      ⎣          𝑗=1 𝑎𝑖 (𝑡) ⎦
+represent inputs, while solid arrows symbolize weights (Actions for the warehouse,
+biases and hidden layers’ activation functions are omitted for clarity).                          This rule is widely used in combination with echelon base-stock
+                                                                                              policies as it facilitates analysis. However, as empirically validated,
+                                                                                              proportional allocation does not provide an incentive for the DRL agent
+                                                                                              to output feasible actions. When trained to output orders which will
+for multi-action MDPs is to enumerate each possible combination of
+                                                                                              be processed with a proportional allocation rule, the agent tends to
+individual actions (see Gijsbrechts et al., 2022; Vanvuchelen et al.,
+2020).                                                                                        suggest high order quantities at the retailers (in the top of the available
+     However, the activation function of the last layer of the neural net-                    range), while limiting on-hand inventory at the warehouse. This results
+work is typically a softmax that forms a discrete probability distribution                    in undesired behavior: the agent does not learn to ration the resources,
+over all possible action combinations, and for multi-action MDPs the                          leading to poor performance. The problem persists even when a penalty
+number of action combinations grows very quickly in the number of                             for infeasible actions is added; this could be a consequence of the
+retailers. Beyond ∼ 103 action combinations, DRL becomes increasingly                         highly stochastic environment, which renders it challenging to learn
+unwieldy and training effective policies becomes prohibitively time-                          which actions are considered infeasible. Additionally, penalties may
+consuming; this limit may already be reached for 𝐾 = 3, i.e., two                             have undesirable side-effects and it is not easy to define appropriate
+retailers.                                                                                    penalties.
+     To overcome these limitations, the approach proposed in this paper                           For training the RL agent, we will instead rely on a custom random-
+differs on two important aspects from the standard approach. First,                           ized sequential allocation rule. For this rule, the sequence of retailers is
+we adopt a multi-discrete action distribution, i.e., our neural net-                          randomized for every time step, and the orders 𝑎𝑗 (𝑡), 𝑗 ∈ 1, … , 𝐾 − 1
+works output several probability distributions, one for each stock-point                      provided by the actor-network are executed in full, one by one until the
+individually, and the corresponding order quantities are sampled inde-                        available inventory at the warehouse is depleted. When the inventory
+pendently. Second, we adopt a custom allocation policy that enables                           at the warehouse is insufficient to satisfy an order in full, the order is
+the DRL algorithm to efficiently learn well-performing multi-discrete                         truncated so that the warehouse inventory falls to 0.
+policies.                                                                                         For infeasible actions, i.e., those violating (7), the last retailer(s) in
+     We explain the multi-discrete action distribution and its advantages                     the sequence will not see their order shipped in full, which will increase
+by example. Suppose the replenishment orders for the warehouse are                            the retailer’s costs. We indeed find empirically that RL agents trained to
+restricted to lie in the [0, 20) range. Similarly, suppose each retailer is                   output orders processed using this rule learn to output feasible actions,
+restricted to order in the [0, 10) range. Then the dimension of the output
+                                                                                              in contrast to agents trained using proportional allocation, see Fig. 5.
+of the actor-network equals the sum of all possible actions for each
+                                                                                                  Apart from the intuitive appeal of learning to output exact order
+location, i.e., 20 + 10(𝐾 − 1) values. The softmax activation function
+                                                                                              quantities rather than relying on allocation to render retailer orders
+is applied with respect to the first 20 elements of the output vector to
+                                                                                              feasible, one may expect that learning exact order quantities leads
+form a probability distribution over the warehouse’s actions. Similarly,
+                                                                                              to tangible performance benefits. Indeed, if a DRL policy relies on
+element 21 to 30 are transformed to a probability distribution for
+retailer 1, etc. To sample an action using the network, we independently                      allocation for outputting feasible order quantities, actions taken for
+sample for the warehouse and each retailer based on the corresponding                         one retailer can influence the orders dispatched by other retailers, cre-
+probabilities. The final output of the network becomes a vector 𝐴𝑡 =                          ating complex interdependencies. Arguably, retailer-specific decisions
+[𝑎0 (𝑡), 𝑎1 (𝑡), … 𝑎𝐾−1 (𝑡)], where 𝐾 is the total number of locations. This                  decoupled from the decisions of other retailers are more effective:
+allows us to specify an exact ordering decision for each of the stock-                        They reduce dependencies and allow for granular, adaptable strategies,
+points, while the size of the output layer grows only linearly in the                         fostering stability and performance in the overall network. Indeed, in
+number of actions. (Note that the enumeration of action combinations                          Section 4 we will see that training with sequential allocation leads
+would yield 2 × 10𝐾 outputs for this case.)                                                   to substantial performance improvements, which are maintained even
+     To visualize the network, we instead consider a case with only 2                         when switching to the proportional allocation rule while evaluating the
+retailers, that can each place an order 𝑎 ∈ {0, 1}; we also omit the                          trained agent.
+warehouse actions for clarity. Fig. 4 illustrates the resulting network.
+                                                                                              3.6. Benchmark policies
+3.5. Allocation in case of shortages at the warehouse
+                                                                                                 Our aim in this section is to come up with reasonable general-
+    We next discuss the need for an allocation policy, as well as the                         purpose benchmarks, i.e., policies that are appropriate for all three
+adopted allocation policy for DRL training. Since the multi-action dis-                       consumer choice models: lost sales, complete back-ordering and partial
+tribution that is part of our approach samples orders for each location
+                                                                                              back-ordering. The optimal policy is unknown for all three cases.
+independently, there is no a priory guarantee that the orders placed
+                                                                                              However, base-stock policies are optimal for single node systems with
+by retailers can be met in full by warehouse inventory, i.e., they may
+                                                                                              complete back-ordering, and are intuitive and widely used in research
+violate below constraint:
+                                                                                              and in practice (Axsäter, 2015). We adopt echelon base-stock policies,
+∑
+𝐾−1
+                                                                                              which we found to perform better then regular base-stock policies.
+      𝑎𝑗 (𝑡) ≤ 𝐼0 (𝑡) + 𝑞0 (𝑡)                                                     (7)
+𝑗=1
+                                                                                              Note that our benchmarks are stationary replenishment policies: Our
+
+                                                                                          6
+I. Kaynov et al.                                                                                                   International Journal of Production Economics 267 (2024) 109088
+
+
+
+
+Fig. 5. Comparison between actions made by PPO trained with Proportional Allocation vs Sequential Allocation, for typical trajectories.. (For interpretation of the references to
+color in this figure legend, the reader is referred to the web version of this article.)
+
+Table 1                                                                                     brings instance 13 in line with Setting 1 in Gijsbrechts et al. (2022)
+Parameters for instances 1-10; divided between complete back-ordering and lost sales.       and the corresponding setting in Van Roy et al. (1997), while instance
+ Instance      CB     𝑙0     𝑙1     𝑙2    𝑙3     𝐷1           𝐷2           𝐷3               14 presents similar parameters but with highly asymmetric retailer
+ 1             B      2      1      1     1      Poiss(3)     Poiss(3)     Poiss(3)         demand distributions.
+ 2             B      2      1      1     1       (0, 6)      (3, 1)     Poiss(3)              To assess the impact of the number of retailers, we conduct a
+ 3             B      2      1      1     1       (1, 5)      (5, 1)     Poiss(0.5)
+                                                                                            sensitivity analysis to instances 1, 7 and 11. In particular, we create
+ 4             B      2      1      2     3      Poiss(3)     Poiss(3)     Poiss(3)
+ 5             B      5      3      3     3       (1, 5)      (5, 1)     Poiss(0.5)
+                                                                                            two variants for each of these instances where all parameters are kept
+ 6                   1      1      1     1      Poiss(3)     Poiss(3)     Poiss(3)         fixed, except the number of retailers which is changed (from 3) to 5
+ 7                   2      1      1     1      Poiss(3)     Poiss(3)     Poiss(3)         and 7, respectively. To similarly assess the sensitivity to penalty cost
+ 8                   5      1      1     1      Poiss(3)     Poiss(3)     Poiss(3)         asymmetry, we create two additional variants for each of the instances
+ 9                   2      1      2     3      Poiss(3)     Poiss(3)     Poiss(3)         1, 7, and 11. The original instances have a penalty cost of 9 for each
+ 10                  5      3      3     3       (1, 5)      (5, 1)     Poiss(0.5)
+                                                                                            of the three retailers; for the first variant we let 𝑝1 = 4, 𝑝2 = 9, and
+                                                                                            𝑝3 = 19, for the second variant we let 𝑝1 = 3, 𝑝2 = 9, and 𝑝3 = 39.
+                                                                                                 Together, the 14 instances and 12 variants cover a range of prob-
+investigations aim to gain insight into the potential value of more
+                                                                                            lems, including symmetric and asymmetric cases. Instances 13 and 14
+complex state-dependent (DRL) policies. We pair these policies with
+                                                                                            are by far the most challenging, since the size of the state vector equals
+two allocation rules.                                                                       ∑𝐾
+                                                                                               𝑖=1 (𝑙𝑖 + 1) = 33 and the size of the action vector is 11.
+    The first rule is the proportional allocation rule formalized in (8).
+                                                                                                 As a benchmark, we adopt an echelon base-stock policy with the
+For the second rule, we consider the shortfall of retailers after alloca-
+                                                                                            two allocation policies as outlined in Section 3.6, with echelon base-
+tion, i.e., the difference between their respective base-stock levels and                   stock levels set using a heuristic procedure. For all instances except
+inventory positions. When the warehouse has sufficient inventory, the                       instance 14, the base-stock vector is set via exhaustive search in the
+policy ensures that these differences are zero. In case of shortage at the                  base-stock levels. In particular, we try all combinations of echelon base-
+warehouse, we allocate inventories to minimize the maximum shortfall;                       stock levels for each of the nodes, such that each base-stock level lies
+we refer to this heuristic as the min shortage allocation.                                  within a reasonable range for that node, guided by heuristic lower and
+                                                                                            upper bounds. Since 𝑝 > ℎ, demand during lead-time serves as a lower
+4. Numerical experiments                                                                    bound. Since 𝑝∕(𝑝 + ℎ) is typically below 0.9 and always below 0.975,
+                                                                                            demand during lead-time plus 3 standard deviations serves as an upper
+   In this section, we will test the developed training algorithms on a                     bound. For the echelon base-stock level of the warehouse, we adopt
+wide range of cases. We discuss the experimental setup in Section 4.1,                      similar approach, but with system demand and the longest cumulative
+and results in Section 4.2.                                                                 leadtime from outside supplier to retailer. For instances where the
+                                                                                            retailer parameters are symmetric (i.e., same demand distribution, lead-
+4.1. Experimental setup                                                                     time, and cost parameters), we consider only those combinations for
+                                                                                            which the retailer base-stock levels are equal.
+                                                                                                 For each combination of base-stock levels obtained in this fashion,
+    To evaluate the performance of PPO algorithm applied to OWMR
+                                                                                            we employ simulation of 1000 trajectories of length 100 to identify
+systems, we consider 14 problem instances distributed over the 3
+                                                                                            the combination of base-stock levels that leads to the lowest cost. Each
+categories of customer behavior models. We also consider 6+6 instance
+                                                                                            trajectory corresponds to a simulation run with a specific sequence of
+variants to analyze sensitivities. Throughout all instances, demand
+                                                                                            demands; we use common random numbers when assessing different
+processes at retailers are assumed to be i.i.d., and they will be ei-
+                                                                                            combinations of base-stock levels for improved convergence. As a
+ther Poisson distributed (𝑃 𝑜𝑖𝑠𝑠(𝜇)) or Gaussian ( (𝜇, 𝜎)). The values
+                                                                                            partial validation of our heuristic bounds, it was verified that none of
+sampled from the Gaussian distribution are rounded to the nearest                           the resulting base-stock vectors lie on the boundary of the search space.
+integer, or set to zero if the value is negative. The instances are further                      For Instance 14, the large number of locations in combination with
+differentiated based on customer behavior (CB): we consider lost sales                      the lack of symmetry renders exhaustive search over all combinations
+(), back-ordering (B) and partial back-ordering, where the first 10                        of base-stock levels intractable. Instead for that instance, we search
+instances fall in the first two categories. For these instances, the CB                     exhaustively over the base-stock level 𝑧0 for the warehouse, and a
+categories as well as lead-times and demand distributions are listed in                     parameter 𝑘 that is used to resolve the retailer base-stock levels 𝑧𝑗 for
+Table 1. Except where explicitly noted, all instances share the same cost                   𝑗 = 1, 2, … , 𝐾 − 1. In particular, 𝑘 yields retailer base-stock levels as
+structure (𝑝𝑖 = 9, 𝑖 = 2 … 𝐾, ℎ1 = 0.5, ℎ𝑖 = 1, 𝑖 = 2 … 𝐾).                                 follows:
+    Instances 11–14 use partial backlogging with 𝑝em = 0.8 and emer-                                                   √
+                                                                                            𝑧𝑗 = 𝜇𝑗 (𝐿𝑗 + 1) + 𝑘𝜎𝑗 × 𝐿𝑗 + 1                                        (9)
+gency ordering costs of 0; for other parameters see Table 2. For in-
+stances 11 and 12, the warehouse lead-time is 𝐿0 = 2 and retailer                           where 𝜇𝑗 and 𝜎𝑗 are mean and standard deviation for the single-period
+lead-times are 𝐿𝑖 = 1, 𝑖 = 1, … , 𝐾 − 1, and the standard cost structure                    demand distributions for retailer 𝑗, calculated after rounding and clip-
+is adopted. For instances 13 and 14, we use 𝐿0 = 𝐿𝑖 = 2, and the                            ping. That is, we set base-stock levels to an approximate percentile of
+cost structure ℎ0 = ℎ𝑖 = 3 and 𝑝𝑖 = 60 for 𝑖 = 1, … , 𝐾 − 1. This                           the lead-time demand distribution.
+
+                                                                                        7
+I. Kaynov et al.                                                                                                     International Journal of Production Economics 267 (2024) 109088
+
+Table 2
+Parameters for instances 11-14, that use partial backlogging.
+ Instance          𝐷1             𝐷2               𝐷3                𝐷4              𝐷5               𝐷6               𝐷7               𝐷8               𝐷9               𝐷10
+ 11                Poiss(3)       Poiss(3)         Poiss(3)          –               –                –                –                –                –                –
+ 12                 (1, 5)        (5, 1)         Poiss(0.5)        –               –                –                –                –                –                –
+ 13                 (5, 14)       (5, 14)         (5, 14)          (5, 14)        (5, 14)         (5, 14)         (5, 14)         (5, 14)         (5, 14)         (5, 14)
+ 14                 (0, 20)       (2, 16)         (4, 12)          (6, 8)         (8, 4)          (10, 0)        Poiss(0.5)       Poiss(3)         Poiss(9)         Poiss(12)
+
+
+
+
+Fig. 6. (Figures best viewed in color.) Comparison of our multi-action PPO trained with randomized allocation and two heuristic policies using different allocation strategies. The
+echelon stock policy with proportional allocation is normalized to 0, other bars represent the percentage increase or decrease in cost with respect to that policy. Black error bars
+indicate a 95% confidence interval. (For interpretation of the references to color in this figure legend, the reader is referred to the web version of this article.)
+
+
+
+
+Fig. 7. Comparison of our multi-action DRL trained with randomized allocation with echelon base-stock benchmarks. The figure shows the percentage improvement of DRL
+compared to the best of the two benchmarks for each of the cases 11–14.
+
+
+    For each of the instances, we train a neural network policy/agent                         absolute costs obtained for all instances and policies. The relative
+using the methods described in Section 3.4. It was found that PPO                             performance for instances 1–10 are presented in Fig. 6. The figure
+converges after between 50 and 100 million observations, which trans-                         shows that for the complete back-ordering case, results for each of
+lates to 0.5 to one million episodes since we have 100 observations per                       the benchmarks are on average in line with DRL performance, but
+episode. Convergence was found to be relatively stable; during early                          the best benchmark tends to outperform DRL, except for instance 3.
+stages of the research it was observed that several training runs on                          For the lost sales case, DRL tends to outperform both benchmarks
+the same scenario consistently converged to the same performance.                             by ∼ 1−3%. The results for instances 11–14 are presented in Fig. 7.
+Hyperparameters and other implementation details are discussed in                             The figure shows that the proposed DRL algorithm convincingly out-
+Appendix B. The resulting agents are evaluated on 1000 simulation tra-                        performs the benchmarks, also for the highly asymmetric cases 12
+jectories of length 100, generated independently from the trajectories                        and 14. Note that on instance 13 our proposed approach attains an
+used for training. During evaluation, we use proportional allocation.                         improvement of more than 20%, which is substantially higher than the
+We also compute the performance of benchmarks corresponding to op-                            improvements reported for that instance by Gijsbrechts et al. (2022)
+timized echelon base-stock policies under two allocation policies, using                      and Van Roy et al. (1997), who applied the A3C algorithm and neuro-
+the methods discussed above. The benchmarks are likewise evaluated                            dynamic programming, respectively. Based on information available to
+on 1000 simulation trajectories of length 100, generated independently                        us, we attempted to eliminate any differences in testing procedure or
+from the trajectories used for training.                                                      in the implementation of the base-stock policies, and are inclined to
+                                                                                              believe that our proposed approach may indeed perform better than the
+4.2. Results                                                                                  approaches of Gijsbrechts et al. (2022) and Van Roy et al. (1997) for
+                                                                                              this case. Possibly, our proposed algorithm benefits from the ability to
+    We present the results on relative performance of the various poli-                       freely set orders for each of the 10 retailers at every time step, whereas
+cies in this section, while Appendix A contains in addition the estimated                     for both (Gijsbrechts et al., 2022) and Van Roy et al. (1997) the agent
+
+                                                                                          8
+I. Kaynov et al.                                                                                                      International Journal of Production Economics 267 (2024) 109088
+
+
+
+
+Fig. 8. Performance of the best-performing echelon base-stock policy and the proposed DRL algorithm for variants of instance 13: We vary the standard deviation of demand
+while keeping other parameters fixed. Figure reports absolute costs incurred over 100 periods.
+
+
+
+
+Fig. 9. Results on the sensitivity analysis on the number of retailers, with variants of instances 1, 7, and 11. The original instances are in boldface and have 3 retailers, for the
+variants 1 − 5𝑟 denotes the variant of instance 1 with 5 retailers, etc.
+
+
+is restricted to dynamically specify the same target inventory position                       low demand variances would result in low inventory imbalances and
+for all retailers, which may be inappropriate since excess sales are lost                     consequently in close-to-optimal performance of our benchmark, these
+for the retailer.                                                                             results are consistent with the hypothesis outlined above.
+    The proposed algorithm thus convincingly outperforms the bench-                               Our sensitivity analysis continues with an investigation of the im-
+mark for partial back-ordering, but only marginally outperforms the                           pact of varying the number of retailers, see Fig. 9. The Figure shows
+benchmarks for lost sales and is outperformed by the benchmark in the                         that DRL performance tends to deteriorate as the number of retailers
+complete back-ordering case. This may either imply that the bench-                            increases, but continues to convincingly beat the benchmark for the
+marks perform comparatively better in the complete back-ordering                              partial backlogging case. Furthermore, Fig. 10 shows the results for
+case versus the partial back-ordering case, or that our DRL approach                          the variants with asymmetric penalty costs. For the full backlogging
+somehow does much worse (compared to the optimum) in the complete                             instance 1, penalty asymmetry does not qualitatively change the rel-
+backlogging case. We suspect that for all cases, our proposed approach                        ative performance of DRL, but it does seem to deteriorate relative
+learns a policy that can approximate the optimal policy reasonably                            performance compared to the benchmark. Interestingly, for the lost
+well. The benchmarks on the other hand perform very well in case of                           sales instance 7, as penalty costs asymmetry increases the relative
+complete back-ordering, not so well for lost sales, and rather poorly                         performance of DRL improves; it changes from performing on par with
+for partial back-ordering. Indeed, echelon base-stock policies are fixed                      the benchmark to outperforming it by 1.4%. For instance 11, penalty
+inventory position targets, which are known to under-perform in lost                          cost asymmetry causes a slight deterioration of relative performance of
+sales settings even in the single-echelon case (see e.g. Zipkin, 2008).                       DRL, but DRL still convincingly beats the benchmark.
+Similarly, partial backlogging features lost sales, and in addition the                           In an attempt to gain insights into the ability of DRL to beat the
+emergency shipments call for keeping some inventory at the central                            stationary base-stock benchmarks for the partial backlogging instance
+warehouse at all times, which echelon policies are poorly equipped to                         11, we analyze the actions generated by the DRL and benchmark policy
+do.                                                                                           for a range of states, and plot the results in Fig. 11. The figure shows
+    In an attempt to find some support for this hypothesis, we perform                        that the benchmark policy has a very regular structure, in line with its
+further experiments on variations of instance 13, where we vary the                           definition. Note that states visited by the DRL policy would typically
+standard deviation of retailer demands while keeping other parameters                         have retailer inventory levels below 10 (top part of the figure) and
+fixed. The absolute performance of the best-performing echelon base-                          warehouse inventory levels between 5 and 25. It seems that for retailer
+stock policy and our proposed DRL algorithm for these variants are                            inventory levels of about 5, the model tends to place orders of 9, enough
+shown in Fig. 8. We observe that the performance benefit of our pro-                          to maintain the inventory in the system since the average system
+posed approach decreases with the decrease of the demand variance,                            demand per period is 9. When the inventory level becomes too small
+and eventually even turns into a benefit for the benchmark. Since                             or too large, the policy switches to orders of 12–13 or 4–6 respectively.
+
+                                                                                          9
+I. Kaynov et al.                                                                                                      International Journal of Production Economics 267 (2024) 109088
+
+
+
+
+Fig. 10. Varying penalty costs for scenarios 1, 7 and 11. In boldface original scenarios where each retailer has 𝑝 = 9 (e.g. 1-[9,9,9]p). Penalty changed is indicated in square
+brackets for each retailer (e.g. 1-[4, 9, 19] means 𝑝1 = 4, 𝑝2 = 9, 𝑝3 = 19).
+
+
+
+
+Fig. 11. Policy visualization for scenario 11. Warehouse level and Retailer 1 level is changed (x and y axis respectively). Inventory levels of other retailers are equal to lead-time
+demand, while pipelines are empty. The values inside heat-map indicate the action selected by the agent for the warehouse replenishment order.
+
+
+Thus the trained policy favors orders that match the expected system                          network requires in the order of 𝐴 × 𝐾 outputs, where 𝐴 denotes the
+demand, rather than always keeping the echelon inventory level at                             number of possible actions and 𝐾 the number of nodes. This is in
+some fixed number.                                                                            contrast with the 𝐴𝐾 outputs that would be needed in previously ap-
+    Finally, the overall structure of the policy is really rather different                   plied approaches, and enables to scale to problems with a large number
+from the base-stock benchmark; considering the performance gap, this                          of nodes. Additionally, we have demonstrated that to ensure effective
+might indicate that the base-stock policy is inappropriate for this                           reinforcement learning, it may help to pair the learning algorithm with
+problem and a different logic altogether is needed. Our findings provide
+                                                                                              a custom allocation policy; we note that this allocation policy yields
+weak indication that ideas adapted from constant-order policies, which
+                                                                                              very poor allocations in general.
+have been shown to be asymptotically optimal in various settings
+single-location settings (Goldberg et al., 2016; Bu et al., 2020), could                          We compared our approach with the widely accepted echelon base-
+perhaps underlie new policy structures that could potentially be able                         stock heuristics. PPO is shown to be a suitable candidate for finding
+to mimic the optimal policy.                                                                  control policies in multi-echelon inventory control, though it cannot
+    In Section 3.5 we discuss the benefits of using a sequential allocation                   outperform the benchmarks in all cases. We suspect that for some of
+rule while learning good policies. Those benefits also translate to the                       the complete back-ordering cases where DRL failed to outperform the
+performance of the trained policies, as illustrated by Fig. 12. The                           base-stock policy benchmark, the benchmark may be close to optimal
+figure shows that training the neural network to set orders that are                          and our proposed policy still performs reasonably well. Still, better DRL
+processed using a sequential allocation policy yields substantially better                    algorithms tailored to inventory decision making would be welcome.
+performance than training while processing orders with proportional                               For all instances, carefully handcrafted heuristics should be able to
+allocation policies.                                                                          outperform our proposed approach. The main benefit of our approach
+                                                                                              may lie in it being general-purpose and easy to adapt to different mod-
+5. Conclusion
+                                                                                              els. As such, it may be a useful benchmark for researchers working on
+    We have presented an application of a new method for stochastic                           new heuristics, and for cases where appropriate hand-crafted heuristics
+control in multi-action inventory management in this work. Our ap-                            are not available, such as the partial back-ordering case.
+proach solves instances with non-identical retailers by applying multi-                           Our approach may be more generally applicable beyond OWMR, as
+discrete action distributions. As a result, the last layer of the neural                      underlined by our development of a fairly generic MDP formulation
+
+                                                                                         10
+I. Kaynov et al.                                                                                                    International Journal of Production Economics 267 (2024) 109088
+
+
+
+
+Fig. 12. Relative performance of training with proportional allocation vs training Random Sequential Allocation, as proposed in this paper. In both cases, policies are evaluated
+using proportional allocation.
+
+
+
+
+Table A.3
+Mean absolute cost across instances; the table corresponds to results shown in Figs. 6 and 7.
+                   ES: Min shortage                                     ES: Proportional                                       PPO
+                   MEAN               SE              %                 MEAN                    SE              %              MEAN                   SE                 %
+ 1                 −1609.47           1.67            −2.78             −1655.51                1.66            0.0            −1637.2                5.23               −1.11
+ 2                 −1426.84           1.53            3.1               −1383.88                1.36            0.0            −1417.46               4.26               2.43
+ 3                 −1800.5            2.08            1.38              −1776.04                2.1             0.0            −1731.67               7.16               −2.5
+ 4                 −1857.3            1.76            −0.09             −1858.93                1.89            0.0            −1908.95               6.73               2.69
+ 5                 −2306.89           3.47            2.67              −2246.84                3.18            0.0            −2331.07               13.45              3.75
+ 6                 −1366.51           0.91            −0.54             −1373.91                0.92            0.0            −1347.34               2.89               −1.93
+ 7                 −1408.08           0.95            0.13              −1406.27                0.99            0.0            −1405.08               3.11               −0.09
+ 8                 −1516.67           1.14            0.57              −1508.12                1.11            0.0            −1495.49               3.76               −0.84
+ 9                 −1561.56           1.17            1.67              −1535.96                1.14            0.0            −1511.68               3.65               −1.58
+ 10                −1741.6            1.85            0.29              −1736.55                1.69            0.0            −1674.54               5.45               −3.57
+ 11                −1109.96           1.02            −0.16             −1111.76                1.02            0.0            −971.86                3.13               −12.58
+ 12                −1406.43           1.45            0.29              −1402.38                1.44            0.0            −1118.92               4.51               −20.21
+ 13                −99882.51          86.58           −1.81             −101727.47              87.32           0.0            −79727.39              215.39             −21.63
+ 14                −52787.41          49.29           −1.07             −53358.86               45.4            0.0            −42835.02              124.09             −19.72
+
+
+
+that could be extended to other supply chain networks. The multi-                           Appendix B. Hyper-parameters
+discrete action distribution in combination with tailored rationing may
+be a valuable building block to tackle larger supply chains.
+    An interesting direction for future research are continuous review                         Hyperparameters for our experiment are listed in Table B.6. Some
+systems. Continuous review OWMR systems have received a lot of                              observations from hyperparameter tuning are listed next:
+attention in research (e.g. Axsäter, 2000; Axsäter and Marklund, 2008;
+Marklund, 2011; Stenius et al., 2016, 2018; Malmberg and Marklund,                              • Neural Network Architecture. Increasing the number and/or
+2023; Berling et al., 2023), and this literature stream could provide a                           size of the hidden layers did not affect algorithm performance
+good source for appropriate benchmarks. On the other hand, applying                               significantly: Deeper (2, 3 or 4 layers) or wider (64, 128 or 256
+DRL in a continuous review setting comes with new challenges, such                                units in a layer) network resulted in little to no performance gain.
+as deciding when exactly to query the neural network for potentially                            • Number of SGD epochs: Contrary to the results of Vanvuchelen
+placing an order.
+                                                                                                  et al. (2020), reducing the number of training epochs did not re-
+Data availability                                                                                 sult in better convergence. In all of the experiments high number
+                                                                                                  of epochs resulted in faster training and overall better performing
+      Data will be made available on request.                                                     policy.
+                                                                                                • Learning rate: Different learning rates, as well as learning rate
+Acknowledgment                                                                                    schedules, did not lead to better performance.
+                                                                                                • Entropy coefficient (𝑐2 ): An increase in the entropy coefficient
+   The authors express their gratitude to all anonymous reviewers for                             did not result in better performance. We have tested different
+their constructive comments.
+                                                                                                  entropy coefficients [10−3 , 10−5 , 10−7 , 10−9 ]. Any value apart from
+                                                                                                  0 resulted in slower convergence and worse cumulative rewards.
+Appendix A. Absolute costs
+                                                                                                • GAE 𝜆: The 𝜆 parameter for GAE was tuned on a number of
+    The absolute average costs for all considered cases, as well as                               settings starting from 𝜆 = 0.9 to 𝜆 = 1.0 with a step of 0.01.
+percentage deviation compared to the proportional allocation rule, are                            In most cases, values that were closer to one resulted in a good
+listed in Tables A.3–A.5.                                                                         performance.
+
+                                                                                       11
+I. Kaynov et al.                                                                                                          International Journal of Production Economics 267 (2024) 109088
+
+Table A.4
+Mean absolute cost across the variants constructed to assess the impact of the number of retailers; the table corresponds to Fig. 9.
+                   ES: Min Shortage                                          ES: Proportional                                           PPO
+                   MEAN                  SE               %                  MEAN                    SE               %                 MEAN                   SE                %
+ 1-3r              −1610.37              5.44             −2.74              −1655.67                5.38             0.00              −1637.20               5.23              −1.12
+ 1-5r              −2567.10              5.60             0.71               −2549.10                5.45             0.00              −2716.01               5.81              6.55
+ 1-7r              −3509.60              5.84             0.03               −3508.51                6.63             0.00              −3754.68               7.69              7.02
+ 7-3r              −1410.24              2.92             0.59               −1402.00                3.14             0.00              −1405.08               3.11              0.22
+ 7-5r              −2313.62              4.26             0.27               −2307.44                3.99             0.00              −2330.46               4.08              1.00
+ 7-7r              −3182.11              4.56             0.28               −3173.17                4.72             0.00              −3365.65               5.03              6.07
+ 11-3r             −1111.58              3.29             0.12               −1110.22                3.27             0.00              −971.86                3.13              −12.46
+ 11-5r             −1688.45              4.22             −0.66              −1699.65                4.07             0.00              −1478.56               4.00              −13.01
+ 11-7r             −2234.87              4.93             −0.56              −2247.48                4.80             0.00              −2009.61               4.90              −10.58
+
+
+Table A.5
+Mean absolute cost across the variants constructed to assess the impact of penalty asymmetry; table corresponds to Fig. 10.
+                          ES: Min Shortage                                       ES: Proportional                                         PPO
+                          MEAN                  SE             %                 MEAN                     SE              %               MEAN                  SE               %
+ 1-[9,9,9]p               −1610.37              5.44           −2.74             −1655.67                 5.38            0.00            −1637.20              5.23             −1.12
+ 1-[4,9,19]p              −1598.82              4.32           0.60              −1589.29                 5.41            0.00            −1677.74              6.06             5.57
+ 1-[3,9,39]p              −1652.05              6.45           −0.19             −1655.27                 5.63            0.00            −1719.99              6.61             3.91
+ 7-[9,9,9]p               −1410.24              2.92           0.59              −1402.00                 3.14            0.00            −1405.08              3.11             0.22
+ 7-[4,9,19]p              −1408.39              3.33           0.69              −1398.68                 3.20            0.00            −1393.26              3.54             −0.39
+ 7-[3,9,39]p              −1490.60              4.13           0.07              −1489.62                 4.92            0.00            −1468.48              4.57             −1.42
+ 11-[9,9,9]p              −1111.58              3.29           0.12              −1110.22                 3.27            0.00            −971.86               3.13             −12.46
+ 11-[4,9,19]p             −1152.25              3.20           −1.54             −1170.27                 3.92            0.00            −1009.60              3.57             −13.73
+ 11-[3,9,39]p             −1243.97              5.08           −1.47             −1262.55                 3.64            0.00            −1098.90              4.38             −12.96
+
+
+             Table B.6                                                                          Boute, R.N., Gijsbrechts, J., van Jaarsveld, W., Vanvuchelen, N., 2021. Deep re-
+             Hyper-parameters used for PPO training.                                                 inforcement learning for inventory control: A roadmap. European J. Oper.
+              Hyper-parameter                                     Value                              Res.
+                                                                                                Bu, J., Gong, X., Yao, D., 2020. Constant-order policies for lost-sales inventory models
+              Number of Layers                                    2
+                                                                                                     with random supply functions: Asymptotics and heuristic. Oper. Res. 68 (4),
+              Number of Neurons                                   [64, 64]
+                                                                                                     1063–1073.
+              Activation Function Policy Network                  tanh
+              Activation Function Value Network                   ReLU                          Clark, A.J., Scarf, H., 1960. Optimal policies for a multi-echelon inventory problem.
+              Train Batch Size                                    327 680                            Manag. Sci. 6 (4), 475–490.
+              Mini-batch Size                                     32 768                        de Kok, T., Grob, C., Laumanns, M., Minner, S., Rambau, J., Schade, K., 2018.
+              Number SGD Epochs                                   30                                 A typology and literature review on stochastic multi-echelon inventory models.
+              Number of workers                                   12                                 European J. Oper. Res. 269 (3), 955–983.
+              Learning Rate                                       10−4                          Diks, E.B., De Kok, A., 1998. Optimal control of a divergent multi-echelon inventory
+              VF Loss Coefficient (𝑐1 )                           10−7                               system. European J. Oper. Res. 111 (1), 75–97.
+              Entropy Coefficient (𝑐2 )                           0                             Doğru, M.K., De Kok, A., van Houtum, G.J., 2009. A numerical study on the effect
+              Gradient Clipping Norm                              40.0                               of the balance assumption in one-warehouse multi-retailer inventory systems. Flex.
+              Discount factor 𝛾                                   0.95                               Serv. Manuf. J. 21 (3–4), 114–147.
+              GAE 𝜆                                               0.98                          Eppen, G., Schrage, L., 1981. Centralized ordering policies in a multi-warehouse
+                                                                                                     system with lead times and random demand. In: Schwarz, L. (Ed.), Multi-Level
+                                                                                                     Production/Inventory Control Systems: Theory and Practice. North-Holland, pp.
+                                                                                                     51–69.
+References                                                                                      Gayon, J.P., Massonnet, G., Rapine, C., Stauffer, G., 2016. Constant approximation
+                                                                                                     algorithms for the one warehouse multiple retailers problem with backlog or
+                                                                                                     lost-sales. European J. Oper. Res. 250 (1), 155–163.
+Axsäter, S., 2000. Exact analysis of continuous review (R, Q) policies in two-echelon
+                                                                                                Geoffrion, A.M., 1970. Elements of large-scale mathematical programming part I:
+    inventory systems with compound Poisson demand. Oper. Res. 48 (5), 686–696.
+                                                                                                     Concepts. Manage. Sci. 16 (11), 652–675.
+Axsäter, S., 2015. Inventory Control, Vol. 225. Springer.
+Axsäter, S., Marklund, J., 2008. Optimal position-based warehouse ordering in divergent         Gijsbrechts, J., Boute, R.N., Van Mieghem, J.A., Zhang, D.J., 2022. Can deep rein-
+    two-echelon inventory systems. Oper. Res. 56 (4), 976–991.                                       forcement learning improve inventory management? performance on lost sales,
+                                                                                                     dual-sourcing, and multi-echelon problems. Manuf. Serv. Oper. Manag.
+Axsäter, S., Marklund, J., Silver, E.A., 2002. Heuristic methods for centralized control
+    of one-warehouse, N-retailer inventory systems. Manuf. Serv. Oper. Manag. 4 (1),            Goldberg, D.A., Katz-Rogozhnikov, D.A., Lu, Y., Sharma, M., Squillante, M.S., 2016.
+    75–97.                                                                                           Asymptotic optimality of constant-order policies for lost sales inventory models
+Bellemare, M.G., Naddaf, Y., Veness, J., Bowling, M., 2013. The arcade learning                      with large lead times. Math. Oper. Res. 41 (3), 898–913.
+    environment: An evaluation platform for general agents. J. Artificial Intelligence          Huh, W.T., Janakiraman, G., Nagarajan, M., 2016. Capacitated multiechelon inventory
+    Res. 47, 253–279.                                                                                systems: Policies and bounds. Manuf. Serv. Oper. Manag. 18 (4), 570–584.
+Bellman, R., 1953. An Introduction to the Theory of Dynamic Programming. Technical              Li, J., Toriello, A., Wang, H., Borin, S., Gallarno, C., 2021. Dynamic inventory allocation
+    Report, RAND CORP SANTA MONICA CA.                                                               for seasonal merchandise at dillard’s. Inf. J. Appl. Anal. 51 (4), 297–311.
+Berling, P., Johansson, L., Marklund, J., 2023. Controlling inventories in omni/multi-          Liang, E., Liaw, R., Nishihara, R., Moritz, P., Fox, R., Goldberg, K., Gonzalez, J.,
+    channel distribution systems with variable customer order-sizes. Omega 114,                      Jordan, M., Stoica, I., 2018. Rllib: Abstractions for distributed reinforcement
+    102745.                                                                                          learning. In: International Conference on Machine Learning. pp. 3053–3062.
+Berner, C., Brockman, G., Chan, B., Cheung, V., Debiak, P., Dennison, C., Farhi, D.,            Malmberg, F., Marklund, J., 2023. Evaluation and control of inventory distribution
+    Fischer, Q., Hashme, S., Hesse, C., et al., 2019. Dota 2 with large scale deep                   systems with quantity based shipment consolidation. Nav. Res. Logist. 70 (2),
+    reinforcement learning. arXiv preprint arXiv:1912.06680.                                         205–227.
+Bertsekas, D.P., 2019. Reinforcement Learning and Optimal Control. Athena Scientific            Marklund, J., 2011. Inventory control in divergent supply chains with time-based
+    Belmont, MA.                                                                                     dispatching and shipment consolidation. Nav. Res. Logist. 58 (1), 59–71.
+Bertsekas, D.P., Tsitsiklis, J.N., 1996. Neuro-Dynamic Programming. Athena Scientific.          Marklund, J., Rosling, K., 2012. Lower bounds and heuristics for supply chain stock
+Bijvank, M., Johansen, S.G., 2012. Periodic review lost-sales inventory models with                  allocation. Oper. Res. 60 (1), 92–105.
+    compound Poisson demand and constant lead times of any length. European J.                  Mentzer, J.T., DeWitt, W., Keebler, J.S., Min, S., Nix, N.W., Smith, C.D., Zacharia, Z.G.,
+    Oper. Res. 220 (1), 106–114.                                                                     2001. Defining supply chain management. J. Bus. Logist. 22 (2), 1–25.
+
+
+                                                                                           12
+I. Kaynov et al.                                                                                                           International Journal of Production Economics 267 (2024) 109088
+
+
+Mnih, V., Badia, A.P., Mirza, M., Graves, A., Lillicrap, T.P., Harley, T., Silver, D.,            Stenius, O., Karaarslan, A.G., Marklund, J., De Kok, A., 2016. Exact analysis of divergent
+    Kavukcuoglu, K., 2016. Asynchronous methods for deep reinforcement learning.                      inventory systems with time-based shipment consolidation and compound poisson
+    In: Balcan, M., Weinberger, K.Q. (Eds.), Proceedings of the 33nd International                    demand. Oper. Res. 64 (4), 906–921.
+    Conference on Machine Learning, ICML 2016, New York City, NY, USA, June 19-                   Stenius, O., Marklund, J., Axsäter, S., 2018. Sustainable multi-echelon inventory control
+    24, 2016. In: JMLR Workshop and Conference Proceedings, vol. 48, JMLR.org, pp.                    with shipment consolidation and volume dependent freight costs. European J. Oper.
+    1928–1937.                                                                                        Res. 267 (3), 904–916.
+Nahmias, S., Smith, S.A., 1994. Optimizing inventory levels in a two-echelon retailer             Van der Heijden, M., Diks, E., De Kok, A., 1997. Stock allocation in general multi-
+    system with partial lost sales. Manage. Sci. 40 (5), 582–596.                                     echelon distribution systems with (R, S) order-up-to-policies. Int. J. Prod. Econ. 49
+Oroojlooyjadid, A., Nazari, M., Snyder, L.V., Takáč, M., 2022. A deep q-network for the               (2), 157–174.
+    beer game: Deep reinforcement learning for inventory optimization. Manuf. Serv.               van Hezewijk, L., Dellaert, N., Van Woensel, T., Gademann, N., 2022. Using the
+    Oper. Manag. 24 (1), 285–304.                                                                     proximal policy optimisation algorithm for solving the stochastic capacitated lot
+Park, S., 1998. Routing and inventory allocation policies in multi-echelon distribution               sizing problem. Int. J. Prod. Res. 1–24.
+    systems. J. Inf. Oper. Manag. 8.                                                              Van Roy, B., Bertsekas, D.P., Lee, Y., Tsitsiklis, J.N., 1997. A neuro-dynamic program-
+Pirhooshyaran, M., Snyder, L.V., 2020. Simultaneous decision making for stochas-                      ming approach to retailer inventory management. In: Proceedings of the 36th IEEE
+    tic multi-echelon inventory optimization with deep neural networks as decision                    Conference on Decision and Control, Vol. 4. IEEE, pp. 4052–4057.
+    makers. arXiv preprint arXiv:2006.05608.                                                      Vanvuchelen, N., Boute, R.N., 2022. The use of continuous action representations to
+Rosling, K., 1989. Optimal inventory policies for assembly systems under random                       scale deep reinforcement learning: An application to inventory control. Available
+    demands. Oper. Res. 37 (4), 565–579.                                                              at SSRN 4253600.
+Schulman, J., Levine, S., Abbeel, P., Jordan, M., Moritz, P., 2015. Trust region policy           Vanvuchelen, N., Gijsbrechts, J., Boute, R., 2020. Use of proximal policy optimization
+    optimization. In: International Conference on Machine Learning. pp. 1889–1897.                    for the joint replenishment problem. Comput. Ind. 119, 103239.
+Schulman, J., Wolski, F., Dhariwal, P., Radford, A., Klimov, O., 2017. Proximal policy            Wang, T., Hong, L.J., 2023. Large-scale inventory optimization: A recurrent neural
+    optimization algorithms. arXiv preprint arXiv:1707.06347.                                         networks–Inspired simulation approach. INFORMS J. Comput. 35 (1), 196–215.
+Silver, D., Hubert, T., Schrittwieser, J., Antonoglou, I., Lai, M., Guez, A., Lanctot, M.,        Williams, R.J., 1992. Simple statistical gradient-following algorithms for connectionist
+    Sifre, L., Kumaran, D., Graepel, T., et al., 2017. Mastering chess and shogi by                   reinforcement learning. Mach. Learn. 8 (3–4), 229–256.
+    self-play with a general reinforcement learning algorithm. arXiv preprint arXiv:              Zipkin, P., 2008. Old and new methods for lost-sales inventory systems. Oper. Res. 56
+    1712.01815.                                                                                       (5), 1256–1263.
+
+
+
+
+                                                                                             13
+

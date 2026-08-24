@@ -1,0 +1,992 @@
+                                              Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+
+                                                                      Wenjie Xu 1 2 Yuning Jiang 1 Bratislav Svetozarevic 2 Colin Jones 1
+
+
+                                                                     Abstract                             box optimization problems.
+                                                  We study the problem of constrained efficient           In these applications, we typically know little about the
+
+
+
+
+arXiv:2211.00162v4 [math.OC] 6 Feb 2025
+                                                  global optimization, where both the objective and       shape of the black-box functions, which can be non-convex
+                                                  constraints are expensive black-box functions that      and multi-modal. As a result, a global optimization method
+                                                  can be learned with Gaussian processes. We pro-         is needed. In many applications, e.g., tuning the hyperpa-
+                                                  pose CONFIG (CONstrained efFIcient Global               rameters of a deep neural network, each function evaluation
+                                                  Optimization), a simple and effective algorithm to      can take a large number of resources such as energy, time, or
+                                                  solve it. Under certain regularity assumptions, we      GPU computation, so we want to use as few function evalu-
+                                                  show that our algorithm enjoys the same cumula-         ations as possible. Standard global optimization methods,
+                                                  tive regret bound as that in the unconstrained case     such as genetic algorithms or simulated annealing (Parda-
+                                                  and similar cumulative constraint violation upper       los & Romeijn, 2013), typically require a large number of
+                                                  bounds. For commonly used Mátern and Squared           samples and thus can not be applied to the optimization
+                                                  Exponential kernels, our bounds are sublinear and       of expensive black-box functions. Therefore, Gaussian
+                                                  allow us to derive a convergence rate to the op-        process based efficient global optimization1 (Jones et al.,
+                                                  timal solution of the original constrained prob-        1998; Shahriari et al., 2015), as a sample-efficient method
+                                                  lem. In addition, our method naturally provides a       to solve black-box optimization problems (Xu et al., 2022a),
+                                                  scheme to declare infeasibility when the original       has recently been becoming more and more popular. The
+                                                  black-box optimization problem is infeasible. Nu-       general idea of efficient global optimization is to build a
+                                                  merical experiments on sampled instances from           surrogate model, typically by Gaussian process regression,
+                                                  the Gaussian process, artificial numerical prob-        of the black box function from samples and then to choose
+                                                  lems, and a black-box building controller tuning        a search direction using this model. This problem, when
+                                                  problem all demonstrate the competitive perfor-         formulated as a (kernelized) multi-armed bandit problem, is
+                                                  mance of our algorithm. Compared to the other           widely studied in the literatures (Audibert et al., 2010; Srini-
+                                                  state-of-the-art methods, our algorithm signifi-        vas et al., 2012; Soare et al., 2014; Chowdhury & Gopalan,
+                                                  cantly improves the theoretical guarantees, while       2017a; Amani et al., 2019; Zhou & Ji, 2022).
+                                                  achieving competitive empirical performance.
+                                                                                                          A key challenge in many applications is black-box con-
+                                                                                                          straints. For example, when tuning the temperature con-
+                                                                                                          troller parameters of a building, we need to minimize the
+                                          1. Introduction                                                 energy consumption while keeping the occupants’ comfort
+                                          Global optimization of expensive black-box functions is a       at user-defined levels, where both the energy and the com-
+                                          pervasive problem in science and engineering. In black-box      fort are black-box functions of the controller parameters.
+                                          optimization problems, we typically need to sequentially        To handle the unknown black-box constraints, a variety of
+                                          evaluate different candidate solutions to find the optimal      efficient global optimization methods with constraints have
+                                          one without explicit gradient information. For example, hy-     been developed. We can roughly classify them into different
+                                          perparameter tuning for machine learning models (Bergstra       groups based on whether constraint violations are allowed
+                                          & Bengio, 2012; Snoek et al., 2015), control system perfor-     during the optimization process. For the setting where no
+                                          mance optimization (Bansal et al., 2017; Xu et al., 2022b)      constraint violations are tolerated, a group of safe optimiza-
+                                          and drug discovery or materials design (Negoescu et al.,        tion methods has been developed (Sui et al., 2015; Wu et al.,
+                                          2011; Frazier & Wang, 2016) can all be formulated as black-     2016; Sui et al., 2018; Turchetta et al., 2020; Moradipari
+                                                                                                          et al., 2020; Amani et al., 2020). However, these safe al-
+                                              1
+                                              Automatic Control Laboratory, EPFL, Lausanne, Switzerland      1
+                                          2
+                                           Urban Energy Systems Laboratory, Empa, Zurich, Switzerland.        Also known as Gaussian process optimization (e.g., in (Srini-
+                                          Correspondence to: Yuning Jiang <yuning.jiang@epfl.ch>.         vas et al., 2012)), Bayesian optimization (e.g., in (Frazier, 2018;
+                                                                                                          Hernández-Lobato et al., 2016)) or kriging (e.g., in (Jeong et al.,
+                                                                                                          2005)).
+                         Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+gorithms require a set of feasible solutions known a priori,     et al., 2014; Zhou & Ji, 2022; Lu & Paulson, 2022), either
+while in practice, we may not get access to such feasible        require an initial feasible solution to be given or lack the
+solutions or even do not know the feasibility of the problem.    scheme to detect and report infeasibility when the original
+Furthermore, due to these hard safety-critical constraints,      problem is infeasible. This is key, as, in practice, black-box
+these algorithms may become stuck at a local minimum.            optimization problems may be infeasible, and a scheme to
+The other extreme is where constraint violations are allowed     detect and report infeasibility is desired.
+to occur during the optimization process without penalty,
+                                                                 Our contributions. We propose CONFIG, a simple and
+for which there exists generic constrained Bayesian (effi-
+                                                                 effective algorithm for the constrained efficient global opti-
+cient global) optimization methods (Schonlau, 1997; Sasena
+                                                                 mization of expensive black-box functions by exploiting the
+et al., 2002; Basudhar et al., 2012; Bagheri et al., 2017;
+                                                                 principle of optimism in the face of uncertainty. Specifically,
+Zhang et al., 2021). Along this line of research, a group of
+                                                                 in each step, our algorithm solves an auxiliary constrained
+popular methods (Gardner et al., 2014; Gelbart et al., 2014)
+                                                                 optimization problem with lower confidence bound (LCB)
+encodes the constraint information into the acquisition func-
+                                                                 surrogates as both objective and constraints in order to
+tion (e.g., Constrained Expected Improvement). However,
+                                                                 choose the next sample. Fig. 1 demonstrates the idea of
+there are no theoretical guarantees on optimality, constraint
+                                                                 the optimism in the feasible set. Intuitively, our algorithm
+violation incurred during optimization, or convergence rates
+                                                                 strategically trades potential violation for faster learning
+for this class of methods. A recent work of (Inatsu et al.,
+                                                                 of both the objective function and the constraints. Under
+2022) considers Bayesian optimization for distributionally
+                                                                 certain regularity assumptions, we show that the algorithm
+robust chance-constrained problems but can not provide
+                                                                 enjoys the same cumulative regret bound as that in the un-
+cumulative regret/violation bounds.
+                                                                 constrained case. In addition, we show that the cumulative
+More recently, a third group of approaches has been stud-        constraint violation has an upper bound in terms of maxi-
+ied (e.g., (Xu et al., 2022b; Zhou & Ji, 2022)), where con-      mum information gain, which is similar to the cumulative
+straint violations are allowed, but limits are placed on the     regret bounds of the objective function. For the commonly
+total violation incurred during the optimization process.        used Mátern and Squared Exponential kernels, our bounds
+In this setting, two more recent works adopt a penalty-          are sublinear and allow us to derive a convergence rate to
+function approach (Lu & Paulson, 2022) and a primal-dual         the optimal solution of the original constrained problem.
+approach (Zhou & Ji, 2022) to solve constrained efficient        Furthermore, our method naturally provides a scheme to
+global optimization problems. The common ideas behind            declare infeasibility when the original black-box optimiza-
+these two approaches are the addition of a penalizing term       tion problem is infeasible. To the sharp contrast, existing
+of the constraint violation in the objective and the transfor-   algorithms for constrained Bayesian optimization, includ-
+mation of the constrained problem to an unconstrained one.       ing the popular CEI method (Gardner et al., 2014) and the
+However, both of these methods require choosing values           recently introduced primal-dual method (Zhou & Ji, 2022;
+for some critical parameters (e.g., penalty coefficient (Lu      Xu et al., 2023), can only provide no or weak guarantees
+& Paulson, 2022) and dual update step size (Zhou & Ji,           on the cumulative regret/violation bounds or the conver-
+2022)). The performance of these methods relies on the cho-      gence to the optimal solution (See Tab. 1 for more details).
+sen parameters heavily, and hence these methods can take         Additionally, none of the existing methods can detect infea-
+significant parameter tuning effort for implementation. Ad-      sibility when the original problem is infeasible. We then run
+ditionally, the cumulative violations considered in (Zhou &      numerical experiments to corroborate the effectiveness of
+Ji, 2022) are the violations of the cumulative constraint val-   our algorithm. Numerical results show that our algorithm
+ues, not the real total violations. Such a form of cumulative    achieves performance competitive with the state-of-the-art
+violation bounds is weak and can not rule out the case where     constrained expected improvement (CEI) algorithm in terms
+points with severe violations and small constraint values        of both optimality and constraint violations. As such, our
+are alternatingly sampled while keeping a low cumulative         algorithm significantly improves the theoretical guarantees,
+constraint value. The work of (Lu & Paulson, 2022) only          while achieving competitive empirical performance, as com-
+provides a penalty-based regret bound, which is defined as       pared to the existing state-of-the-art constrained efficient
+the regret plus a penalty weight times violations, which does    global/Bayesian optimization methods.
+not directly lead to separate bounds on regret and violation
+since the penalty weight is unknown beforehand. We also          2. Notation and Preliminaries
+notice that a concurrent work (Guo et al., 2022) extends the
+fixed penalty to an increasing penalty sequence. However, it     This section introduces the class of constrained global opti-
+requires a delicate design of the penalty sequence and may       mization problems studied in this paper and recaps existing
+result in numerical issues when the penalty is large. Last but   results from the field of efficient global optimization.
+not least, all the existing methods (Sui et al., 2015; Gelbart
+                            CONFIG: Optimism in the Face of
+                                                    Uncertainty
+                            Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+
+                                              Ground-truth function
+
+
+
+
+                              Global optimum
+
+
+
+
+                           Pessimistic estimate             Certainty-equivalent estimate              Our optimistic estimate
+
+Figure 1. A simple demonstration of different ways to construct the estimate of the feasible set, where we minimize an unknown function
+                               Robust
+subject to that it is non-positive.                          Certainty-equivalent
+                                    Pessimistic estimate can guarantee                                 Optimistic
+                                                                        feasibility with high probability. However, it can be easily seen that
+the pessimistic estimate is very tiny and can easily be empty if the initial several points are infeasible. With the certainty-equivalent
+estimate, the algorithm may easily get stuck due to lack of exploration. To the contrast, we construct an optimistic estimate of the feasible
+set using lower confidence bound functions, which contains the ground-truth feasible set with high probability.
+
+
+Table 1. The comparison of our method to existing state-of-the-art constrained efficient global optimization (or kernelized multi-armed
+bandits with constraints) methods.                                                                                     21
+                                                 Cumulative           Cumulative                 Optimality              Infeasibility
+                     Works
+                                                Regret Bound Violation Bound                     Guarantee               Declaration
+        SafeOPT (Sui et al., 2015), etc.               ✗             No violation            Local convergence                ✗
+  Constrained EI (Gardner et al., 2014), etc.          ✗                   ✗                          ✗                       ✗
+     Primal-Dual (Zhou & Ji, 2022), etc.               ✓              weak-form                       ✗                       ✗
+           Penalty function method                                                           Global convergence
+                                                    Penalty-based Regret Bound                                                ✗
+           (Lu & Paulson, 2022), etc.                                                    with penalty-dependent rate
+             CONFIG (This paper)                       ✓                   ✓                 Global convergence               ✓
+
+
+2.1. Problem statement                                                   Assumption 2.2. f ∈ Hk0 , gi ∈ Hki , i ∈ [N ], where
+                                                                         ki : Rd × Rd → R, i ∈ {0} ∪ [N ] are symmetric,
+We consider the following black-box optimization problem,
+                                                                         positive-semidefinite kernel functions and Hki are their
+                                                                         corresponding reproducing kernel Hilbert spaces (RKHSs,
+                                                                         see (Schölkopf et al., 2001)). Furthermore, we assume
+                min           f (x) ,                          (1a)
+                x∈X                                                      ∥f ∥k0 ≤ B0 and ∥gi ∥ki ≤ Bi , i ∈ [N ], where ∥ · ∥ki is
+          subject to          gi (x) ≤ 0 ,     ∀i ∈ [N ],      (1b)      the norm induced by the inner product in the corresponding
+                                                                         reproducing kernel Hilbert space.
+where X ⊂ Rd is a known set of candidate solutions (e.g., a
+hyperbox) with dimension d and [N ] := {1, 2, . . . , N } ⊂ Z            Assumption 2.2 requires that the underlying functions are
+denotes the set of integers from 1 to N . Both f and gi , i ∈            regular in the sense of having a bounded norm in an RKHS.
+[N ] are unknown black-box functions.                                    In existing literature of efficient global optimization (also
+                                                                         known as Bayesian optimization or Gaussian process opti-
+Remark 1. In Prob. 1, we only consider inequality con-
+                                                                         mization), having a bounded norm in an RKHS is a common
+straints because an equality constraint g(x) = 0 can be
+                                                                         assumption (e.g., (Srinivas et al., 2012; Zhou & Ji, 2022)).
+equivalently transformed into two inequality constraints
+g(x) ≤ 0, −g(x) ≤ 0.                                                     Assumption 2.3. Prob. (1) is feasible and has an optimal
+                                                                         solution x∗ with the optimal value f ∗ = f (x∗ ).
+To proceed, we make the following commonly used assump-
+tions in the field of efficient global optimization.                     With Assumption 2.3, we focus on the case that the orig-
+                                                                         inal black-box optimization problem is feasible. We will
+Assumption 2.1. Set X is compact.                                        separately discuss how our algorithm can handle infeasible
+                                                                         problem instances later in Sec. 5.
+Assumption 2.1 is naturally satisfied in a large set of appli-
+cations. For example, when tuning the hyperparameters of                 We consider a zero-order feedback setting, where the algo-
+a machine learning model, we can restrict the parameters to              rithm can sequentially query noisy evaluations of different
+lie inside a hyperbox based on prior knowledge.                          candidate solutions to learn the optimal feasible solution.
+                            Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+                                                                                                 2
+At step t, with query point xt , we get noisy evaluations,                   where µ0,t−1 (x), σ0,t−1 (x) and γ0,t−1 are as given in
+                                                                             Eq. (3) and Eq. (4), and λ set to be 1 + T2 . (µ0,0 and σ0,0
+               y0,t = f (xt ) + ξ0,t ,                                (2a)
+                                                                             are the prior mean and standard deviation, and γ0,0 = 0.)
+               yi,t = gi (xt ) + ξi,t ,     i ∈ [N ],              (2b)
+                                                                             We remark that we replace the ‘δ’ in Theorem 2 of (Chowd-
+where ξi,t , i ∈ {0} ∪ [N ], t ≥ 1 are i.i.d σ-sub-Gaussian                  hury & Gopalan, 2017a) by N δ+1 , which will be useful to
+noise with fixed σ > 0. We also use Xt := (x1 , x2 , · · · , xt )            derive the confidence interval with 1−δ probability in Corol-
+to denote the sequence of sampled points up to step t.                       lary 2.6. We can derive similar confidence intervals for the
+                                                                             constraint functions. To facilitate the following algorithm
+2.2. Gaussian process surrogates                                             design and discussion, we introduce the lower confidence
+                                                                             and upper confidence bound functions,
+To design our algorithm, we use a Gaussian process surro-
+gate model to learn the unknown functions. As in (Chowd-                     Definition 2.5. For i ∈ {0} ∪ [N ], x ∈ X and t ∈ [T ],
+hury & Gopalan, 2017a), we artificially introduce a Gaus-
+                                                                                        li,t (x) := µi,t−1 (x) − βi,t σi,t−1 (x) , (6a)
+sian process GP(0, k(·, ·)) for the surrogate modeling of
+the unknown black-box function f . We also adopt an i.i.d                              ui,t (x)  := µi,t−1 (x) + βi,t σi,t−1 (x) , (6b)
+Gaussian zero-mean noise model with noise variance λ > 0.                                           p
+                                                                             where βi,t = Bi + σ 2 (γi,t−1 + 1 + ln((N + 1)/δ)).
+Remark 2. Note that this Gaussian process model is only
+used to derive posterior mean functions, covariance func-                    We then have the following corollary,
+tions, and maximum information gain for the purpose of                       Corollary 2.6. Let Assumptions 2.1 and 2.2 hold. With
+algorithm design. We introduce the artificial Gaussian pro-                  probability at least 1 − δ, the following holds for all x ∈ X
+cess only to make the algorithm more interpretable. It does                  and 1 ≤ t ≤ T ,
+not change our set-up that f is a deterministic function and
+that the noise is only assumed to be sub-Gaussian. Indeed,                                 gi (x) ∈ [li,t (x), ui,t (x)] ,   ∀i ∈ [N ]    (7)
+we are considering the agnostic setting introduced in (Srini-                        and    f (x) ∈ [l0,t (x), u0,t (x)].                 (8)
+vas et al., 2012).
+                                                                             2.3. Performance metric
+We introduce the following functions for x, x′ ,
+                                                 −1                          Before we design our algorithm, we introduce the
+      µ0,t (x) = k0 (x1:t , x)⊤ (K0,t + λI)           y0,1:t ,        (3a)   performance metric. We are interested in minimiz-
+  k0,t (x, x′ ) = k0 (x, x′ )                                      (3b)      ing the gap of f (xt ) to the optimal value f ∗ =
+                                ⊤
+               − k0 (x1:t , x) (K0,t + λI)
+                                                −1                ′
+                                                      k0 (x1:t , x ) ,       minx∈X ,gi (x)≤0,∀i∈[N ] f (x), i.e., the instantaneous regret.
+       2
+                                                                             Instantaneous regret at step t is defined as,
+      σ0,t (x) = k0,t (x, x)    ,                                     (3c)
+                                                                                                rt = f (xt ) − f ∗ ,                      (9)
+                                                                         ⊤
+where k0 (x1:t , x) = [k0 (x1 , x), k0 (x2 , x), · · · , k0 (xt , x)] ,
+K0,t          =          (k0 (x, x′ ))x,x′ ∈Xt and y0,1:t            =       where xt is the point queried by our algorithm in step t.
+[y0,1 , y0,2 , · · · , y0,t ]⊤ .      Similarly, we can derive               Since f ∗ is the constrained optimal value, we may sample
+µi,t (·), ki,t (·, ·), σi,t (·), ∀i ∈ [N ] for the constraints.              some infeasible points with even smaller objective values
+We also introduce the maximum information gain for the                       than f ∗ , we further define the positive regret as,
+objective f as in (Srinivas et al., 2012),                                                    rt+ = [f (xt ) − f ∗ ]+ ,                  (10)
+                          1
+       γ0,t :=   max        log I + λ−1 K0,X ,                         (4)   where [·]+ := max{0, ·}. We are also interested in the
+               X⊂X ;|X|=t 2
+                                                                             constraint violation, defined as,
+where K0,X = (k0 (x, x′ ))x,x′ ∈X . Similarly, we can intro-                                    vi,t = [gi (xt )]+ .                     (11)
+duce the maximum information gain γi,t , ∀i ∈ [N ] for the
+constraints.                                                                 We then introduce cumulative regret that measures the extra
+Lemma 2.4 (Theorem 2, (Chowdhury & Gopalan, 2017a)).                         cost incurred during the running of the algorithm, as in exist-
+Let Assumptions 2.1 and 2.2 hold. For any δ ∈ (0, 1), with                   ing kernelized multi-armed bandit literature (e.g., (Srinivas
+probability at least 1 − δ/(N + 1), the following holds for                  et al., 2012; Chowdhury & Gopalan, 2017a)).
+all x ∈ X and 1 ≤ t ≤ T , T ∈ N,                                             Definition 2.7 (Cumulative-Regret). We define the
+                                                                             cumulative-regret as
+ |µ0,t−1 (x) − f (x)|                           (5)
+          q                                                                                       T
+                                                                                                    X
+≤ B0 + σ 2 (γ0,t−1 + 1 + ln((N + 1)/δ)) σ0,t−1 (x),                                         RT =      (f (xt ) − f ∗ ).                  (12)
+                                                                                                    t=1
+                          Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+To facilitate the following discussion, we further define the      Note that in line 1 of Alg. 1, we may declare infeasibility
+cumulative positive regret,                                        if the auxiliary problem in line 1 is infeasible. When the
+                       T
+                                                                   original problem (1) is feasible, in some very rare cases,
+                       X                                           we may find the auxiliary problem infeasible due to the
+               RT+ =         [f (xt ) − f ∗ ]+ .           (13)
+                                                                   potentially unbounded noise. Fortunately, we will show
+                       t=1
+                                                                   that with guaranteed high probability, line 1 of Alg. 1 is
+We further define the cumulative violation.                        never declared when the original problem is feasible and
+                                                                   Assumptions 2.1 and 2.2 hold.
+Definition 2.8 (Cumulative-Violation). We define the
+cumulative-violation as
+                   T
+                                                                   4. Analysis
+                   X
+            Vi,T =   [gi (xt )]+ , ∀i ∈ [N ].              (14)    We now analyze the performance of Alg. 1. All the proofs
+                    t=1                                            to the results are put in the appendix. We first introduce a
+                                                                   lemma to bound the instantaneous regret and violation,
+Cumulative regret/violations measure the performance dur-
+                                                                   Lemma 4.1. Let Assumptions 2.1, 2.2, and 2.3 hold. With
+ing the running of the algorithm. Besides them, we are also
+                                                                   probability at least 1 − δ, we have first that infeasibility is
+interested in the convergence speed to the constrained global
+                                                                   never declared in line 1 of the Alg. 1, and for all 1 ≤ t ≤ T ,
+optimum. Intuitively, small average regret/violations indi-
+cate the existence of a sample with small regret/violation.                        rt ≤ rt+ ≤ 2β0,t σ0,t−1 (xt ) ,             (15)
+                                                                               vi,t ≤ 2βi,t σi,t−1 (xt ) ,   i ∈ [N ].         (16)
+3. Algorithm
+We propose the lower confidence bound based CONstrained
+efFIcient Global (CONFIG) optimization algorithm to                We can also bound the cumulative sum of the posterior
+solve our problem as shown in Alg. 1 2 . Our algorithm             standard deviation,
+                                                                   Lemma 4.2 (Lemma 4, (Chowdhury & Gopalan, 2017b)).
+Algorithm 1 Lower confidence bounds based CONstrained              If x1 , x2 , · · · , xT are the points selected by Alg. 1, then,
+efFIcient Global (CONFIG) optimization algorithm.
+                                                                             T                      q
+ 1: for t ∈ [T ] do
+                                                                             X
+                                                                                   σi,t−1 (xt ) ≤    4(T + 2)γi,T .            (17)
+ 2:   if ∃i ∈ [N ], such that minx∈X li,t (x) > 0 then                       t=1
+ 3:      Declare infeasibility.
+ 4:   end if                                                       The bound in Eq. (17) is in terms of maximum information
+ 5:   Find xt ∈ arg minx∈X l0,t (x)                                gain. To derive a kernel-specific bound, we need to estimate
+              subject to li,t (x) ≤ 0, ∀i ∈ [N ].                  the maximum information gain. A set of upper bounds for
+ 6:   Make noisy evaluations of f and gi , i ∈ [N ] at xt .        the maximum information gains were given by (Srinivas
+ 7:   Update Gaussian process posterior mean and covari-           et al., 2012; Vakili et al., 2021), which we restate in the
+      ance with the new evaluations added.                         maximum information gain column of Tab. 2. We can now
+ 8: end for                                                        state our main theorem,
+                                                                   Theorem 4.3. Under Assumptions 2.1, 2.2 and 2.3, we
+is conceptually simple based on the optimism in the face of        have, with probability at least 1 − δ, the sample points of
+uncertainty and only requires one to solve an auxiliary prob-      Algorithm 1 satisfy,
+lem with the black-box objective and constraints replaced by                             q                        √
+their lower confidence bound surrogates as shown in line 1           RT ≤ RT+ ≤ 4β0,T (T + 2)γ0,T = O(γ0,T T ) ,
+of Alg. 1. Since we consider problems with expensive-to-                                                                      (18a)
+evaluate functions, the cost of solving the auxiliary problem,                     q                          √
+which may itself be non-convex, is much smaller compared           Vi,T ≤ 4βi,T        (T + 2)γi,T = O(γi,T T ) ,        ∀i ∈ [N ].
+to solving the original black-box optimization problem when                                                                  (18b)
+the dimension of the input space is small to medium size.
+To solve the auxiliary problem, we can use a pure grid
+                                                                   Interestingly, the regret bound in Thm. 4.3 is exactly the
+search method when the dimension is small (e.g., ≤ 5). For
+                                                                   same as the regret bound in the unconstrained case shown
+larger dimensions, one can, for example, start from multiple
+                                                                   in (Chowdhury & Gopalan, 2017b). Furthermore, the con-
+different points and apply gradient-based methods.
+                                                                   straint violation bound is similar to the regret bound. Based
+   2
+     Knowledge of T is assumed. Standard ‘doubling trick’ can be   on Thm. 4.3, we can derive a convergence rate to the optimal
+applied to extend to the setting without knowing T .               feasible solution.
+                           Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+
+Table 2. Kernel-specific cumulative regret/violation bounds and the convergence rate to the optimal solution. See Appendix A for the
+specific kernel functions. The column of maximum information gain shows the results of (Srinivas et al., 2012; Vakili et al., 2021). In the
+table, d represents the dimension of the input space, and ν represents the smoothness parameter of the Mátern kernel.
+     Kernel         Maximum Information Gain              Cumulative
+                                                                  Regret/Violation                     Convergence      Rate
+                                                                        √                                  
+                                                                                                              (N +1)d log T
+                                                                                                                            
+     Linear                    O(d log T )                     O d log T T                               O        √
+                                                                                                                    T
+   Squared
+                                                                         √                              
+                                                                                                            (N +1)(log T )d+1
+                                                                                                                              
+  Exponential                O((log T )d+1 )                 O (log T )d+1 T                            O         √
+                                                                                                                    T
+    Mátern                    d        2ν                         2ν+3d       2ν
+                                                                                                            2ν−d       2ν
+                                                                                                                                 
+                        O(T 2ν+d log 2ν+d (T ))               O(T 4ν+2d log 2ν+d (T ))          O (N + 1)T − 4ν+2d log 2ν+d (T )
+    ν > d2
+
+                                                                                        γ
+Theorem 4.4. Under Assumptions 2.1, 2.2 and 2.3, we                and limT →∞ √i,T  T
+                                                                                       = 0, ∀i ∈ [N ]. Given a desired confi-
+have, with probability at least 1 − δ, that there exists x̃T ∈     dence level δ ∈ (0, 1), Alg. 1 will declare infeasibility on
+{x1 , x2 , · · · , xT }, such that, ∀j ∈ [N ],
+                                                                   line 1 within a number of steps equal to
+                √              √                               !
+               4 T +2 N
+                     P                               PN                                                     
+           ∗          i=0 βi,T   γi,T                 i=0 γi,T
+f (x̃T ) − f ≤                        =O               √         ,                       X γ                
+                       T                                 T                  T = min T             √i,T < Cϵ ,              (20)
+                                                           (19a)
+                                                                                  T ∈N+            T
+                                                                                                    i∈[N ]
+                                                                                                             
+                  √              √                             !
+                 4 T +2 N
+                       P                             PN
+                        i=0 βi,T   γi,T               i=0 γi,T          with probability at least 1 − δ, where C is a constant inde-
+  [gj (x̃T )]+ ≤                        =O             √         .
+                         T                               T              pendent of T .
+                                                           (19b)
+                                                                        Remark 3. Our algorithm design and analysis in this paper
+                                                                        focus on the case where T is given. In cases where T is not
+                                                                        given or not large enough to declare the infeasibility, we
+Thm. 4.4 gives the convergence rate to the constrained opti-            can apply the ‘doubling trick’. The basic idea is that we can
+mal value in terms of maximum information gain for general              start running a round of steps with T = 1 and double T after
+kernels. We can now apply Thm. 4.3 and Thm. 4.4 to derive               each round. As T grows larger and larger, it will finally be
+kernel-specific results. Specifically, if ki , i ∈ {0} ∪ [N ]           larger than T and enough for infeasibility declaration.
+share the same kernel types, we can list the kernel-specific
+bounds and the convergence rates in Tab. 2.                             Remark 4. Note that in Thm. 5.1, we assume that
+                                                                                  γ
+                                                                        limT →∞ √i,TT
+                                                                                       = 0. From Tab. 2, we can see that for lin-
+                                                                        ear and squared exponential kernels, it is satisfied and for
+5. Infeasibility Declaration                                            Mátern kernel, we require that ν > d2 .
+Thm. 4.3 and Thm. 4.4 are derived under the assumption that
+the problem is feasible. However, the underlying problem                6. Experiments
+may indeed sometimes be infeasible and therefore, we need
+an infeasibility detection scheme. In the following, we                 To demonstrate the effectiveness of CONFIG, we run ex-
+show that if the original problem is infeasible, we are able            periments over sampled instances from the Gaussian pro-
+to declare infeasibility in line 1 of Alg. 1 and detect the             cess, artificial numerical instances, and a room tempera-
+original problem’s infeasibility with high probability.                 ture controller tuning problem. We compare our method
+                                                                        to the state-of-the-art Gaussian process optimization base-
+For infeasibility declaration, we try to avoid ‘false positives’,       line methods with constraints consideration. The baselines
+where a feasible problem is declared as infeasible, and ‘false          include SafeOPT (Sui et al., 2015), CEI (Constrained
+negatives’, where an infeasible problem is not declared to              Expected Improvement) based method (Gelbart et al., 2014;
+be infeasible. Lem. 4.1 already shows that if the original              Gardner et al., 2014), primal-dual algorithm (Zhou & Ji,
+black-box optimization problem is feasible, then with high              2022) and EPBO (exact penalty Bayesian optimization) (Lu
+probability infeasibility is not declared. The following theo-          & Paulson, 2022). The experiments are implemented in
+rem complements Lem. 4.1 by showing that if the original                python, based on the package GPy (GPy, since 2012).
+problem is infeasible, our algorithm is guaranteed to declare
+infeasibility within finite steps with high probability.                Choice of Parameters. Definition 2.5 gives a rigorous
+                                                                        way of selecting the coefficient βi,t . Since Bi and σ may
+Theorem 5.1. Let Assumptions 2.1 and 2.2 hold. Assume                   be hard to obtain in practice, βi,t can usually be set as a
+that Prob. (1) is infeasible, that is,                                  constant. The choice of βi,t is a key factor that impacts the
+                                                                        performance of different algorithms. Empirically, if βi,t is
+                  min max gi (x) = ϵ > 0,                               set too small, exploration may be insufficient and we may
+                  x∈X i∈[N ]
+                         Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+miss the global optimal solution. If βi,t is set too large, the
+
+
+
+
+                                                                          Cumulative Positive Regret
+algorithm overly explores, converges slower and may suffer
+from high cumulative regret/violation before converging                                                80
+to the optimal solution. In our experiments shown in this                                              60
+section, manually setting βi,t = 3 works well. We also set
+λ = 0.052 as the noise variance for the Gaussian process                                               40
+modelling. We use the common squared exponential kernel
+functions. For Sec. 6.2 and Sec. 6.3, we randomly sample a                                             20
+few points and maximize the likelihood function to get the                                              0
+hyperparameters of the kernel.                                                                                  0   20   40          60    80    100
+Computational Time. In our experiments, all the prob-                                                                         Step
+lems have low-dimensional input (≤ 3). So we use pure                                                  25
+
+
+
+
+                                                                          Cumulative Violation
+grid search to solve the auxiliary problem for different al-
+gorithms. Therefore, the computational time is almost the                                              20
+same for different algorithms. With the explicit expression                                            15
+of the lower confidence bounds, the computation cost of
+solving the auxiliary problems is much cheaper than evalu-                                             10
+ating the expensive functions, e.g., energy consumption and                                             5
+discomfort of a simulated building in Sec. 6.3.
+                                                                                                        0
+6.1. Numerical Results over Sampled Instances from                                                              0   20   40          60    80    100
+     Gaussian Process                                                                                                         Step
+In this section, we consider the constrained problem with                                               CEI              Primal-Dual            EPBO-2.0
+both the objective and the constraint sampled from a Gaus-                                              SafeOPT          EPBO-1.0               CONFIG
+sian process. We use the squared exponential kernel as
+shown in (21).
+                            (              )
+                                         2
+                     2           ∥x − y∥                          Figure 2. Cumulative regret and violation of different algorithms.
+          k(x, y) = σSE exp −               ,         (21)
+                                     l2                           The shaded area represents ±0.1 standard deviation and EPBO-
+                                                                  ρ represents EPBO with penalty ρ.
+       2
+where σSE = 2.0 and l = 1.0. We remove those instances
+with empty feasible sets. We sampled 48 instances in total.                                                 0
+
+
+                                                                  log10 (Best Positive Regret
+As shown in Fig. 2, we observe that SafeOPT has almost
+linear cumulative regret, although achieving close-to-zero                                              20
+violation. This is due to the possibility of getting stuck
+
+
+
+                                                                         plus Violation)
+in a local minimum for SafeOPT. In contrast, the primal-                                                40
+dual method can achieve competitive performance with the
+state-of-the-art constrained expected improvement (CEI)                                                 60
+method in terms of cumulative regret but suffers from almost
+linear cumulative violation. The EPBO method may also
+suffer from almost linear cumulative violation if the penalty                                                   0   5    10     15        20    25     30
+term is not set large enough. Our CONFIG algorithm can                                                                         Step
+achieve performance competitive with the state-of-the-art
+constrained expected improvement method in terms of both
+                                                                                                        CEI              Primal-Dual            EPBO-2.0
+cumulative regret and cumulative violation.
+                                                                                                        SafeOPT          EPBO-1.0               CONFIG
+We further show the evolution of the best-observed subop-
+timality plus violation up to the current step t in Fig. 3,
+which measures the empirical convergence speed to the op-         Figure 3. The best suboptimality plus violation up to step t, that is
+timal feasible solution. We notice that our algorithm again       minτ ∈[t] [f (xτ ) − f ∗ ]+ + [g(xτ )]+ , of different algorithms. The
+achieves empirical convergence speed competitive with the         shaded area represents ±0.1 standard deviation. Here, EPBO-ρ
+                                                                  represents the EPBO algorithm with penalty term ρ. The SafeOPT
+state-of-the-art CEI method.
+                                                                  has a higher initial value due to the restriction of starting from a
+We then test our algorithms on a set of infeasible instances,     feasible solution.
+                          Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+where we shift the sampled constraint function g(x) by             with a lower level Modelica (Fritzson & Engelson, 1998)
+ϵ − minx∈X g(x) with ϵ = 0.1. Over 50 such infeasible              model with a single thermal zone as our simulator. We
+instances, our algorithm consistently declares infeasibility,      consider a P controller controlling the temperature. The
+within 16.3 steps on average.                                      mathematical expression of the P controller is given as
+                                                                              u = Kp (set-point − temperature),
+6.2. Artificial Numerical Instances
+                                                                   where Kp is the proportional gain and u is the heating con-
+In this section, we present the results of a set of global opti-
+                                                                   trol. We use θ to denote the tuning parameters, which in-
+mization test problems. We consider the global optimization
+                                                                   clude the proportional gain, daytime set-point for temper-
+problem in two-dimensional space with X = [−10, 10]2 .
+                                                                   ature, and the switching time from nighttime set-point to
+We then introduce a set of potentially non-convex and multi-
+                                                                   daytime set-point. Here, the nighttime set-point is fixed.
+modal functions as in Tab. 4 in the Appendix G. Using these
+                                                                   Our objective is to minimize energy consumption while
+functions as the objective or constraint, we construct a set
+                                                                   keeping the average temperature deviation below a given
+of global optimization benchmark problems as shown in
+                                                                   threshold. Our problem is formulated as in Eq. (23).
+Tab. 3. We use the common squared exponential kernel for
+all the experiments.                                                   min    J(θ) subject to g(θ) − gthr ≤ 0,               (23)
+                                                                       θ∈Θ
+We use constrained regret defined as
+                                                                   where J(θ) represents energy consumption in this example,
+                            ∗ +
+            min [f (xτ ) − f ] + [g(xτ )] ,+
+                                                           (22)    g(θ) represents average temperature deviation and gthr is
+           τ ∈[t]                                                  a given average temperature deviation threshold. In each
+                                                                   step, our algorithm selects a set of promising controller
+to measure the quality of the solution found by different
+                                                                   parameters. We use this set of parameters to run a closed-
+algorithms up to step t. It can be seen that the smaller the
+                                                                   loop building simulation over a period of 1 day.
+constrained regret is, the closer to the constrained optimum
+our solution is in terms of optimality and violations.             Based on the closed-loop trajectory, we calculate the key
+                                                                   performance indicators, that is, energy consumption and av-
+                                                                   erage temperature deviation. We then update the Gaussian
+Table 3. Artificial numerical problems constructed using the       process regression with the new data added. Since energy
+functions from Tab. 4, where QrX (h) := 34 minx∈X h(x) +
+1                                                                  consumption and temperature deviations are in two differ-
+  maxx∈X h(x).
+4                                                                  ent scales, we use normalized energy consumption σJJ plus
+  Problem       Objective f           Constraint g                                                                     +
+
+  P1               Br              SinQ −QrX (SinQ)                normalized average temperature deviation [g−gσthr
+                                                                                                                   g
+                                                                                                                     ]
+                                                                                                                         to mea-
+  P2              MBr              SinQ −QrX (SinQ)                sure the quality of the solution, where σJ , σg are standard
+  P3               Br           InvBowl −QrX (InvBowl)             deviations in a set of randomly sampled data.
+  P4              MBr           InvBowl −QrX (InvBowl)             Fig. 5 gives the best-normalized energy consumption plus
+  P5               Br              Bowl −QrX (Bowl)                average temperature deviation up to the current step. We
+  P6              MBr              Bowl −QrX (Bowl)                observe that within 15 steps, our algorithm identifies the
+                                                                   solution with minimized normalized energy consumption
+Fig. 4 demonstrates the convergence of constrained regret          plus normalized average temperature deviation, verifying
+for different algorithms. The results show that the CONFIG         the competitiveness of our algorithm with the currently pop-
+algorithm consistently achieves a superior or comparable           ular constrained expected improvement method again. In
+speed of finding the constrained optimal solution, as com-         contrast, the SafeOPT method can be overly cautious and
+pared to the other state-of-the-art baselines. We can also         fails to find a solution with performance comparable to ours.
+notice that in problem 3 and problem 4, SafeOPT outper-
+forms both CEI and our method. Intuitively, it happens             7. Conclusion
+when the constrained global optimum lies in the same lo-
+cal feasible set as the initial points. In such a case, our        In this paper, we have presented CONFIG, a simple and
+method may spend lots of samples exploring globally, while         effective algorithm, for constrained efficient global opti-
+SafeOPT identifies the local (and global) optimal solution         mization of expensive black-box functions by exploiting the
+quickly by restricting to the local feasible set.                  principle of optimism in the face of uncertainty. Specifically,
+                                                                   our algorithm solves an auxiliary constrained optimization
+                                                                   problem with the lower confidence bound (LCB) surrogates
+6.3. Tuning The P Controller of a Building
+                                                                   as objective and constraints to get the next sample. Theo-
+In this section, we consider a building temperature controller     retically, we show that our algorithm enjoys the same cu-
+tuning problem. We use Energym (Scharnhorst et al., 2021)          mulative regret bound as that in the unconstrained case. In
+                                                     Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+                                              Problem P1                                                         Problem P2                                                            Problem P3
+                     200
+
+
+
+Constrained regret                                                       Constrained regret                                                         Constrained regret
+                     150                                                                      600                                                                        30
+                     100                                                                      400                                                                        20
+                           50                                                                 200                                                                        10
+                            0                                                                   0                                                                         0
+                                0       20        40     60         80                              0       20       40     60           80                                   0   20       40     60     80
+                                                 Step                                                               Step                                                                  Step
+                                              Problem P4                                                         Problem P5                                                            Problem P6
+                                                                                                                                                                   400
+
+
+
+      Constrained regret                                                 Constrained regret                                                   Constrained regret
+                           20                                                                 150
+                                                                                                                                                                   300
+                                                                                              100                                                                  200
+                           10
+                                                                                               50                                                                  100
+                            0                                                                   0                                                                    0
+                                0       20       40          60     80                              0       20         40      60        80                                   0   20      40        60   80
+                                                Step                                                                  Step                                                               Step
+                                                       CEI          SafeOPT                             Primal-Dual           EPBO 0.2                         EPBO 3.0                CONFIG
+
+
+                                                    Figure 4. Convergence of constrained regret for the collections of problems in Tab. 3.
+
+
+                                                                                                                       method naturally provides a scheme to declare infeasibility
+
+
+
+Best normalized energy
+                            5                                                                                          when the original black-box optimization problem is infea-
+                                                                                                                       sible. Numerical experiments over sampled instances, artifi-
+                                                                                                                       cial problems, and a building controller tuning problem, all
+                            4
+
+
+plus normalized deviation
+                                                                                                                       corroborate the effectiveness of our algorithm, which is com-
+                                                                                                                       petitive with the popular CEI method. As compared to ex-
+                            3                                                                                          isting state-of-the-art constrained efficient global/Bayesian
+                                                                                                                       optimization methods, CONFIG significantly improves the
+                                                                                                                       theoretical guarantees, while achieving competitive empiri-
+                                                                                                                       cal performance.
+                                    0   2       4      6        8   10 12 14
+                                                             Step                                                      One limitation of our work is that the auxiliary problem
+                                                                                                                       may be infeasible with misspecified hyperparameters, which
+                                    CEI                    Primal-Dual                              EPBO 1.0           needs to be addressed in future work.
+                                    SafeOPT                EPBO 0.2                                 CONFIG
+
+
+Figure 5. Best normalized energy consumption plus normalized
+temperature deviation up to the current step. For SafeOPT, the ini-
+tial required feasible solution is obtained based on domain knowl-
+edge.
+
+
+addition, we show that the cumulative constraint violations
+have upper bounds in terms of maximum information gain,
+which are similar to the cumulative regret bounds of the
+objective function. For commonly used Mátern (ν > d2 ) and
+Squared Exponential kernels, our bounds are sublinear and
+allow us to derive a convergence rate to the optimal solu-
+tion of the original constrained problem. Furthermore, our
+                        Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+References                                                      Gelbart, M. A., Snoek, J., and Adams, R. P. Bayesian
+                                                                  optimization with unknown constraints. In Proc. of the
+Amani, S., Alizadeh, M., and Thrampoulidis, C. Linear
+                                                                 30th Conf. on Uncertainty in Artif. Intell., UAI’14, pp.
+ stochastic bandits under safety constraints. Advances in
+                                                                  250–259, Arlington, Virginia, USA, 2014. AUAI Press.
+ Neural Information Processing Systems, 32, 2019.
+                                                                  ISBN 9780974903910.
+Amani, S., Alizadeh, M., and Thrampoulidis, C. Regret
+ bound for safe gaussian process bandit optimization. In        GPy. GPy: A Gaussian process framework in python.
+ Learning for Dynamics and Control, pp. 158–159. PMLR,           http://github.com/SheffieldML/GPy, since
+ 2020.                                                           2012.
+
+Audibert, J.-Y., Bubeck, S., and Munos, R. Best arm identifi-   Guo, H., Zhu, Q., and Liu, X. Rectified pessimistic-
+  cation in multi-armed bandits. In The Annual Conference         optimistic learning for stochastic continuum-armed ban-
+  On Learning Theory (COLT), pp. 41–53. Citeseer, 2010.           dit with constraints. arXiv preprint arXiv:2211.14720,
+                                                                  2022.
+Bagheri, S., Konen, W., Allmendinger, R., Branke, J., Deb,
+  K., Fieldsend, J., Quagliarella, D., and Sindhya, K. Con-     Hernández-Lobato, J. M., Gelbart, M. A., Adams, R. P.,
+  straint handling in efficient global optimization. In Pro-      Hoffman, M. W., and Ghahramani, Z. A general
+  ceedings of the Genetic and Evolutionary Computation            framework for constrained bayesian optimization using
+  Conference, pp. 673–680, 2017.                                  information-based search. 2016.
+
+Bansal, S., Calandra, R., Xiao, T., Levine, S., and Tom-        Inatsu, Y., Takeno, S., Karasuyama, M., and Takeuchi, I.
+  lin, C. J. Goal-driven dynamics learning via Bayesian           Bayesian optimization for distributionally robust chance-
+  optimization. In 2017 IEEE 56th Annual Conference               constrained problem. In International Conference on
+  on Decision and Control (CDC), pp. 5168–5173. IEEE,             Machine Learning, 2022.
+  2017.
+                                                                Jeong, S., Murayama, M., and Yamamoto, K. Efficient
+Basudhar, A., Dribusch, C., Lacaze, S., and Missoum, S.           optimization design method using kriging model. Journal
+  Constrained efficient global optimization with support          of Aircraft, 42(2):413–420, 2005.
+  vector machines. Structural and Multidisciplinary Opti-
+  mization, 46(2):201–221, 2012.                                Jones, D. R., Schonlau, M., and Welch, W. J. Efficient global
+                                                                  optimization of expensive black-box functions. Journal
+Bergstra, J. and Bengio, Y. Random search for hyper-              of Global Optimization, 13(4):455–492, 1998.
+  parameter optimization. Journal of Machine Learning
+  Research, 13(2), 2012.                                        Lu, C. and Paulson, J. A. No-regret Bayesian optimization
+                                                                  with unknown equality and inequality constraints using
+Chowdhury, S. R. and Gopalan, A. On kernelized multi-             exact penalty functions. IFAC-PapersOnLine, 55(7):895–
+  armed bandits. In International Conference on Machine           902, 2022.
+  Learning, pp. 844–853. PMLR, 2017a.
+                                                                Moradipari, A., Thrampoulidis, C., and Alizadeh, M. Stage-
+Chowdhury, S. R. and Gopalan, A. On kernelized multi-
+                                                                 wise conservative linear bandits. Advances in Neural
+  armed bandits. arXiv preprint arXiv:1704.00445, 2017b.
+                                                                 Information Processing Systems, 33:11191–11201, 2020.
+Frazier, P. I. A tutorial on Bayesian optimization. arXiv
+  preprint arXiv:1807.02811, 2018.                              Negoescu, D. M., Frazier, P. I., and Powell, W. B. The
+                                                                  knowledge-gradient algorithm for sequencing experi-
+Frazier, P. I. and Wang, J. Bayesian optimization for materi-     ments in drug discovery. INFORMS Journal on Com-
+  als design. In Information Science for Materials Discov-        puting, 23(3):346–363, 2011.
+  ery and Design, pp. 45–75. Springer, 2016.
+                                                                Pardalos, P. M. and Romeijn, H. E. Handbook of Global
+Fritzson, P. and Engelson, V. Modelica—a unified object-          Optimization: Volume 2, volume 62. Springer Science &
+  oriented language for system modeling and simulation. In        Business Media, 2013.
+  European Conference on Object-Oriented Programming,
+  pp. 67–90. Springer, 1998.                                    Sasena, M. J., Papalambros, P., and Goovaerts, P. Explo-
+                                                                  ration of metamodeling sampling criteria for constrained
+Gardner, J. R., Kusner, M. J., Xu, Z. E., Weinberger, K. Q.,      global optimization. Engineering optimization, 34(3):
+  and Cunningham, J. P. Bayesian optimization with in-            263–278, 2002.
+  equality constraints. In International Conference on
+  Machine Learning (ICML), volume 2014, pp. 937–945,            Scharnhorst, P., Schubnel, B., Fernández Bandera, C., Sa-
+  2014.                                                           lom, J., Taddeo, P., Boegli, M., Gorecki, T., Stauffer, Y.,
+                         Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+  Peppas, A., and Politi, C. Energym: A building model            Xu, W., Jones, C. N., Svetozarevic, B., Laughman, C. R.,
+  library for controller benchmarking. Appl. Sciences, 11           and Chakrabarty, A. VABO: Violation-aware Bayesian
+  (8):3518, 2021.                                                   optimization for closed-loop control performance opti-
+                                                                    mization with unmodeled constraints. In 2022 American
+Schölkopf, B., Herbrich, R., and Smola, A. J. A generalized       Control Conference (ACC), pp. 5288–5293. IEEE, 2022b.
+  representer theorem. In International Conference on
+  Computational Learning Theory, pp. 416–426. Springer,           Xu, W., Jiang, Y., Svetozarevic, B., and Jones, C. N. Primal-
+  2001.                                                             dual contextual Bayesian optimization for control system
+                                                                    online optimization with time-average constraints. arXiv
+Schonlau, M. Computer experiments and global optimiza-              preprint arXiv:2304.06104, 2023.
+  tion. 1997.
+                                                                  Zhang, Y., Zhang, X., and Frazier, P. I. Two-step looka-
+Shahriari, B., Swersky, K., Wang, Z., Adams, R. P., and
+                                                                    head bayesian optimization with inequality constraints.
+  De Freitas, N. Taking the human out of the loop: A
+                                                                    Advances in Neural Information Processing Systems, 34,
+  review of Bayesian optimization. Proceedings of the
+                                                                    2021.
+  IEEE, 104(1):148–175, 2015.
+
+Snoek, J., Rippel, O., Swersky, K., Kiros, R., Satish, N.,        Zhou, X. and Ji, B. On kernelized multi-armed bandits with
+  Sundaram, N., Patwary, M., Prabhat, M., and Adams,                constraints. Advances in Neural Information Processing
+  R. Scalable Bayesian optimization using deep neural net-          Systems, 35, 2022.
+  works. In International Conference on Machine Learning,
+  pp. 2171–2180. PMLR, 2015.
+                                                                  A. Examples of kernel functions
+Soare, M., Lazaric, A., and Munos, R. Best-arm identifica-
+  tion in linear bandits. Advances in Neural Information            • Linear:
+  Processing Systems, 27, 2014.                                                            k(x, y) = xT y.
+
+Srinivas, N., Krause, A., Kakade, S. M., and Seeger, M. W.
+                                                                    • Squared Exponential:
+  Information-theoretic regret bounds for Gaussian process
+  optimization in the bandit setting. IEEE Transactions on                                          (
+                                                                                                                       2
+                                                                                                                           )
+                                                                                                  ∥x − y∥
+  Information Theory, 58(5):3250–3265, 2012.                                      k(x, y) = exp −                           .
+                                                                                                     ℓ2
+Sui, Y., Gotovos, A., Burdick, J., and Krause, A. Safe
+  exploration for optimization with Gaussian processes. In
+                                                                    • Mátern:
+  Proc. of the Int. Conf. on Mach. Learn., pp. 997–1005,
+  2015.                                                                  k(x, y) =
+                                                                                                    ν
+                                                                          21−ν √                                  √
+                                                                                                                                   
+Sui, Y., Burdick, J., Yue, Y., et al. Stage-wise safe Bayesian                            ∥x − y∥                          ∥x − y∥
+                                                                                     2ν                  Kν           2ν                 ,
+  optimization with Gaussian processes. In Proc. of the Int.               Γ(ν)              ρ                                ρ
+  Conf. on Mach. Learn., pp. 4781–4789, 2018.
+                                                                       where ρ and ν are positive parameters of the kernel
+Turchetta, M., Berkenkamp, F., and Krause, A. Safe ex-                 function, Γ is the gamma function, and Kν is the mod-
+  ploration for interactive machine learning. Advances in              ified Bessel function of the second kind.
+  Neural Inf. Process. Syst. 32, 4:2868–2878, 2020.
+
+Vakili, S., Khezeli, K., and Picheny, V. On information           B. Proof of Corollary 2.6
+  gain and regret bounds in Gaussian process bandits. In          Proof. Note that li,t (x) and ui,t (x) are random variables
+  International Conference on Artificial Intelligence and         since they depend on the observations yi,t ’s, which are
+  Statistics, pp. 82–90. PMLR, 2021.                              corrupted by random noise. The following events defini-
+Wu, Y., Shariff, R., Lattimore, T., and Szepesvári, C. Conser-   tions are with respect to the randomness from noise. For
+ vative bandits. In International Conference on Machine           simplicity of notation, we use {li,t (x) ≤ y ≤ ui,t (x)}
+ Learning, pp. 1254–1262. PMLR, 2016.                             to denote the intersection event that the random variable
+                                                                  li,t (x) ≤ y and ui,t (x) ≥ y, where y ∈ R, i ∈ {0} ∪ [N ]
+Xu, W., Jiang, Y., Maddalena, E. T., and Jones, C. N. Lower       and t ≥ 1. We define the event Ei ≜ ∩x∈X ∩T ≥t≥1
+  bounds on the worst-case complexity of efficient global         {li,t (x) ≤ gi (x) ≤ ui,t (x)}, ∀i ∈ [N ] and the event
+  optimization. arXiv preprint arXiv:2209.09655, 2022a.           E0 ≜ ∩x∈X ∩T ≥t≥1 {l0,t (x) ≤ f (x) ≤ u0,t (x)}. We
+                              Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+have,                                                                    [a]+ + [b]+ , ∀a, b ∈ R, and the equality (28f) follows by the
+                                                                       inequality (27). We now consider the constraint violation,
+                  P ∩N
+                                     N
+                     i=0 Ei = 1 − P ∩i=0 Ei                      (24a)
+                                                                                vi,t = [gi (xt )]+                                       (29a)
+                             = 1 − P ∪N
+                                             
+                                      i=0 Ei                     (24b)
+                                                                                                                                 +
+                                         N
+                                                                                    = [gi (xt ) − li,t (xt ) + li,t (xt )]               (29b)
+                                         X
+                                                                                                                    +                +
+                                                        
+                                   ≥1−           P Ei            (24c)              ≤ [gi (xt ) − li,t (xt )] + [li,t (xt )]             (29c)
+                                          i=0                                                                       +
+                                                                                    = [gi (xt ) − li,t (xt )]                            (29d)
+                                         N
+                                         X   δ                                      ≤ [ui,t (xt ) − li,t (xt )]         +
+                                                                                                                                         (29e)
+                                   ≥1−                           (24d)
+                                           N +1
+                                       i=0                                          = 2βi,t σi,t−1 (xt ),                                (29f)
+                                   = 1 − δ,                      (24e)
+                                                                         where the equality (29d) follows by the feasibility of xt for
+where the inequality (24c) follows by union bound of prob-               the auxilliary problem in line 1 of Alg. 1.
+ability and the inequality (24d) follows by Lemma 2.4. The
+conclusion then follows.
+                                                                         D. Proof of Theorem 4.3
+                                                                         Proof. By the monotonicity of βi,t and Lem. 17, we have,
+
+C. Proof of Lemma 4.1                                                                            T
+                                                                                                 X
+                                                                                          RT =           rt                              (30a)
+Proof. By Corollary 2.6, with probability at least 1 − δ, we
+                                                                                                   t=1
+have, for all x ∈ X and 1 ≤ t ≤ T ,                                                              T
+                                                                                                 X
+          f (x)        ∈ [l0,t (x), u0,t (x)] ,                  (25a)                       ≤           rt+ = RT+                       (30b)
+                                                                                                   t=1
+         gi (x)        ∈ [li,t (x), ui,t (x)] ,     ∀i ∈ [N ].   (25b)                           T
+                                                                                                 X
+                                                                                             ≤           2β0,t σ0,t (xt )                (30c)
+All the following statements are conditioned on the above
+                                                                                                   t=1
+joint event happening, which has a probability of at least
+                                                                                                              T
+1 − δ.                                                                                                        X
+                                                                                             ≤ 2β0,T                σ0,t (xt )           (30d)
+By setting x = x∗ in (25b) and the feasibility of the optimal                                                 t=1
+solution x∗ , we have
+                                                                                                           q
+                                                                                             ≤ 4β0,T            (T + 2)γ0,T ,            (30e)
+                  ∗            ∗
+           li,t (x ) ≤ gi (x ) ≤ 0,           ∀i ∈ [N ].          (26)
+                                                                         and ∀i ∈ [N ],
+Therefore, infeasibility is not declared in line 1 of the Alg. 1,                                  T
+and x∗ is a feasible solution for the auxiliary problem in                                Vi,T =
+                                                                                                   X
+                                                                                                         vi,t                            (31a)
+line 1 of the Alg. 1. Therefore, we have                                                           t=1
+                                                                                                   T
+                      l0,t (xt ) ≤ l0,t (x∗ ).                    (27)                             X
+                                                                                              ≤          2βi,t σi,t (xt )                (31b)
+Therefore,                                                                                         t=1
+                                                                                                              T
+                                                                                                              X
+    rt = f (xt ) − f ∗                                           (28a)                        ≤ 2βi,T               σi,t (xt )           (31c)
+                                                                                                              t=1
+        ≤ rt+                                                    (28b)                                        q
+        = [f (xt ) − l0,t (xt ) + l0,t (xt ) − f ]  ∗ +
+                                                                 (28c)                        ≤ 4βi,T          (T + 2)γi,T ,             (31d)
+        ≤ [f (xt ) − l0,t (xt )]+ + [l0,t (xt ) − f ∗ ]+         (28d)
+                                                                         Combining with the expression of βi,t in Definition 2.5, we
+                                     +                       ∗   +
+        ≤ [u0,t (xt ) − l0,t (xt )] + [l0,t (xt ) − l0,t (x )]           can derive
+                                                                 (28e)                      q                          √
+        = u0,t (xt ) − l0,t (xt )                                (28f)    RT ≤ RT+ ≤ 4β0,T (T + 2)γ0,T = O(γ0,T T ) ,
+        = 2β0,t σ0,t−1 (xt ),                                    (28g)               q                          √
+                                                                         Vi,T ≤ 4βi,T (T + 2)γi,T = O(γi,T T ) , ∀i ∈ [N ],
+where the inequality (28e) follows by the inequalities (25a),
+the inequality (28d) follows by the fact that [a + b]+ ≤                 which completes the proof.
+                              Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+E. Proof of Theorem 4.4                                                            Meanwhile,
+Proof. Consider the sum,                                                                  T
+                                                                                        X X                                  X               T
+                                                                                                                                             X
+                                                                !                   2                βi,t σi,t−1 (xt ) ≤ 2            βi,T         σi,t−1 (xt )
+               T                            N
+                                                                                        i∈[N ] t=1                           i∈[N ]          t=1
+               X                            X
+                      [f (xt ) − f ∗ ]+ +         [gi (xt )]+                                                                X               q
+               t=1                          i=1                                                                      ≤2               βi,T    4(T + 2)γi,T ,
+                      N
+                      X                                                                                                      i∈[N ]
+         =RT+ +             Vi,T
+                      i=1                                                          where the last inequality follows by Lem. 17. Therefore,
+                  N
+           √      X     √                                                                         X        q
+         ≤4 T + 2   βi,T γi,T ,                                                                2      βi,T 4(T + 2)γi,T ≥ T ϵ,
+                          i=0                                                                         i∈[N ]
+where the last inequality follows by the inequalities (30e)                                           P           √
+                                                                                                     2 i∈[N ] βi,T 4(T +2)γi,T
+and (31d). Therefore,                                                              which implies ϵ ≤                           . By Def. 2.5,
+                                                                                                                  T
+                                   N
+                                                  !                                we have
+                                   X
+          min [f (xt ) − f ∗ ]+ +     [gi (xt )]+                                       P          p                                 
+             t∈[T ]
+                                            i=1
+                                                                                      2 i∈[N ] βi,T 4(T + 2)γi,T            X γi,T
+                                                                                                                    = O          √ .
+                                                                                                   T
+              T                         N
+                                                                !
+             1X                         X                                                                                  i∈[N ]
+                                                                                                                                    T
+                                     ∗ +
+        ≤              [f (xt ) − f ] +   [gi (xt )]+
+          T t=1                i=1
+           √     PN       √                                                        Hence, ∃C̃ > 0, such that,
+          4 T + 2 i=0 βi,T γi,T
+        ≤                       .                                                                           X γi,T
+                  T                                                                                 ϵ ≤ C̃        √ .                                        (32)
+                                                                                                           i∈[N ]
+                                                                                                                   T
+So there exists x̃T ∈ {x1 , x2 , · · · , xT }, such that,
+                  N                      √        PN      √    That is
+           ∗ +
+                 X
+                             +
+                                       4 T + 2 i=0 βi,T γi,T
+[f (x̃T )−f ] + [gi (x̃T )] ≤                                .                                                      X γi,T
+                 i=1
+                                                     T                                                     Cϵ ≤           √ ,                                (33)
+                                                                                                                   i∈[N ]
+                                                                                                                           T
+Since [f (x̃T ) − f ∗ ]+ and [gi (x̃T )]+ are non-negative, we
+                                                                                                             γ
+have                                                           where C = C̃1 . However, since limT →∞ √i,T     T
+                                                                                                                 = 0, ∀i ∈
+                                        √        PN        √   [N  ], the inequality (33) will be violated  when  T is large
+                                       4 T + 2 i=0 βi,T γi,T
+f (x̃T ) − f ∗ ≤ [f (x̃T ) − f ∗ ]+ ≤                          enough. So infeasibility will be declared on or before the
+                                                   T
+                   √         PN          √                     first time the above inequality is violated, which is T .
+             +
+                 4    T  + 2        β
+                                 i=0 i,T   γ i,T
+  [gj (x̃T )] ≤                                  , ∀j ∈ [N ].
+                                 T
+                                                                                   G. Explicit functions for the artificial
+The desired conclusion then follows.                                                  numerical instances
+
+F. Proof of Theorem 5.1
+Proof. Suppose up to step T , infeasibility has not been
+declared. We have,
+                      li,t (xt ) ≤ 0, ∀i ∈ [N ],
+and since minx∈X maxi∈[N ] gi (x) = ϵ, there exists it ∈
+arg maxi∈[N ] gi (xt ), such that
+                      uit ,t (xt ) ≥ git (xt ) ≥ ϵ
+with probability at least 1 − δ.
+Accordingly, we have
+T
+X X                                 T
+                                    X X                                      T
+                                                                             X                                     T
+                                                                                                                   X
+             2βi,t σi,t−1 (xt ) =                (ui,t (xt )−li,t (xt )) ≥         (uit ,t (xt )−lit ,t (xt )) ≥         ϵ = T ϵ.
+t=1 i∈[N ]                          t=1 i∈[N ]                               t=1                                   t=1
+          Constrained Efficient Global Optimization of Expensive Black-box Functions
+
+
+
+
+Name                                                   Function
+                                            5.1 2     5
+                                                               2           1
+                                                                              
+Branin (Br)            Br (x1 , x2 ) = x2 − 4π 2 x1 + π x1 − 6    + 10 1 − 8π   cos (x1 ) + 10 .
+ Modified
+                       MBr (x1 , x2 ) = Br (x1 , x2 ) + 20x1 − 30x2 .
+ Branin (MBr)
+                                                                  
+                                                          2
+                         Bowl (x1 , x2 ) = 12 ∥x − cbowl ∥ − Rbowl
+                                                              2
+                                                                     where Rbowl = 10 and
+Bowl (Bowl)
+                        cbowl = [−3, −3].
+ Inverted bowl
+                       InvBowl (x1 , x2 ) = − Bowl (x1 , x2 ) .
+ (InvBowl)
+ Sine-
+                                                2
+                                                 x1 +x22
+                                                           
+ quadratic             SinQ (x1 , x2 ) = sin       10          .
+ (SinQ)
+
+             Table 4. Explicit functions used to construct the artificial numerical instances.
+

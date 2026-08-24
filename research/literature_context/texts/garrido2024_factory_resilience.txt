@@ -1,0 +1,1139 @@
+      International Journal of Production Research
+
+
+
+
+      ISSN: (Print) (Online) Journal homepage: www.tandfonline.com/journals/tprs20
+
+
+
+
+Zero-inventory plans, constant workforce, or
+hybrid approach? Analysing pure production
+strategies for enhancing factory resilience with
+demand variability
+
+Alexander Garrido, Fabián Pongutá & Heriberto García-Reyes
+
+To cite this article: Alexander Garrido, Fabián Pongutá & Heriberto García-Reyes (25 Nov
+2024): Zero-inventory plans, constant workforce, or hybrid approach? Analysing pure
+production strategies for enhancing factory resilience with demand variability, International
+Journal of Production Research, DOI: 10.1080/00207543.2024.2425771
+
+To link to this article: https://doi.org/10.1080/00207543.2024.2425771
+
+
+
+
+       Published online: 25 Nov 2024.
+
+
+
+       Submit your article to this journal
+
+
+
+       View related articles
+
+
+
+       View Crossmark data
+
+
+
+
+                      Full Terms & Conditions of access and use can be found at
+             https://www.tandfonline.com/action/journalInformation?journalCode=tprs20
+INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH
+https://doi.org/10.1080/00207543.2024.2425771
+
+
+
+
+Zero-inventory plans, constant workforce, or hybrid approach? Analysing pure
+production strategies for enhancing factory resilience with demand variability
+Alexander Garridoa , Fabián Pongutáb and Heriberto García-Reyesa
+a Industrial and Systems Engineering, Tecnológico de Monterrey, Monterrey, México; b Industrial Engineering, Universidad Cooperativa de
+Colombia, Bogotá, Colombia
+
+
+    ABSTRACT                                                                                                               ARTICLE HISTORY
+    Historically the notion of resilience capability has primarily been conceptualised as a holistic con-                  Received 20 October 2023
+    struct in the domain of supply chain networks – referred to as SCRES. The field of SCRES has since                     Accepted 4 October 2024
+    evolved gaining prominence among scholars and practitioners. However, the existing SCRES litera-                       KEYWORDS
+    ture inadequately delves into the embedded resilience harboured by their constituent components,                       Production planning; supply
+    practices, or internal routines, including the aggregate production planning (APP) process. There-                     chain resilience;
+    fore, the purpose of this article is to examine the interplay between medium-term pure strategies for                  manufacturing systems;
+    APP and the resilience of manufacturing facilities, assuming demand to be the sole source of uncer-                    resilience management;
+    tainty. To accomplish this, a realistic Monte-Carlo simulation model integrated with a robust heuristic                simulation
+    procedure for pure strategies is merged with a factory resilience index-based Cobb–Douglas func-                       SUSTAINABLE
+    tion. The results of this research suggest that manufacturing facilities achieve a higher level of                     DEVELOPMENT GOALS
+    resilience when certain ‘zero-inventory plans’ are implemented. Based on this key finding, pro-                        SDG 9: Industry, Innovation
+    duction/demand planners might incorporate the resilience dimension alongside the customary                             and infrastructure
+    manufacturing success factors. Thus, to the best of the authors’ knowledge, this study represents
+    the first attempt to establish a clear linkage between the implementation of pure APP strategies and
+    a quantitative measure of factory resilience.
+
+
+
+1. Introduction
+                                                                            and, in selecting and categorising fundamental strate-
+Supply chain resilience (SCRES) has a significant impact                    gies to reduce the risk of supply chain (SC) disruptions
+on manufacturing industries’ survivability (Cheng,                          (Alikhani et al. 2023; Belhadi et al. 2022; Sawik 2022).
+Elsayed, and Huang 2022; Lerch et al. 2022). The notion                     However, relatively few studies to date have examined the
+of SCRES – defined as the adaptive ability of supply net-                   idea of resilience from a structural point of view (Kim,
+works to withstand unexpected disruptions and return                        Chen, and Linderman 2015; Su and Junge 2023). Namely,
+to a desired state (Garrido 2017) – has mostly been                         research works that had explored the resilience of the
+studied from a macro point of view (Castillo 2023).                         nodes – facilities – and arcs – transport flows – that make
+As a result of embracing this strategic perspective, the                    up a SC network (Alexopoulos et al. 2022; Thomas et al.
+SCRES field has resulted in a great progress in the last                    2014). In particular, the resilience of manufacturing facil-
+two decades. Peer-reviewed journal articles have mainly                     ities or factories, and the key internal factors that may
+focused on understanding, exploring, and enhancing the                      influence it (Dittfeld, van Donk, and van Huet 2022). This
+concept of resilience (Um and Han 2021; Wieland and                         is the main focus of the current research.
+Durach 2021); in developing a variety of metrics to mea-                        Adopting a holistic perspective, factories can be
+sure resilience (Behzadi, O’Sullivan, and Olsen 2020;                       viewed as the backbone of SC networks, undertaking
+Han, Chong, and Li 2020; Ozdemir et al. 2022; Tan,                          vital functions within these organisational systems. These
+Zhang, and Cai 2019); in integrating and/or relating the                    functions encompass the procurement of raw materials,
+notion of resilience with other allied concepts (Dixit,                     their transformation into finished products, and the ulti-
+Verma, and Kumar 2020; Massari and Giannoccaro 2021;                        mate delivery of these products to customers. In terms
+Razak, Hendry, and Stevenson 2023); in identifying the                      of SCRES, factories have also played a crucial role in
+main drivers of resilience (Moktadir et al. 2023; Naras-                    different scenarios. For example, manufacturing facili-
+sima et al. 2022; Piya, Shamsuzzoha, and Khadem 2022);                      ties can serve as a reservoir of the raw material flow in
+
+CONTACT Alexander Garrido         alexander.garrido@tec.mx     Industrial and Systems Engineering, Tecnológico de Monterrey, E. Garza Sada 2501 Sur,
+Code 64849 Monterrey, Nuevo León, México
+
+© 2024 Informa UK Limited, trading as Taylor & Francis Group
+2       A. GARRIDO ET AL.
+
+
+
+
+Figure 1. Resilience concept: network, organisational, and factory perspective.
+
+
+case of scarcity (Hopp and Spearman 2011); guarantee-                subcontracting, inventory, backorders, and pricing over
+ing the supply of finished products downstream of the                time (Rasmi and Türkay 2021). Hence, determine how
+SC under risky conditions (Zsidisin et al. 2020); and/or             much and when each product family must be produced
+collaborating in the implementation of resilient strategies          is undoubtedly a crucial mid-term decision – i.e. from
+(Belhadi et al. 2022). Nonetheless, most of studies on this          few weeks up to one year – for production/demand man-
+topic have not directly measured factory resilience, but             agers. This decision process has been denominated the
+indirectly through different approximations (Qin et al.              APP problem – see Figure 2. The literature in this regard
+2022). This fact, in spite of the large and growing num-             distinguishes two main approaches for macro-planning
+ber of investigations dedicated to studying organisational           strategies in manufacturing facilities: optimal-mixed and
+resilience (Nielsen et al. 2023; Su and Junge 2023). More-           pure strategies (Nahmias and Olsen 2021). Thus, while
+over, delving into the link between the use of aggregate             optimal-mixed APP strategies usually involve the utilisa-
+production planning (APP) strategies in manufacturing                tion of linear programming models or parametric linear
+settings and metrics of factory resilience, no relevant              decision rules to minimise a cost function or maximise
+studies were found, confirming a priori the existence of             a profit function (Aydin and Tirkolaee 2022); pure APP
+a pertinent gap in literature.                                       strategies, on the contrary, denote suboptimal production
+   Based on the paradigm of the SC as a ‘System of Sys-              plans based on the application of a single-stage planning
+tems’ (Bourne et al. 2018), Figure 1 outlines the scope of           policy or focal point (Stevenson 2021). In the current arti-
+the resilience concept seen from three different contexts.           cle, we will focus only on these latter. The reasons for
+First, from the perspective of a network or SCRES; sec-              adopting pure APP strategies’ approach are twofold. First
+ond, through the framework of an open system engaged                 and foremost is that prior empirical evidence suggests
+in continuous interaction with its environment or organ-             that production planners have favoured the utilisation
+isational/enterprise resilience; and third, from the stand-          of pure APP strategies to sophisticated algorithms. The
+point of the internal constituent elements, processes and            lack of reliable forecasts and/or mathematical expertise
+operations integrated within a manufacturing facility                have been mentioned as the main reasons for this prefer-
+or factory resilience. Also from this figure, additional             ence (Buxey 2003, 2005; Jamalnia and Feili 2013). And
+nuances in the types of disruptions and strategies for               second, the article’s authors administered a computer
+resilience can be inferred. Therefore, the primary goal              survey to five manufacturing firms in order to identify
+of this research is to conduct a thorough examination                which macro planning strategy is used the most – see
+of the relationship between medium-term strategies for               the Appendix. This survey revealed that in four of the
+APP and factory resilience. Here, the factory resilience             five companies interviewed, pure APP strategies turned
+concept refers to the inherent ability of a manufactur-              out as the prevalent approach for production planning
+ing facility to handle demand fluctuations, as well as               purposes.
+external and internal disruptions, allowing any factory to              For decades researchers have studied the APP prob-
+return to its desired performance level based on its core            lem in factories (Cheraghalikhani, Khoshalhan, and
+components.                                                          Mokhtari 2019; Nam and Logendran 1992), mak-
+   In a similar vein, an APP strategy describes how a fac-           ing this knowledge accessible to business practitioners
+tory can be supported at planning levels for production,             through production and operations management (POM)
+                                                                              INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH     3
+
+
+
+
+Figure 2. Interaction of medium-term pure strategies for APP and factory resilience R.
+
+
+textbooks – see e.g. Nahmias and Olsen 2021; Silver,                experiment allowed the generation of thousand differ-
+Pyke, and Thomas 2017; Benton 2014; Buffa 1977. Nev-                ent demand stochastic patterns – or scenarios –, all
+ertheless, the theory that substantiate pure APP strategies         based on a seasonal time series. Second, it built two
+have remained almost unaltered since Holt et al.’ sem-              integrated iterative heuristic procedures for all the pure
+inal work (1955, 1960). Table 1 summarises the types                APP strategies under consideration. Third, it derived
+of pure APP strategies described in several modern                  a numerical multidimensional factory resilience index
+POM textbooks. Based on this table, this research con-              based on a Cobb–Douglas production function. Lastly,
+siders three general categories of approaches for pure              the results of the factory resilience index for each APP
+APP strategies: zero inventory plans – i.e. align produc-           strategy are compared through the quantile regression
+tion rate exactly with demand to minimise inventory                 approach. Thus, according to previous analysis, factories
+costs, integrating high flexibility in labour and produc-           can achieve a higher level of resiliency if they imple-
+tion adjustments –; constant workforce strategies – i.e.            ment pure APP strategies to produce exactly the quan-
+sustain a consistent level of workers, utilising inven-             tities required with spare capacity. This salient finding is
+tory adjustments to absorb and mitigate fluctuations in             consistent with the lesson learned from the latest Coro-
+demand –; and, hybrid strategies – a mixture of the two             navirus outbreak, which revealed that many manufac-
+above. Therefore, this article aims to answer the following         turing systems were too lean and unreliable to supply
+research question: Which of these three pure APP strate-            disruptions (Ambrogio et al. 2022; Lerch et al. 2022).
+gies allow manufacturing facilities to achieve a higher                 The implications of the article’s results extend beyond
+level of resilience?                                                theoretical contribution, since they encourage produc-
+   To answer this question, this research embraces a com-           tion/demand planners to integrate resilience dimension
+bined methodology that includes several analysis tools.             alongside other usual manufacturing performance indi-
+First, it developed a thorough Monte-Carlo simulation               cators (Caputo, Donati, and Salini 2023). These find-
+(MCS) model that integrates a Holt exponential smooth-              ings are especially relevant for manufacturing facilities
+ing function with random parameters. This simulation                operating under a make-to-stock (MTS) environment.
+4         A. GARRIDO ET AL.
+
+
+Table 1. Types of pure APP strategies.                                               regard, the work of Datta, Christopher, and Allen (2007)
+Deﬁnition                                                       Author(s)            stands out as one of the first to emphasise the importance
+‘There are two pure planning strategies available to       Benton (2014, 60)         of focusing on the key variables of the resilience con-
+   the aggregate planner: a pure level strategy and a                                cept; that is, production/distribution system rather than
+   pure chase strategy. Firms may choose to utilise
+   one of the pure strategies in isolation, or they may                              solely on the broader perspective of this construct. Zhang
+   implement a hybrid strategy that combines the                                     and van Luttervelt (2011) proposed one of the earliest
+   pure strategies.’
+‘There are three general categories of approaches          Chapman (2006, 52)
+                                                                                     definitions of resilience applicable to factory design and
+   used in aggregate planning: level, chase and                                      management. Yet, this conception of resilience lacks a rig-
+   combination’.                                                                     orous foundation and empirical validation. Thomas et al.
+‘Pure strategy for meeting demand denotes that one         Rasmi and Türkay (2021,
+   alternative is selected. When two or more are             5)                      (2014) employed an organisational case study approach
+   selected, a company has a mixed strategy’.                                        to evaluate the impact of business improvement methods
+‘The zero-inventory plan and constant workforce            Nahmias and Olsen
+   strategies are pure strategies: they are designed to     (2021, 156)              on manufacturing resilience, using criteria such as qual-
+   achieve one objective. They are useful in                                         ity, cost, delivery, and flexibility. Despite its theoretical
+   enhancing intuition and for ballpark calculations’.
+‘ ... [If] skilled labor is scarce ... managers may        Silver et al. (2017,      significance, this study falls short of detailing a quan-
+   decide to pursue a strategy that maintains a              591)                    titative methodology for measuring factory resilience.
+   constant workforce size ... this strategy is called
+   level ... Other ﬁrms face extremely high inventory
+                                                                                     Gu et al. (2015) introduced a system dynamics model
+   costs, but are able to hire and ﬁre somewhat                                      to measure manufacturing resilience based on three cri-
+   freely ... this strategy is often called chase ... ’                              teria, production loss, throughput settling time, and
+‘If we elected to produce exactly the same amount          Jacobs et al. (2018,
+   as what we expect demand to be each                       98)                     total underproduction time. Although mathematically
+   month ... this unique policy is called chase                                      robust, the model’s analysis is narrow, only account-
+   strategy. The opposite extreme is the level strategy,
+   what production is at a constant uniform rate of                                  ing for machinery breakdowns as disruptions. Hosseini,
+   output with inventory buildups and depletions                                     Khaled, and Sarder (2016) introduced a robust Bayesian
+   over the planning horizon ... ’
+                                                                                     network model to quantify manufacturing resilience in
+                                                                                     a chemical plant, focusing solely on the recovery of lost
+Furthermore, it should be noted that in the MCS model,                               production and lost production capacity as the princi-
+demand is assumed as the only source of uncertainty,                                 pal criteria. Wang et al. (2019) examined manufacturing
+since it has been considered the main driving force of the                           resilience from the perspective of production schedul-
+APP process in manufacturing environments (Jamalnia                                  ing, exploring changes in processing sequence, system
+and Feili 2013; Luo, Thevenin, and Dolgui 2023). The rest                            parameters, and structure. While this study primarily
+of this article is organised as follows. Section 2 reviews                           addresses tactical aspects, its practical utility is hindered
+the existing literature related to factory resilience, from                          by the lack of an explicit index for factory resilience.
+which a relevant gap and key contributions are identi-                               Bauer et al. (2021) developed a theoretical framework
+fied. In Section 3, the article describes the MCS model                              for manufacturing resilience, drawing upon the concepts
+in detail, the three main pure APP strategies selected,                              of robustness and responsiveness. External and inter-
+and the logic behind the operationalisation of the fac-                              nal complexities are addressed by using machine learn-
+tory resilience index. Section 4 examines the results of                             ing models to mitigate disruptions. Notably, this study
+the factory resiliency index, based on the three men-                                does not include a specific metric for measuring man-
+tioned APP strategies. In Section 5, the sensitivity of the                          ufacturing resilience. Similarly, Lee et al. (2022) devel-
+factory resilience index is evaluated considering varia-                             oped a conceptual model for manufacturing resilience,
+tions in cost parameters. Finally, in Section 6, conclusions                         incorporating agility, robustness, and survivability fac-
+are presented, along with theoretical and managerial                                 tors. These authors proposed enhancing manufacturing
+implications.                                                                        resilience through the application of artificial intelligence
+                                                                                     (AI), automation, and digitisation. However, this study
+                                                                                     remains purely theoretical in nature. Dohale et al. (2022)
+2. Previous studies on factory resilience
+                                                                                     employed a combination of the voting analytical hierar-
+The measurement of factory resilience is a relevant                                  chy process and Bayesian network methods to investigate
+research topic in the field of SC networks, although it                              the role of AI in strengthening the resilience of produc-
+is relatively understudied (Dittfeld, van Donk, and van                              tion functions in manufacturing organisations during a
+Huet 2022). One key question that deserves to be exam-                               pandemic. While the study explores a novel and timely
+ined is how factory resilience has been measured so far,                             topic, its findings are primarily anecdotal, lacking the
+specifically which approaches have been used to assess it.                           support of a quantifiable index for assessing production
+Furthermore, it is important to identify the factors recog-                          resilience. This absence of measurable indicators lim-
+nised as the main drivers for factory resilience. In this                            its the generalizability and practical application of the
+                                                                          INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH        5
+
+
+research outcomes. Alexopoulos et al. (2022) developed            time. This research underscores gaps in SC disruption lit-
+a two-stage stochastic model to assess resilience in man-         erature, advocating for improved recovery time measure-
+ufacturing facilities. Their model integrates a penalty of        ment methods and deeper analysis of SC complexity’s
+change approach with variable costs and a probability             influence.
+function. While providing a robust and practical method              Based on this comprehensive theoretical background,
+for measuring manufacturing resilience, this study lacks          it was identified that prior studies on factory resiliency
+clarity in distinguishing between the three primary per-          are mostly strategic in nature (Thomas et al. 2014),
+spectives outlined in the literature – i.e. factory resilience,   excepting the works of Dittfeld, van Donk, and van
+organisational resilience, and SCRES. Feng et al. (2022)          Huet (2022), Caputo, Donati, and Salini (2023), and
+introduced a resilience model for smart manufacturing             Guntuka, Corsi, and Cantor (2024) – see Table 2. The
+systems, focusing on time-oriented recovery, utilising a          limited research on factory resilience has predomi-
+joint optimisation approach. While the proposed model             nantly focused on examining this capability as a uni-
+is mathematically robust and well-founded, its practical          fied construct, primarily from an organisational perspec-
+applicability to real-world manufacturing systems is lim-         tive (Guntuka, Corsi, and Cantor 2024). However, the
+ited. Amidst the Covid-19 pandemic, Ambrogio et al.               embedded resilience associated with practices, specific
+(2022) examined the effects of labour shortages on the            tasks, or internal processes at the tactical level has been
+resilience of manufacturing systems. They introduced a            neglected (Hillmann and Guenther 2021). Additionally,
+detailed qualitative design framework, integrating ele-           the majority of previous studies on factory resilience
+ments from innovative harmony and digital humanism                have been mostly theoretical, focusing on this capability
+models. However, while this study analysed several real           from an organisational standpoint rather than a tacti-
+business cases, it falls short in providing a compre-             cal one. The gap becomes even more pronounced when
+hensive measurement of manufacturing resilience that              considering the joint relationship between the use of
+would enable broader application across various prac-             APP strategies and factory resilience. In this intermediate
+tical scenarios. In a similar context, Lerch et al. (2022)        planning horizon within a factory, manufacturing deci-
+examined the relationship between artificial intelligence         sions are typically made on a weekly to monthly basis,
+readiness and production resilience during the Covid-19           with a primary focus on meeting demand at the low-
+outbreak from an organisational standpoint, utilising a           est costs rather than prioritising resilience enhancement.
+field survey methodology. While this work offers valuable         This subtle yet significant characteristic in itself justifies
+insights, especially regarding the redefinition of factory        estimating the impact of routine manufacturing deci-
+resilience, the conclusions drawn from it may not be              sions – such as the APP process – on factory resilience.
+broadly applicable due to methodological limitations. Ul          Moreover, this interaction gains additional importance
+Haq et al. (2022) explored the connection between imple-          when compared with the substantial investments needed
+menting lean distributed manufacturing and the opera-             to improve resilience at a strategic level (Ivanov 2023).
+tional resilience of food manufacturing companies in the          In this regard, as far as the authors are aware, no peer-
+UK, using a survey methodology. Although this research            reviewed article has yet addressed this specific research
+offers new theoretical knowledge into this relationship,          problem.
+it lacks a robust and widely applicable measure for man-
+ufacturing resilience. Dittfeld, van Donk, and van Huet
+                                                                  2.1. Contributions of this research
+(2022) investigated the influence of production process
+characteristics on the practicality of resilience capabil-        The current research contributes significantly to the
+ities in manufacturing facilities through the analysis of         existing body of literature in several ways:
+multiple case studies. Their research provides a basis for
+the current study by emphasising the inherent resilience          (1) It addresses an important gap within the literature
+stemming from internal planning processes within fac-                 primarily characterised by a macro resilience per-
+tories. Caputo, Donati, and Salini (2023) developed a                 spective, commonly referred to as SCRES and/or
+network-based model that integrates the impact of natu-               organisational resilience. This is achieved through
+ral disasters and major industrial accidents on the capac-            an in-depth investigation of the interplay between
+ity recovery of a pharmaceutical plant. The primary merit             pure APP strategies and the resilience of manufac-
+of this research is measuring the factory resilience from a           turing facilities.
+tactical perspective. More recently, Guntuka, Corsi, and          (2) A novel quantitative index has been formulated
+Cantor (2024) studied the impact of a manufacturing                   to gauge the resilience of manufacturing facil-
+plant’s internal operations and network connections on                ities, denoted as R. This comprehensive index
+a driver of the factory resilience – disruption recovery              encompasses five pivotal variables, namely inventory
+6        A. GARRIDO ET AL.
+
+
+Table 2. Summary of previous studies in manufacturing resilience.
+                                                                              Factory resilience perspective
+                                         Type of manufacturing system          Strategic (organisational) /      Is a factory resilience metric
+Reference                                          analysed                          Tactical (focus)                   included? (type)
+Datta, Christopher, and Allen (2007)   General manufacturing facilities      Organisational                    Yes/agent-based simulation
+Zhang and van Luttervelt (2011)        General manufacturing facility        Organisational                    No
+Thomas et al. (2014)                   General manufacturing facility        Organisational                    No
+Gu et al. (2015)                       Multi-stage reconﬁgurable             Organisational                    Yes/Bernoulli reliability model
+                                         manufacturing facility
+Hosseini, Khaled, and Sarder (2016)    General manufacturing facility        Organisational                    Yes/Bayesian network
+Wang et al. (2019)                     General manufacturing facilities      Organisational                    No
+Bauer et al. (2021)                    General manufacturing facility        Organisational                    No
+Alexopoulos et al. (2022)              Additive manufacturing and            Organisational                    Yes/two-stage stochastic model
+                                         injection moulding facilities
+Lee et al. (2022)                      Automated manufacturing facility      Organisational                    No
+Feng et al. (2022)                     Smart manufacturing facility          Organisational                    Yes/optimisation model
+Ambrogio et al. (2022)                 Additive manufacturing facility       Organisational                    No
+Lerch et al. (2022)                    intelligent manufacturing             Organisational                    No
+Ul Haq et al. (2022)                   Lean distributed manufacturing        Organisational                    No
+Dittfeld, van Donk, and van Huet       General manufacturing facilities      Tactical (general production      no
+  (2022)                                                                       system characteristics)
+Dohale et al. (2022)                   General manufacturing facilities      Organisational                    No
+Bianco et al. (2023)                   Intelligent manufacturing             Organisational                    No
+Caputo, Donati, and Salini (2023)      Pharmaceutical plant                  Tactical (production ﬂows)        Yes/mechanistic ﬂow-based model
+Guntuka, Corsi, and Cantor (2024)      General manufacturing facility        Tactical (business internal       Yes/econometric model
+                                                                               processes)
+Current study                          General manufacturing facility        Tactical (production planning)    Yes/Cobb-Douglas function
+
+
+
+
+    levels, backorders, spare production capacity, time-                  cost of producing items in regular time cp , overtime co ,
+    to-fulfill, and total costs.                                          holding inventory ci , backorders cb , as well as costs asso-
+(3) This research also introduces an innovative inte-                     ciated with hiring ch , firing c , and managing marginal
+    grated heuristic procedure – expressed through two                    capacity cu . The demand Dt fluctuates across periods,
+    mathematical algorithms – that unifies and oper-                      with smoothing constants α and γ helping to forecast
+    ationalises the three principal pure APP strategies                   future demand Ft + 1 and trend estimates δ t + 1 . Gross
+    most used in real-manufacturing settings.                             requirements GRt + v , net requirements NRt , and pro-
+(4) Lastly, this study proffers an integrated conceptual                  duction substrategies Sij define the production approach,
+    framework that can serves as a foundational refer-                    where substrategy-specific costs κ(Sij ) are evaluated. The
+    ence point for the development of future research                     decision variables include the number of workers Wt ,
+    endeavours within the domain of manufacturing                         required workforce Wr t , and installed manufacturing
+    resilience at tactical level.                                         capacity t , all necessary in aligning production output
+                                                                          Pt , inventory levels It , backorders Bt , overtime produc-
+                                                                          tion Ot , and spare capacity Ut with real-time demands.
+3. Model description and operationalisation of
+                                                                          Worker dynamics are captured by the hiring Ht and firing
+pure APP strategies
+                                                                          Lt decisions. Output variables such as average accumu-
+The problem addressed in this research involves devel-                    lated inventory ζ , backorders ε, and spare capacity φ
+oping a mathematical model to evaluate which APP sub-                     at the end of the planning horizon T, along with the
+strategy Sij with i, j = 1 . . . 3 and S23 , S33 = Ø, leads to            time τ required to meet net requirements, provide key
+obtaining a higher level of resilience R in a manufac-                    performance indicators for evaluating the system’s effi-
+turing facility. The planning horizon spans T periods                     ciency. Additionally, deviation costs κ̇(Sij ) and the overall
+from t = 1 . . . T, where the production rate of aggregate                resiliency index R (Sij ) for each substrategy at the end of
+items per worker r, and the effective working time in                     the planning horizon are crucial in assessing the long-
+each period et , are crucial to determining the total pro-                term adaptability and stability of the production system.
+duction                                                                   This integrated approach establishes a robust framework
+       capacity Pt . The cumulative effective working
+time et across the planning horizon T, alongside ini-                     for addressing uncertainties in workforce and capacity,
+tial conditions such as the number of items i0 , workers                  directly linking operational decision-making with the
+w0 , and backorders b0 , set the foundation for under-                    resilience of manufacturing facilities.
+standing resource availability and constraints. Various                       Based on this explanation, Figure 2 mathematically
+cost components factor into this system, including the                    illustrates the relationships among all variables in the
+                                                                       INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH         7
+
+
+APP problem included in this investigation. This figure       3.2. Demand variability (input variable)
+depicts a top-down planning approach, driven by the
+                                                              Factories may encounter three forms of uncertainty:
+gross requirements forecast GRt + v to the decision vari-
+                                                              demand variability, external disruptions, and internal
+ables. The first step in the APP problem, as shown in
+                                                              disruptions (Graves 2011). In the current analysis, the
+Figure 2, is to identify the focal point of analysis. This
+                                                              focus is exclusively on demand variability, which is
+typically begins at (t – 1) and covers a medium-term
+                                                              acknowledged as a recurrent and the most critical fac-
+planning horizon T, as a function of GRt + v . In practice,
+                                                              tor affecting the APP process in real-manufacturing set-
+the primary concern for any production/demand plan-
+                                                              tings (Bauer et al. 2021; Jamalnia and Feili 2013; Luo,
+ner handling an APP process in an MTS-manufacturing
+                                                              Thevenin, and Dolgui 2023). This form of uncertainty
+facility is to balance capacity t against the trend line
+                                                              – as stated by Hong and Moran (2017) – describes the
+of GRt + v . Since t is a long-term decision variable,
+                                                              degree of irregularity or volatility in the frequency of cus-
+demand planners must determine how far it deviates
+                                                              tomer orders received by a company. Thus, when demand
+from GRt + v . Whether t is larger or smaller than
+                                                              variability is high, there are substantial fluctuations in
+GRt + v , demand planners must examine the set of cost
+                                                              orders from period to period; whereas in low demand
+parameters and market externalities – or manufacturing
+                                                              variability scenarios, customer orders remain relatively
+environment signals – of the facility. Based on this anal-
+                                                              stable and do not vary significantly on a regular basis.
+ysis, they should be able to determine which substrategy
+                                                              In both cases, these deviations may negatively affect the
+Sij will best meet customer demand or NRt . That is, to
+                                                              performance of manufacturing facilities (Munir et al.
+make Pt equal to NRt as closely as possible, at the low-
+                                                              2020), highlighting the importance to flexibly respond to
+est total cost κ. It is important to highlight in Figure 2
+                                                              demand variability (Lerch et al. 2022). To effectively mea-
+that resilience R is presented as an independent variable
+                                                              sure demand variability, we use the standard deviation
+in the described process, as it has not yet been incorpo-
+                                                              of the gross requirements forecast divided by its mean –
+rated into the traditional description of the APP problem
+                                                              or the coefficient of variation –, which can be written as
+in the literature. This distinction emphasises the novel
+                                                              cv = σGR . In this way, based on this definition, demand
+approach taken in this study, aiming to address gaps in              GR
+                                                              variability is introduced in the gross requirement forecast
+existing research and offer new insights into the role of
+                                                              function GRt + v through two smoothing parameters, α
+resilience within this context.
+                                                              and γ , as indicated in Equation (1).
+
+3.1. Model assumptions                                                GRt+v = αDt + (1 − α)(Ft + δt ) + δt+1
+In order to tackle the proposed research question, the                           + γ (Ft+1 − Ft ) + (1 − γ )δt            (1)
+following set of assumptions must be met:
+                                                              In this equation, α and γ are the parameters for the level
+(1) The manufacturing facility under analysis operates        and the trend estimated, respectively. In order to evaluate
+    within a MTS environment, with demand to be the           the largest number of demand variability scenarios, α and
+    sole source of uncertainty.                               γ assume random values in the range [0, 1), with α, γ
+(2) The model does not incorporate inducements or             ∈ R. Figure 3 captures the magnitude of the variation in
+    promotions that might lessen the variability of the       the demand patterns considered in this study. The scatter
+    demand pattern.                                           plot depicted in Figure 3 represents 360,000 integer data
+(3) The produced items in the manufacturing facility          points – i.e. 10,000 runs per 36 periods –, with a mean
+    can be stored indefinitely without risk of damage or      of 819.13, a standard deviation of 174.51, minimum and
+    obsolescence.                                             maximum values equal to 0 and 1335, and kurtosis and
+(4) The manufacturing facility operates without any           skewness indices of – 1.88 and 5.19, respectively.
+    constraints imposed on the quantities of items
+    stored, the production in overtime, the number of
+                                                              3.3. Pure APP strategies (decision variables)
+    backorders, and the number of hired/fired workers.
+(5) All the pure APP strategies considered are deemed         As previously indicated, the simulation-based framework
+    feasible within the planning horizon T.                   developed in this research encompasses three distinct
+(6) Lastly, all decision variables of the output variable     types of pure APP decision rules: zero-inventory plans
+    κ̇(Sij ) share a constant cost parameter c, with c = 1.   (S1j ), constant workforce (S2j ), and hybrid strategies (S3j ).
+    This assumption is initially intended to keep κ̇(Sij )    To this end, Algorithm 1 incorporates the general heuris-
+    isolated from the influence of cost parameters of the     tic decision procedure proposed for S1j and S31 , while
+    decision variables considered.                            Algorithm 2 does the same for S2j and S32 , respectively.
+8       A. GARRIDO ET AL.
+
+
+
+
+Figure 3. Demand variability through the forecast gross requirements GRt + v .
+
+
+
+3.3.1. The zero-inventory plans (S1j )                               the production/demand planner must decide which
+In their seminal book, Holt et al. (Planning Produc-                 of the three substrategies S1j will be implemented. If
+tion, Inventories, and Work Force, 1960) defined zero-               the production/demand planner chooses S11 or lead-
+inventory plans (S1j ) as ‘[the] maintenance of constant             chase, then Wr 1 must be rounded up (W1r ) and
+production rate by hiring-firing work force in precise               the result obtained compared with w0 = 0. Given that
+adjustment with order fluctuations’. The decision rule               W1r  > 0 in t = 1, the production manager must
+that guides S1j strategy consists in adjusting the num-              acquire short-term production capacity by hiring a
+ber of workers Wt according to the level of NRt when                 number of workers H1 , with H1 = maxW1r , 0 and
+necessary. This pure APP manufacturing strategy har-                 L1 = 0. As a result, the workforce balance equation
+monises with the policy of ‘lot size of one’ while it min-           can be expressed as W1 = H1 , with the level of pro-
+imises the financial exposure of the factory (Buxey 2003;            duction P1 = 100W1 = 1 . The foregoing procedure
+Hopp and Spearman 2011). In this way, depending on                   is replicated for remaining periods of the planning
+whether Wt is rounded up (Wtr ) or rounded down                    horizon T, from t = 2 . . . 35 weeks, since in the last
+(Wtr ), the zero-inventory plans or chase strategy – as            period or t = 36, P36 = NR36 instead of 36 . Alter-
+are also called – can be split in three main substrategies:          natively, in Algorithm 1, if the production planner
+lead-chase (S11 ), match-chase (S12 ), and lag-chase (S13 ).         chooses S12 or match-chase, then the previous procedure
+To apply the S1j -heuristic to a real-world APP problem              used for S11 is replicated, excepting for the calculation
+in a factory setting, in Algorithm 1, consider the follow-           of the level of production Pt , where P1 = NR1 , P2 =
+ing initial conditions at time t = 1. Thus, in t = 1, the            NR2 , . . . , P36 = NR36 . Lastly, if the production manager
+strategy S1j begins with parameters i0 , w0 and b0 are all           favours S13 strategy or lag-chase, the procedure used for
+equal to 0; et is equal to 20 for all t, r is equal to 5 per         S11 is also replicated, excepting for the calculation of Wr t
+worker, and GR1 + v as the input variable. To estimate               and Pt . In the first case, Wr 1 is rounded down (W1r )
+Ft + 1 from GR1 + v , a seasonal time series of 36 demand            and the result obtained compared with w0 = 0. Since
+values is taken as a seed for the MCS model (Makridakis,             W1r  > 0 in t = 1, the production planner must acquire
+Wheelwright, and Hyndman 1998). With these param-                    short-term production capacity by hiring a number of
+eters, then NR1 = max(GR1 + v – i0 + b0 ), 0 can be cal-             workers H1 , with H1 = maxW1r , 0 and L1 = 0. As a
+culated. Once NR1 is calculated, Wr 1 = max(NR1 /100),               result, the workforce balance equation can be expressed
+0 can also be estimated. At this point of analysis,                  as W1 = H1 , with the level of production P1 = minNR1 ,
+                                                                          INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH        9
+
+
+1 . The foregoing procedure is replicated for remaining          the pending orders (Bt > 0) are fulfilled using over-
+periods of the planning horizon, from t = 2 . . . 35 weeks,       time (Ot ), substrategy S31 is implemented. Otherwise, in
+with the exception of t = 36, where P36 = NR36 instead            Algorithm 2, when the constant workforce strategy S2j
+of 36 .                                                          in any of its variants is selected, and the pending orders
+                                                                  (Bt > 0) are fulfilled using overtime (Ot ), substrategy
+3.3.2. The constant workforce strategy (S2j )                     S32 is implemented. If any of the above cases occur,
+Similar to aforesaid strategy S1j , Holt et al. (1960) defined    the decision variable Ot is integrated into the output
+constant workforce or S2j as ‘[the] maintenance of a con-         variable κ̇(Sij ).
+stant workforce and a constant production rate, allowing             At this point of analysis, it is appropriate to ask
+inventories and order backlogs to fluctuate’. The main            which of the three-foregoing pure APP strategies S1j , S2j ,
+idea behind strategy S2j is based in determining the              or S3j is more advantageous for factory performance.
+appropriate level of workers Wt that will be maintained           Research evidence has revealed two contradictory view-
+throughout the planning horizon T. The Algorithm 2                points. In a combined simulation-based study, Jamal-
+details the heuristic decision procedure used for S2j strat-      nia and Feili (2013) found that the zero-inventory plans
+egy, which can be split in two main substrategies: includ-        or S1j lead to a higher manufacturing performance. To
+ing backorders (S21 ) and no-backorders (S22 ). To apply          come to this conclusion, these authors compared five
+the S2j -heuristic procedure to a real-world APP prob-            scenarios or strategies, based on total profit evaluation.
+lem in a factory setting, consider the same initial con-          On the other hand, Krajewski, Malhotra, and Ritzman
+ditions for a planning horizon of 36 weeks, et is equal           (2019) found that the best manufacturing performance
+to 20 for all t, and r is equal to 5 per worker. In this          is achieved when the hybrid strategies or S3j are imple-
+pure APP strategy,
+                     the pivotal
+                                  decision variable is Wr t ,    mented. According to these authors, both zero-inventory
+                  T             T
+with Wr t = t=1 Gt+v /r t=1 et . Thus, for both sub-              plans or S1j and constant workforce strategies or S2j are
+strategies S2j , the heuristic procedure begins by calcu-         limited by the availability of workers and schedule times,
+lating Wr t foreach period t, fromt = 1 . . . 36 weeks,         respectively, leaving the hybrid strategy or S3j as the
+with W    r =     GR1 /100, Wr 2 = (GR1 + GR2 )/200,             more flexible, since buffer inventory, part-time employ-
+            1
+W 3 = (GR1 + . . . + GR3 )/300 . . . Wr 36 = (GR1 + . . .
+   r                                                              ees, subcontractors, backorders, and stockouts can all
++ GR36 ) /3600. Once all Wr t have been calculated,               be included.
+the value of W1 = W2 = . . . W36 = W can be deter-                   Alt text for Algorithms 1 and 2 [30]: Two detailed
+mined depending on the type of the substrategy S2j                pseudo algorithms explaining the heuristic decision pro-
+selected. If the production planner chooses the strategy          cedures for the three main pure aggregate production
+S21 , the number of workers is equal to W = min(W1r  . . .      planning strategies, including four input variables, eleven
+W36 r . This decision rule provides a constant number for       decision variables, and six output variables are shown.
+W equal to the lower bound, with Pt less than or equal to
+average GRt . On the contrary, if the production manager
+                                                                  3.4. Index of resilience for manufacturing facilities
+selects the strategy S22 , then W = max(W1r  . . . W36  r .
+                                                                  R (output variables)
+In this case, the decision rule provides a constant number
+for W equal to the upper bound, with Pt greater than or           The proposed overall index of resilience for man-
+equal to average GRt . Thus, as W > 0 in t = 1 for S21 and        ufacturing facilities R is based on the well-known
+S22 , then H1 = maxW, 0, L1 = 0, and P1 = 100W = 1               Cobb–Douglas (C-D) production function (Cobb and
+in both cases. The previous procedure in Algorithm 2 is           Douglas 1928). This mathematical formula, usually
+replicated for remaining periods of the planning horizon          expressed as P = µLk C1–k , has been used in a number
+T, from t = 2 . . . 36 weeks.                                     of varied research fields, ranging from the economics of
+                                                                  pensions to sustainability issues (Liu et al. 2023; Zhao and
+3.3.3. The hybrid strategy (S3j )                                 Wang 2022). In the original C-D production function, P
+Lastly, from the two prior pure APP strategies, a third           is the product or volume of goods, µ is a positive param-
+decision rule can be derived: the hybrid strategy (S3j ).         eter that represents the technological efficiency, k is a
+Although Holt (1960) defined S3j strategy as ‘[the] main-         positive fraction, and L and C represent both the amount
+tenance of a constant work force, adjusting produc-               of labour and the fixed capital, respectively. Although the
+tion rate to orders by working overtime and undertime,            existing literature offers a wide range of applications, rel-
+accordingly’ – that is, only substrategies S2j were included      atively few studies have employed the C-D production
+in this definition –, Algorithms 1 and 2 also integrates          function to evaluate resilience. Table 3 lists a sample of
+the two variants of substrategy S3j . Thus, in Algorithm          recent works that use the C-D production function to
+1, when the lag-chase substrategy S31 is selected, and            measure distinct forms of resilience.
+10          A. GARRIDO ET AL.
+
+
+
+Algorithm 1. Heuristic decision procedure for implementing pure APP                Algorithm 2. Heuristic decision procedure for implementing pure APP
+strategies S1j and S31 .                                                           strategies S2j and S32 .
+1     Start;                                                                       1      Start;
+2     Set w0 , i0 , b0 ← 0;                                                        2      Set w0 , i0 , b0 ← 0;
+3     GRt + v is the initialisation variable, GRt + v ∈ Z+ ;                       3      GRt + v is the initialisation variable, GRt + v ∈ Z+ ;
+4     et and r are given parameters, et and r∈ Z+ ;                                4      et and r are given parameters, et and r∈ Z+ ;
+5     t is an index of the length of the planning horizon, from t = 1, ... , T;    5      t is an index of the length of the planning horizon, from t = 1, ... , T;
+6     R is the overall index of resiliency for manufacturing facilities using      6      R is the overall index of resiliency for manufacturing facilities using
+         substrategy Sij , with 0 ≤ R ≤ 1;                                                   substrategy Sij , with 0 ≤ R ≤ 1;
+7     if zero-inventory plans S1j are implemented then                             7      if constant workforce S2j are implemented then
+8         NRt ← max{GR  t + v− It −1 + Bt −1 , 0};                                                    GRt+v
+                                                                                                        T
+                                                                                   8          Wtr ←         et ;
+9         Wr t ← max NR       t
+                           ret , 0 ;                                                                 t=1
+10    if S1j is a lead zero-inventory plan or S11 to be implemented then           9        if S2j is a level strategy that allows backlogs or S21 then
+11           if Wtr  ≥ Wt −1 then                                                10           W ← min{W1r , W2r , . . . , WTr };
+12               Ht ← max{Wtr  − Wt −1 , 0};                                     11       else if S2j is a level strategy with no backlogs or S22 then
+13               Lt ← 0;                                                           12           W ← max{W1r , W2r , . . . , WTr };
+14           else                                                                  13       if W ≥ w0 then
+15               Lt ← max{Wt −1 − Wtr , 0};                                      14           H1 ← max{W − w0 , 0};
+16               Ht ← 0;                                                           15           L1 ← 0;
+17           Wt ← Wt −1 + Ht − Lt ;                                                16       else
+18           Pt ← ret Wt = t , ∀t = 1, ... ,T − 1;                                17           L1 ← max{W − w0 , 0};
+19        else if S1j is a match zero-inventory plan or S12 to be implemented      18           H1 ← 0;
+         then                                                                      19       Wt ← w0 + H1 – L1 ;
+20           if Wtr  ≥ Wt −1 then                                                20       Wt ← Wt + 1 = Wt + 2 = ... WT
+21               Ht ←max{Wtr  − Wt −1 , 0};                                      21       Pt ← ret Wt = t ;
+22               Lt ← 0;                                                           22       if Bt is ﬁlled with Ot or hybrid strategy S32 then
+23           else                                                                  23           NRt ← max{GRt + v − It −1 + Bt −1 , 0};
+24               Lt ← max{Wt −1 − Wtr , 0};                                      24           if NRt − Pt > 0 then
+25               Ht ← 0;                                                           25              Ot ← NRt − Pt ;
+26           Wt ← Wt −1 + Ht − Lt ;                                                26       for t = 1 to T do
+27           Pt ← NRt ;                                                            27           It ← max{Pt − NRt , 0};
+28        else if S1j is a lag zero-inventory plan or S13 to be implemented then   28           Bt ← max{NRt – Pt , 0};
+29           if Wtr  ≥ Wt −1 then                                                29           t ← max{Pt , 0};
+30               Ht ← max{Wtr  − Wt −1 , 0};                                     30           Ut ← t − Pt ;
+31               Lt ← 0;                                                                                T
+                                                                                   31           Ct ← (cp Pt + ch Ht + c Lt + cu Ut + ci It + cb Bt + co Ot );
+32           else                                                                                       1
+33               Lt ← max{Wt −1 − Wtr , 0};                                      32       for output variables do
+34               Ht ← 0;                                                                            It
+                                                                                                    T
+35           Wt ← Wt −1 + Ht − Lt ;                                                33         ζ←       T;
+                                                                                                     t=1
+36           Pt ← min{NRt , t };
+                                                                                                      
+                                                                                                      T
+                                                                                                             Bt
+37        if Bt is ﬁlled with Ot or hybrid strategy S31 then                       34           ε←           T ;
+38           if NRt − Pt > 0 then                                                                      t=1
+39           Ot ← NRt − Pt ;                                                                            T
+                                                                                                             Ut
+                                                                                   35           φ←           T ;
+40        else                                                                                         t=1
+41           for t = T do                                                                              T
+                                                                                                             (NRt /min{GRt+v ,t })
+42               Pt ← NRt ;                                                        36           τ←                     T            ;
+43        for t = 1 to T do                                                                            t=1
+                                                                                                       T
+44           It ← max{Pt − NRt , 0};                                               37           κ̇ ←         Ct
+                                                                                                             T ;
+45           Bt ← max{NRt – Pt , 0};                                                                   t=1
+46           t ← max{Pt , 0};                                                     38           R(ζ , ε, φ, τ , κ̇) = 1+e−(aLnζ −bLn +cLnφ−dLnτ
+                                                                                                                                     1
+                                                                                                                                                −nLnκ̇)
+47           Ut ← t − Pt ;                                                        39     End
+                     T
+48           Ct ← (cp Pt + ch Ht + c Lt + cu Ut + ci It + cb Bt + co Ot );
+                    1
+49      for output variables do
+                 It
+                T                                                                  Adapting the form of Equation (2) to the five output
+50        ζ←        T;                                                             variables of the MCS model, and making the efficiency
+                   t=1
+                   T
+                         Bt                                                        parameter µ = 1, the index of factory resilience can be
+51          ε←           T ;
+                   t=1                                                             restated as follows:
+                    T
+                         Ut
+52          φ←           T ;
+                   t=1                                                                  R(ζ , , φ, τ , κ̇) = (ζ a )(1/ b )(φ c )(1/τ d )(1/κ̇ n )                (3)
+                   T
+                         (NRt /min{GRt+v ,t })
+53          τ←                     T            ;
+                   t=1
+                   T
+                                                                                   Linearising the above Equation (3):
+                         Ct
+54          κ̇ ←         T ;
+                   t=1
+            R(ζ , ε, φ, τ , κ̇) = 1+e−(aLnζ −bLn +cLnφ−dLnτ
+                                                 1                                            R(ζ , , φ, τ , κ̇) = aLnζ − bLn + cLnφ
+55                                                          −nLnκ̇) ;
+56    End                                                                                                                       − dLnτ − nLnκ̇                   (4)
+
+                                                                                   From Equation (4), based on the resilience’s definition
+   As previously indicated, the C-D production function
+                                                                                   provided by Garrido (2017), it is assumed that some out-
+can be described in the following terms:
+                                                                                   put variables are directly or inversely proportional to R
+                               P(L, C) = μLk C1−k                           (2)    index.
+                                                                                       INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH                       11
+
+
+Table 3. Applications of the C-D function to resilience assessment.
+Author(s)                                                         Brief description                                                  Application area
+Wang and Zhang            It describes a stochastic C-D production function to assess the eﬃciency of production in               Flow-shop scheduling
+   (2024)                    human-robot collaborations, considering the variability in human performance.
+Ilyas et al. (2024)       It utilises the C-D production function that integrates exogenous technological progress. This          Economic development
+                             study provides detailed insights into the environmental impacts of adopting renewable energy
+                             and to recommend policies that foster sustainable economic growth.
+Fan et al. (2022)         It proposes a mathematical framework that quantiﬁes resilience in urban facilities through a            Urban facilities
+                             variation of the C-D model.
+Pukkala (2021)            It develops metrics based on a multiplicative C-D function to evaluate forest management’s social       Forest ecosystems
+                             beneﬁts.
+Jandhana, Zagloel, and    It proposes a sectorial economic study based on a C-D production function to assess the metal           Manufacturing
+  Nurcahyo (2018)            sector’s resilience in Indonesia.
+Diop, Blanchard, and      It proposes a study on renewable resources based on two-calibrated C-D functions to estimate            Ecology
+  Sanz (2018)                shrimp stock dynamic.
+Barlow and Vodenska       It uses a modiﬁed C-D production function for multiple goods to estimate disruptions in                 Economics
+  (2021)                     production capacity due to a pandemic.
+
+
+
+    Thus, increases
+                      in the average accumulated inven-                     log-linear form is shown as follows:
+tory ζ =         It /T 
+                       and/or the average spare produc-
+tion capacity φ =         Ut /T will raise R index. This is                     R(ζ , , φ, τ , κ̇) = 0.024Lnζ − 0.026Ln + 0.04Lnφ
+because the higher ε and/or φ, the shorter the lead                                                      − 0.06Lnτ − 0.1771Lnκ̇                         (5)
+times, and thus the greater the factory responsive-
+ness to demand variability (Bauer et al. 2021; Ivanov                           The output range of Equation (5) is restricted by intro-
+and Dolgui 2018). Conversely, increases          in the aver-               ducing a sigmoid monotonic function, since R index is
+age accumulated backorders ε = Bt /T, the average                           meaningless for negative values, as shown in Equation
+time to meet net requirements τ = (NRt /minGR           t + v,              (6):
+t )/T, or the cost deviation κ̇(Sij ) = 7κ(Sij )/ κ(Sij ),
+will reduce in all the cases the R index. In the first                                                                        1
+                                                                                R(ζ , , φ, τ , κ̇) =             
+                                                                                                              −(0.024Lnζ −0.026Ln +0.04Lnφ
+                                                                                                                                                      
+and second cases, a higher-level of and a longer τ                                                       1 + e −0.06Lnτ −0.1771Lnκ̇)
+will imply both a greater lead times, and thus a lower                                                                                                  (6)
+factory responsiveness (Cachon and Terwiesch 2013).
+Finally, in the third case, since all the cost parameters                    with R as a numerical dimensionless index ranging
+are assumed equal to one, increases in any of the out-                       between 0 – the lowest level of factory resiliency – and
+                                       R index (Ivanov and
+put variables considered will raise                                          1 – the highest level of factory resiliency.
+Dolgui 2018), with κ(Sij ) = [cp Pt + ch Ht + c Lt +
+cu Ut + ci It + cb Bt + co Ot ]Sij . This is because a higher
+                                                                             4. Monte-Carlo simulation analysis
+κ(Sij ) will make the manufacturing facility inefficient,
+which could have a negative impact on its agility                            The current study describes the APP process of a man-
+to respond to demand variations (Alexopoulos et al.                          ufacturing facility that anticipates the production of dis-
+2022).                                                                       crete quantities Pt in a medium-term planning horizon
+    In a mathematical model based on a C-D function’s                        t, t = 1 . . . 36 weeks. When production exceeds demand,
+type, the model parameters represent the degree of pro-                      surplus is stored, otherwise orders are declared pending
+portionality of the input variables regarding the output                     delivery. In other words, it is assumed that the hypo-
+variable (Sydsæter et al. 2021). Taking advantage of this                    thetical manufacturing facility under study operates on a
+mathematical feature, the five parameters a, b, c, d, and                    MTS basis. Ideally, as indicated in Figure 2, the APP pro-
+n in Equation (3) are used as offset factors to make the                     cess aims to match supply with demand while minimising
+input variables comparable to each other. That is, first,                    total costs. If this were the only case, substrategy S31
+the highest values of ζ , ε, φ, τ , and κ̇(Sij ) were identified             would emerge as the decision rule with the lowest total
+after 10,000 simulation runs. And second, each function                      cost within the planning horizon, among the seven sub-
+argument was equated to 1/5. For example, in the case of                     strategies evaluated in the heuristic decision procedure
+ζ , ζ max ≈ 3,612, from which aLn3,612 = 0.20, result-                       explained in Algorithms 1 and 2. Yet, the main objec-
+ing in a = 0.024. The same procedure is replicated on the                    tive of this analysis is to determine which decision rule
+other output variables, obtaining the values of b = 0.026,                   Sij yields the highest factory resilience level R . For this
+c = 0.04, d = 0.06, and n = 0.1771, respectively. Replac-                    purpose, a MCS model with three types of variables –
+ing the above values in Equation (4), the C-D function in                    input, decision, and output – is developed. The software
+12         A. GARRIDO ET AL.
+
+
+@risk simulator® is used to perform 10,000 simulation                strength of this result, this must be understood in light of
+runs for the seven mentioned substrategies Sij . Therefore,          the set of assumptions listed in section 3.1, particularly
+based on the mentioned heuristic procedure, there are                by considering the assumption (6), since the total cost
+arguments to posit the following three null hypotheses:              function κ(Sij ) integrates seven cost parameters (cp , ch ,
+                                                                     c , cu , ci , cb , co ). Thus, if the assumption (6) were relaxed
+     H(1) 0 : ‘Assuming demand variability as the sole source of
+     uncertainty, there is no statistically significant difference
+                                                                     – namely cp , ch , c , cu , ci , cb or co > 1, what would happen
+     between R(S11 ), R(S12 ), and R(S13 )’                          to the overall measure of resilience R for each substrategy
+                                                                     Sij ? This experimental verification is discussed in detail in
+     H(2) 0 : ‘Assuming demand variability as the sole source of
+     uncertainty, there is no statistically significant difference   the following section.
+     between R(S21 ) and R(S22 )’
+     H(3) 0 : ‘Assuming demand variability as the sole source of     5. Analysis of the simulation output data
+     uncertainty, there is no statistically significant difference
+     between R(S31 ) and R(S32 )’                                    This section delves into how the factory resilience func-
+                                                                     tion R in Equation (6) reacts to changes in the seven
+This set of hypotheses aims to establish the link between            specified cost parameters for each substrategy Sij . To
+demand variability – viewed as an operational disrup-                accurately identify which cost parameters most signifi-
+tion – and factory resilience – as a function of pure                cantly influence the R function, the concept of partial
+APP strategies. Figure 4a further shows the results of               derivatives is introduced. To facilitate this analysis, the
+the resilience index R for the seven substrategies Sij ,             general form of Equation (6) is restated as a function of
+based on the model’s assumptions declared in subsec-                 each substrategy Sij , with κ̇treated as an explicit variable.
+tion 3.1. To examine the preceding three null hypothe-               Consequently in Equation (6), for Sij = S12 , by treating
+ses and considering the varied nature of the distribu-               ζ̂ , ˆ , φ̂, τ̂ , and all decision variables within κ̇as fixed
+tion values shown in this figure, the quantile regression            constants, then Equation (7) is derived:
+approach is selected (Koenker and Machado 1999). By
+using this comprehensive approach to linear and non-                 R(ζ̂ , ˆ , φ̂, τ̂ , κ̇)
+linear response models, two independent data sets of                        ⎡                                                            ⎤
+comparable size can be contrasted to determine whether                    ⎢                               1                              ⎥
+their median differ from each other. Table 4 shows the                   =⎣                                                              ⎦
+                                                                                                                          7κ̂(S12 )
+                                                                                        − aLnζ̂ −bLnˆ +cLnφ̂−dLnτ̂ −nLn   
+results of this test hypothesis analysis with a specified tau                                                              ij κ̂(Sij )
+                                                                                1+e                                                      S12
+value of 0.5.                                                                                                                            (7)
+   It should be noted from Table 4 that, first, H(1) 0 con-
+sists of three comparisons – R (S12 ) vs R (S11 ), R (S11 )          with κ̂(Sij ) = [cp P̂ + ch Ĥ + c L̂ + cu Û + ci Î + cb B̂ +
+vs R (S13 ), and R (S12 ) vs R (S13 ) –; and second, H(2) 0          co Ô]Sij , and P̂, Ĥ, L̂, Û, Î, B̂ and Ô as the estimated
+and H(3) 0 consists of one comparison each one – R (S22 )            average values after 10,000 simulation runs for the seven
+vs R (S21 ), and R (S32 ) vs R (S31 ), respectively. From            substrategies Sij .
+the above it follows that for H(1) 0 , H(2) 0 , and H(3) 0 , the         Expressed in simple terms, Equation (7) represents
+substrategies that enhance the resilience in manufactur-             the level of resilience achieved by the manufacturing
+ing facilities the most are S12 , S22 , and S32 , respectively.      facility when substrategy S12 is implemented. Assuming
+Thereby, a second round of comparisons is necessary:                 Equation (7), when applied to the substrategy S12 , is con-
+     2H(1) 0 : ‘Assuming demand variability as the sole source       tinuous and has partial derivatives with respect to the
+     of uncertainty, there is no statistically significant differ-   production cost, ∂ R /∂cp , then Equation (8) is obtained:
+     ence between R(S12 ) and R(S22 )’
+                                                                                          1021 × (1527.39cu − 357.42co + 7.24c
+     2H(2) 0 : ‘Assuming demand variability as the sole source
+                                                                                            −12102.99ci + 8.26ch − 1564.65cb )
+     of uncertainty, there is no statistically significant differ-   ∂ R/∂cp =
+     ence between R(S12 ) and R(S32 )’                                                44046197.85m2
+                                                                                                                                 
+                                                                                           29485.72cp +1835.69cu +18.91c +29.02ch 0.82
+     2H(3) 0 : ‘Assuming demand variability as the sole source                         ×                  m/10000
+     of uncertainty, there is no statistically significant differ-                       ⎛       29485.72cp +1835.69cu 0.17         ⎞2
+     ence between R(S32 ) and R(S22 )’
+                                                                                                      +18.91c +29.02ch
+                                                                                       × ⎝8.47           m/10000               + 7.14⎠
+The results of previous analysis are shown in Table 5. Of
+the seven hypotheses tested in Tables 4 and 5, the null                                                                                  (8)
+hypothesis H0 in all the cases has been rejected. This left
+the substrategy S12 as the dominant decision rule over               with m = 2064023584cp + 18854127cu + 25658448co +
+the other substrategies evaluated. However, despite the              803903c + 868828921ci + 1438613ch + 112320582cb
+                                                                     INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH   13
+
+
+
+
+Figure 4. (a) Marginal R(S12 ) to variations in cost parameters c.
+14            A. GARRIDO ET AL.
+
+
+Table 4. Hypothesis test results based on the quantile regression (tau = 0.5).
+Hypothesis tested∗                  β0           β1         p-value∗∗                                               Interpretation
+H(1) 0 : R(S12 ) vs R(S11 )    0.55784       −0.01522         0.000       Null hypothesis is rejected. The result of R(S12 ) is statistically higher than the result of R(S11 ).
+H(1) 0 : R(S11 ) vs R(S13 )    0.54262       −0.04676         0.000       Null hypothesis is rejected. The result of R(S11 ) is statistically higher than the result of R(S13 ).
+H(1) 0 : R(S12 ) vs R(S13 )    0.55784       −0.06199         0.000       Null hypothesis is rejected. The result of R(S12 ) is statistically higher than the result of R(S13 ).
+H(2) 0 : R(S22 ) vs R(S21 )    0.53791       −0.04758         0.000       Null hypothesis is rejected. The result of R(S22 ) is statistically higher than the result of R(S21 ).
+H(3) 0 : R(S32 ) vs R(S31 )    0.54154       −0.04002         0.000       Null hypothesis is rejected. The result of R(S32 ) is statistically higher than the result of R(S31 ).
+∗ 2H(3)                           ∗∗ Values statistically signiﬁcant with p < 0.05.
+          0 was not calculated,
+
+
+Table 5. Hypothesis test results based on the quantile regression (tau = 0.5).
+Hypothesis tested                    β0            β1        p-value∗                                               Interpretation
+2H(1) 0 : R(S12 ) vs R(S22 )      0.55784      −0.01993        0.000      Null hypothesis is rejected. The result of R(S12 ) is statistically higher than the result of R(S22 ).
+2H(2) 0 : R(S12 ) vs R(S32 )      0.55784      −0.01630        0.000      Null hypothesis is rejected. The result of R(S12 ) is statistically higher than the result of R(S32 ).
+∗ Values statistically signiﬁcant with p < 0.05.
+
+
+
+
+    This partial derivative ∂ R /∂cp quantifies the marginal                               findings in terms of their theoretical, practical contri-
+resilience in relation to production cost, under the                                       butions and limitations, as well as avenues for future
+assumption that all other cost parameters remain con-                                      studies.
+stant or ceteris paribus. By applying this approach to each
+of the cost parameters, Figure 5a can be derived. Thus,                                    6. Conclusions and future research
+Figure 4a illustrates that, when employing the substrat-
+egy S12 , the parameters ci and cp emerge both as the                                      In today’s manufacturing environment, the process of
+most influential on the resilience function R . Expanding                                  sales and operations management still plays a critical role
+the prior procedure on the other substrategies, Figure 4b                                  in matching supply with forecast demand. Among the
+reveals that, in addition to ci and cp , parameter cb also                                 options available for production/demand planners, pure
+plays a crucial role as a sensitive cost parameter.                                        APP strategies seem to be the most popular choice. So,
+    Now consider Figure 5. The boxplot shown in Figure                                     which pure APP (sub)strategy provides a superior perfor-
+5a relates the impact of the seven pure APP substrate-                                     mance? Although there is no unified consensus, empir-
+gies on the manufacturing resilience index R , assum-                                      ical evidence suggest that production/demand planners
+ing all seven cost parameters are equal to 1. From this                                    typically choose the most cost-effective pure APP strat-
+figure, consider the introduction of random variations in                                  egy. However, this complex decision-making process fails
+the range [1, 2] to the sensitive parameters ci , cp , and                                 to determine which of these APP strategies performs
+cb , respectively. The result of taking this assumption is                                 better to handle demand variability. The results of this
+shown in Figure 5b. The comparison of both boxplots                                        study indicate that the zero-inventory plans (S1j ), particu-
+reveals that the variation of these three cost parameters                                  larly the match-chase (S12 ) and lead-chase (S11 ) substrate-
+does not significantly alter the superiority of substrat-                                  gies, allow manufacturing facilities to achieve a higher
+egy S12 over the other substrategies analysed. Addition-                                   resilience level. There is a key common feature between
+ally, based on the aforementioned analysis, a preference                                   these two substrategies: ‘having more workers than nec-
+ranking for pure APP substrategies can be established:                                     essary to meet demand’. Stated differently, spare capacity,
+                                                                                           through zero-inventory plans, safeguards manufactur-
+     R(S12 )          R(S11 )            R(S32 )        R(S22 )        R(S31 )             ing facilities against the adverse effects stemming from
+                                                                                           demand variability.
+                      R(S13 )            R(S21 )                                 (9)
+                                                                                           6.1. Theoretical and managerial implications
+Lastly, in Equation (9), with respect to the factory
+resilience index R defined in Equation (6), should sub-                                    From a theoretical standpoint, this study makes a mean-
+strategy S12 become impracticable for any reason, the                                      ingful contribution to the field of resilience, by clearly
+next preferred substrategy would be S11 . Should S11 also                                  delineating the conceptual differences among SCRES,
+prove unfeasible, substrategy S32 would then be selected.                                  organisational resilience, and factory resilience. Addi-
+This sequence of selecting alternatives would continue                                     tionally, this research introduces a new definition and
+in this manner down to the final substrategy S21 , which                                   a novel metric designed to assess factory resilience,
+represents the lowest level of resilience attainable by                                    both grounded in the elements that form the theoretical
+a manufacturing facility using pure strategies for the                                     framework of this study. Regarding managerial implica-
+APP problem. The following section discusses the above                                     tions, prior this study it remained unclear which pure
+                                                                               INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH       15
+
+
+
+
+Figure 5. Resilience index results for manufacturing strategies Sij .
+
+
+
+
+APP strategy enables a manufacturing facility to attain                 sub-strategies. Finally, this research highlights that fac-
+a higher level of resilience. To this end, this research                tory resilience is not only a subject of keen interest among
+develops a ranking of resilience preferences, which can                 scholars but also a crucial success factor that can be
+be used by production/demand planners as a practical                    improved through routine decisions at the heart of man-
+mechanism to balance against cost-effective pure APP                    ufacturing plants, such as the APP process.
+16       A. GARRIDO ET AL.
+
+
+6.2. Limitations and future research                                               Fabián Pongutá is Lecturer at the Univer-
+                                                                                   sidad Cooperativa de Colombia, Bogotá.
+All research carries limitations, and this study is no                             Fabián received his BSc in from the Uni-
+exception. The limitations primarily arise from the                                versidad Pedagógica y Tecnológica de
+assumptions utilised to modelling the three pure APP                               Colombia and his MSc from the Uni-
+strategies selected, particularly with the incorporation                           versidad Militar Nueva Granada. His
+                                                                                   research interests are optimisation and
+of a distinctive forecasted demand pattern, as well
+                                                                                   supply chain design (e-mail: fabian.
+as the research methodology used. In this sense, the               ponguta@campusucc.edu.co).
+utilisation of synthetic simulated data as main input
+                                                                                         Heriberto García-Reyes is a Full Profes-
+for the factory resilience index can be considered to                                    sor in the Industrial & Systems Engineer-
+some extent a handicap of research. It is also worth                                     ing Department at the Tec de Monter-
+to note that although the proposed resilience index R                                    rey, México. Dr. García-Reyes received his
+included five features or output variables, other impor-                                 B.Sc. and M.Sc. in Industrial Engineer-
+tant factory resilience’s drivers were not taken into                                    ing & Systems and Quality from the Tec
+                                                                                         de Monterrey, and his PhD degree from
+account. For instance, given the preference of produc-
+                                                                                         the Florida International University. His
+tion/demand planners for pure APP strategies, future               research interests are supply chain and logistics (e-mail: herib-
+studies on factory resilience should include other recur-          erto.garcia@tec.mx).
+rent risky events in manufacturing environments, such
+as power failure, machines breakdowns, absenteeism,
+material shortages, or reprocessing orders; or alterna-            Data availability statement
+tively, climate-related disruptions, considering the cur-          The data that support the findings of this study are available
+rent global warming outlook. Future researchers inter-             from the corresponding author, upon reasonable request.
+ested in measuring factory resilience should also consider
+including the learning capability’s notion. This impor-
+                                                                   References
+tant organisational attribute, although closely related
+to key components for improving factory resilience,                Alexopoulos, K., I. Anagiannis, N. Nikolakis, and G. Chrys-
+has been neglected in existing literature. Embracing                 solouris. 2022. “A Quantitative Approach to Resilience in
+                                                                     Manufacturing Systems.” International Journal of Production
+this research direction would imply the combined use                 Research 60 (24): 7178–7193. https://doi.org/10.1080/00207
+of discrete simulation techniques and robust learning-               543.2021.2018519.
+based algorithms. Furthermore, the proposed overall                Alikhani, R., A. Ranjbar, A. Jamali, S. A. Torabi, and C.
+index for manufacturing resilience R could be used in                W. Zobel. 2023. “Towards Increasing Synergistic Effects of
+multi-objective optimisation and/or simulation models                Resilience Strategies in Supply Chain Network Design.”
+                                                                     Omega 116:102819. https://doi.org/10.1016/j.omega.2022.
+addressing the APP problem. Last but not least, future
+                                                                     102819.
+research should concentrate on measuring the impact                Ambrogio, G., L. Filice, F. Longo, and A. Padovano. 2022.
+of other tactical manufacturing processes – e.g. the pur-            “Workforce and Supply Chain Disruption as a Digital and
+chasing and material requirements planning – on factory              Technological Innovation Opportunity for Resilient Manu-
+resilience.                                                          facturing Systems in the COVID-19 Pandemic.” Computers
+                                                                     & Industrial Engineering 169:108158. https://doi.org/10.10
+                                                                     16/j.cie.2022.108158.
+                                                                   Aydin, N., and E. Tirkolaee. 2022. “A Systematic Review of
+Disclosure statement
+                                                                     Aggregate Production Planning Literature with an Outlook
+No potential conflict of interest was reported by the author(s).     for Sustainability and Circularity.” Environment, Develop-
+                                                                     ment and Sustainability 1–42. https://doi.org/10.1007/s10668-022-
+                                                                     02304-8.
+Notes on contributors                                              Barlow, J., and I. Vodenska. 2021. “Socio-Economic Impact of
+                                                                     the Covid-19 Pandemic in the U.S.” Entropy 23 (6): 673.
+                     Alexander Garrido is a Researcher Pro-          https://doi.org/10.3390/e23060673.
+                     fessor in the Industrial & Systems Engi-      Bauer, D., M. Böhm, T. Bauernhansl, and A. Sauer. 2021.
+                     neering Department at the Tec de Mon-           “Increased Resilience for Manufacturing Systems in Sup-
+                     terrey, México. Dr. Garrido received his        ply Networks Through Data-Based Turbulence Mitigation.”
+                     BSc from the Universidad Distrital FJC,         Production Engineering 15 (3-4): 385–395. https://doi.org/10.
+                     his MSc from the Universidad Nacional de        1007/s11740-021-01036-4.
+                     Colombia, and his PhD degree in Engi-         Behzadi, G., M. O’Sullivan, and T. Olsen. 2020. “On Metrics for
+                     neering (Logistics) from the University of      Supply Chain Resilience.” European Journal of Operational
+Warwick. His research interests are resilience, logistics, and       Research 287 (1): 145–158. https://doi.org/10.1016/j.ejor.20
+health supply chain (e-mail: alexander.garrido@tec.mx).              20.04.040.
+                                                                            INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH         17
+
+
+Belhadi, A., S. Kamble, S. Fosso Wamba, and M. Queiroz.             Dittfeld, H., D. van Donk, and S. van Huet. 2022. “The Effect
+  2022. “Building Supply-Chain Resilience: An Artificial              of Production System Characteristics on Resilience Capa-
+  Intelligence-Based Technique and Decision-Making Frame-             bilities: A Multiple Case Study.” International Journal of
+  work.” International Journal of Production Research 60 (14):        Operations & Production Management 42 (13): 103–127.
+  4487–4507.       https://doi.org/10.1080/00207543.2021.1950         https://doi.org/10.1108/IJOPM-12-2021-0789.
+  935.                                                              Dixit, V., P. Verma, and M. Kumar. 2020. “Assessment of Pre
+Benton, W. 2014. Supply Chain Focused Manufacturing Plan-             and Post-Disaster Supply Chain Resilience Based on Net-
+  ning and Control. Boston, MA: Cengage Learning.                     work Structural Parameters with CVaR as a Risk Measure.”
+Bianco, D., A. Bueno, M. Godinho, H. Latan, A. Ganga, A.              International Journal of Production Economics 227:107655.
+  Frank, and C. Jabbour. 2023. “The Role of Industry 4.0 in           https://doi.org/10.1016/j.ijpe.2020.107655.
+  Developing Resilience for Manufacturing Companies Dur-            Dohale, V., M. Akarte, A. Gunasekaran, and P. Verma. 2022.
+  ing COVID-19.” International Journal of Production Eco-             “Exploring the Role of Artificial Intelligence in Building
+  nomics 256:108728. https://doi.org/10.1016/j.ijpe.2022.108          Production Resilience: Learnings from the COVID-19 Pan-
+  728.                                                                demic.” International Journal of Production Research 62 (15):
+Bourne, M., M. Franco-Santos, P. Micheli, and A. Pavlov. 2018.        5472–5488.       https://doi.org/10.1080/00207543.2022.2127
+  “Performance Measurement and Management: A System                   961.
+  of Systems Perspective.” International Journal of Production      Fan, C., X. Jiang, R. Lee, and A. Mostafavi. 2022. “Equality
+  Research 56 (8): 2788–2799. https://doi.org/10.1080/002075          of Access and Resilience in Urban Population-Facility Net-
+  43.2017.1404159.                                                    works.” Npj Urban Sustainability 2 (1): 9. https://doi.org/10.
+Buffa, E. 1977. Modern Production Management. 5th ed. New             1038/s42949-022-00051-3.
+  York: Wiley.                                                      Feng, Q., X. Hai, M. Liu, D. Yang, Z. Wang, Y. Ren, B. Sun,
+Buxey, G. 2003. “Strategy Not Tactics Drives Aggregate Plan-          and B. Cai. 2022. “Time-Based Resilience Metric for Smart
+  ning.” International Journal of Production Economics 85 (3):        Manufacturing Systems and Optimization Method with
+  331–346. https://doi.org/10.1016/S0925-5273(03)00120-8.             Dual-Strategy Recovery.” Journal of Manufacturing Systems
+Buxey, G. 2005. “Aggregate Planning for Seasonal Demand:              65:486–497. https://doi.org/10.1016/j.jmsy.2022.08.010.
+  Reconciling Theory with Practice.” International Journal of       Garrido, A. 2017. “A Mixed-Method Study on the Effective-
+  Operations & Production Management 25 (11): 1083–1100.              ness of a Buffering Strategy in the Relationship between
+  https://doi.org/10.1108/01443570510626907.                          Risks and Resilience.” Doctoral thesis, Coventry, England.
+Cachon, G., and C. Terwiesch. 2013. Matching Supply with              https://wrap.warwick.ac.uk/106605/1/WRAP_Theses_Garr
+  Demand: An Introduction to Operations Management. 3rd ed.           ido_Rios_2017.pdf.
+  New York, NY: McGraw-Hill. Irwin.                                 Graves, S. 2011. Uncertainty and Production Planning. New
+Caputo, A., L. Donati, and P. Salini. 2023. “Estimating               York: Springer.
+  Resilience of Manufacturing Plants to Physical Disruptions:       Gu, X., X. Jin, J. Ni, and Y. Koren. 2015. “Manufacturing
+  Model and Application.” International Journal of Production         System Design for Resilience.” Procedia CIRP 36:135–140.
+  Economics 266:109037. https://doi.org/10.1016/j.ijpe.2023.          https://doi.org/10.1016/j.procir.2015.02.075.
+  109037.                                                           Guntuka, L., T. Corsi, and D. Cantor. 2024. “Recovery from
+Castillo, C. 2023. “Is There a Theory of Supply Chain                 Plant-Level Supply Chain Disruptions: Supply Chain Com-
+  Resilience? A Bibliometric Analysis of the Literature.” Inter-      plexity and Business Continuity Management.” International
+  national Journal of Operations & Production Management              Journal of Operations & Production Management 44 (1):
+  43 (1): 22–47. https://doi.org/10.1108/IJOPM-02-2022-0136.          1–31. https://doi.org/10.1108/IJOPM-09-2022-0611.
+Chapman, S. 2006. The Fundamentals of Production Planning           Han, Y., W. Chong, and D. Li. 2020. “A Systematic Literature
+  and Control. Upper Saddle River, NJ: Pearson/Prentice Hall.         Review of the Capabilities and Performance Metrics of Sup-
+Cheng, Y., E. Elsayed, and Z. Huang. 2022. “Systems Resilience        ply Chain Resilience.” International Journal of Production
+  Assessments: A Review, Framework and Metrics.” Inter-               Research 58 (15): 4541–4566. https://doi.org/10.1080/002075
+  national Journal of Production Research 60 (2): 595–622.            43.2020.1785034.
+  https://doi.org/10.1080/00207543.2021.1971789.                    Hillmann, J., and E. Guenther. 2021. “Organizational Resilience:
+Cheraghalikhani, A., F. Khoshalhan, and H. Mokhtari. 2019.            A Valuable Construct for Management Research?” Interna-
+  “Aggregate Production Planning: A Literature Review and             tional Journal of Management Reviews: IJMR 23 (1): 7–44.
+  Future Research Directions.” International Journal of Indus-        https://doi.org/10.1111/ijmr.12239.
+  trial Engineering Computations 10 (2): 309–330. https://doi.      Holt, C. 1960. Planning Production, Inventories, and Work Force.
+  org/10.5267/j.ijiec.2018.6.002.                                     Englewood Cliffs, NJ: Prentice-Hall.
+Cobb, C., and P. Douglas. 1928. “A Theory of Production.” The       Holt, C., F. Modigliani, and H. Simon. 1955. “A Linear Decision
+  American Economic Review 18 (1): 139–165.                           Rule for Production and Employment Scheduling.” Manage-
+Datta, P., M. Christopher, and P. Allen. 2007. “Agent-Based           ment Science 2 (1): 1–30. https://doi.org/10.1287/mnsc.2.1.1.
+  Modelling of Complex Production/Distribution Systems to           Hong, P., and Z. Moran. 2017. “Managing Demand Variability
+  Improve Resilience.” International Journal of Logistics 10 (3):     and Operational Effectiveness: Case of Lean Improvement
+  187–203. https://doi.org/10.1080/13675560701467144.                 Programmes and MRP Planning Integration.” Production
+Diop, B., F. Blanchard, and N. Sanz. 2018. “Mangrove Increases        Planning & Control 28 (13): 1066–1080. https://doi.org/10.
+  Resiliency of the French Guiana Shrimp Fishery Fac-                 1080/09537287.2017.1329956.
+  ing Global Warming.” Ecological Modelling 387:27–37.              Hopp, W., and M. Spearman. 2011. Factory Physics. 3rd ed.
+  https://doi.org/10.1016/j.ecolmodel.2018.08.014.                    Long Grove, IL: Waveland Press.
+18       A. GARRIDO ET AL.
+
+
+Hosseini, S., A. Khaled, and M. Sarder. 2016. “A Gen-              Makridakis, S., S. Wheelwright, and R. Hyndman. 1998. Fore-
+   eral Framework for Assessing System Resilience Using               casting: Methods and Applications. 3rd ed. New York, NY:
+   Bayesian Networks: A Case Study of Sulfuric Acid Man-              Wiley.
+   ufacturer.” Journal of Manufacturing Systems 41:211–227.        Massari, G., and I. Giannoccaro. 2021. “Investigating the Effect
+   https://doi.org/10.1016/j.jmsy.2016.09.006.                        of Horizontal Coopetition on Supply Chain Resilience in
+Ivanov, D. 2023. “Two Views of Supply Chain Resilience.” Inter-       Complex and Turbulent Environments.” International Jour-
+   national Journal of Production Research 62 (11): 4031–4045.        nal of Production Economics 237:108150. https://doi.org/10.
+   https://doi.org/10.                                                1016/j.ijpe.2021.108150.
+   1080/00207543.2023.2253328.                                     Moktadir, M., S. Paul, A. Kumar, S. Luthra, S. Ali, and R. Sul-
+Ivanov, D., and A. Dolgui. 2018. “Low-Certainty-Need (LCN)            tana. 2023. “Strategic Drivers to Overcome the Impacts of the
+   Supply Chains: A New Perspective in Managing Disruption            COVID-19 Pandemic: Implications for Ensuring Resilience
+   Risks and Resilience.” International Journal of Production         in Supply Chains.” Operations Management Research 16 (1):
+   Research 57 (15-16): 5119–5136. https://doi.org/10.1080/00         466–488. https://doi.org/10.1007/s12063-022-00301-8.
+   207543.2018.1521025.                                            Munir, M., M. Jajja, K. Chatha, and S. Farooq. 2020. “Sup-
+Jacobs, F., W. Berry, D. Whybark, and T. Vollmann. 2018. Man-         ply Chain Risk Management and Operational Perfor-
+   ufacturing Planning and Control for Supply Chain Manage-           mance: The Enabling Role of Supply Chain Integration.”
+   ment. 6th. ed. New York, NY: McGraw-Hill Education.                International Journal of Production Economics 227:107667.
+Jamalnia, A., and A. Feili. 2013. “A Simulation Testing and           https://doi.org/10.1016/j.ijpe.2020.107667.
+   Analysis of Aggregate Production Planning Strategies.”          Nahmias, S., and T. Olsen. 2021. Production and Operations
+   Production Planning & Control 24 (6): 423–448. https://            Analytics. 8th ed. Long Grove, IL: Waveland Press Inc.
+   doi.org/10.1080/09537287.2011.631595.                           Nam, S., and R. Logendran. 1992. “Aggregate Production
+Jandhana, I., T. Zagloel, and R. Nurcahyo. 2018. “Resilient           Planning–A Survey of Models and Methodologies.” Euro-
+   Structure Assessment Using Cobb-Douglas Production                 pean Journal of Operational Research 61 (3): 255–272.
+   Function: The Case of the Indonesian Metal Industry.”              https://doi.org/10.1016/0377-2217(92)90356-E.
+   International Journal of Technology 9 (5): 1061–1071.           Narassima, M., S. Anbuudayasankar, K. Mathiyazhagan, K.
+   https://doi.org/10.14716/ijtech.v9i5.1862.                         Ganesh, and T. Lee. 2022. “Supply Chain Resilience: Concep-
+Kim, Y., Y. Chen, and K. Linderman. 2015. “Supply Net-                tual Model Building and Validation.” International Journal of
+   work Disruption and Resilience: A Network Structural Per-          Logistics 27 (5): 781–813. https://doi.org/10.1080/13675567.
+   spective.” Journal of Operations Management 33-34:43–59.           2022.2056584.
+   https://doi.org/10.1016/j.jom.2014.10.006.                      Nielsen, J., L. Mathiassen, O. Benfeldt, S. Madsen, C. Haslam,
+Koenker, R., and J. Machado. 1999. “Goodness of Fit and               and E. Penttinen. 2023. “Organizational Resilience and Dig-
+   Related Inference Processes for Quantile Regression.” Jour-        ital Resources: Evidence from Responding to Exogenous
+   nal of the American Statistical Association 94 (448): 1296–        Shock by Going Virtual.” International Journal of Infor-
+   1310. https://doi.org/10.1080/01621459.1999.10473882.              mation Management 73: 1–14. https://doi.org/10.1016/j.ijin
+Krajewski, L., M. Malhotra, and L. Ritzman. 2019. Operations          fomgt.2023.102687.
+   Management: Processes and Supply Chains. 12th ed. Boston,       Ozdemir, D., M. Sharma, A. Dhir, and T. Daim. 2022. “Supply
+   MA: Pearson.                                                       Chain Resilience During the COVID-19 Pandemic.” Tech-
+Lee, J., S. Siahpour, X. Jia, and P. Brown. 2022. “Introduction       nology in Society 68:101847. https://doi.org/10.1016/j.tech
+   to Resilient Manufacturing Systems.” Manufacturing Letters         soc.2021.101847.
+   32:24–27. https://doi.org/10.1016/j.mfglet.2022.02.002.         Piya, S., A. Shamsuzzoha, and M. Khadem. 2022. “Analy-
+Lerch, C., H. Heimberger, A. Jäger, D. Horvat, and F. Schult-         sis of Supply Chain Resilience Drivers in Oil and Gas
+   mann. 2022. “AI-Readiness and Production Resilience:               Industries During the COVID-19 Pandemic Using an Inte-
+   Empirical Evidence from German Manufacturing in Times              grated Approach.” Applied Soft Computing 121:108756.
+   of the Covid-19 Pandemic.” International Journal of Produc-        https://doi.org/10.1016/j.asoc.2022.108756.
+   tion Research 62 (15): 5378–5399. https://doi.org/10.1080/      Pukkala, T. 2021. “Measuring the Social Performance of
+   00207543.2022.2141906.                                             Forest Management.” Journal of Forestry Research 32 (5):
+Liu, J., Y. Ren, Y. Hong, and T. Glauben. 2023. “Does Forest          1803–1818. https://doi.org/10.1007/s11676-021-01321-z.
+   Farm Carbon Sink Projects Affect Agricultural Develop-          Qin, T., R. Du, A. Kusiak, H. Tao, and Y. Zhong. 2022. “Design-
+   ment? Evidence from a Quasi-Experiment in China.” Journal          ing a Resilient Production System with Reconfigurable
+   of Environmental Management 335:117500. https://doi.org/           Machines and Movable Buffers.” International Journal of Pro-
+   10.1016/j.jenvman.2023.117500.                                     duction Research 60 (17): 5277–5292. https://doi.org/10.10
+Luo, D., S. Thevenin, and A. Dolgui. 2023. “A State-of-               80/00207543.2021.1953715.
+   the-art in Production Planning in Industry 4.0.” Interna-       Rasmi, S., and M. Türkay. 2021. Aggregate Planning. Springer
+   tional Journal of Production Research 61 (19): 6602–6632.          Briefs in Operations Research. Cham: Springer International
+   https://doi.org/10.1080/00207543.2022.2122622.                     Publishing AG.
+lyas, M., Z. Mu, S. Akhtar, H. Hassan, K. Shahzad, B. Aslam, and   Razak, G., L. Hendry, and M. Stevenson. 2023. “Supply Chain
+   S. Maqsood. 2024. “Renewable Energy, Economic Devel-               Traceability: A Review of the Benefits and its Relationship
+   opment, Energy Consumption and its Impact on Envi-                 with Supply Chain Resilience.” Production Planning & Con-
+   ronmental Quality: New Evidence from South East Asian              trol 34 (11): 1114–1134. https://doi.org/10.1080/09537287.
+   Countries.” Renewable Energy 223:119961. https://doi.org/          2021.1983661.
+   10.1016/j.renene.2024.119961.
+                                                                          INTERNATIONAL JOURNAL OF PRODUCTION RESEARCH         19
+
+
+Sawik, T. 2022. “Stochastic Optimization of Supply Chain           Zhao, H., and S. Wang. 2022. “Optimal Investment and Ben-
+   Resilience Under Ripple Effect: A COVID-19 Pandemic               efit Adjustment Problem for a Target Benefit Pension Plan
+   Related Study.” Omega 109:102596. https://doi.org/10.1016/        with Cobb-Douglas Utility and Epstein-Zin Recursive Util-
+   j.omega.2022.102596.                                              ity.” European Journal of Operational Research 301 (3):
+Silver, E., D. Pyke, and D. Thomas. 2017. Inventory and Pro-         1166–1180. https://doi.org/10.1016/j.ejor.2021.11.033.
+   duction Management in Supply Chains. 4th edition ed. Boca       Zsidisin, G., A. Bresler, B. Hazen, K. Snider, and T. Wilker-
+   Raton: CRC Press, Taylor & Francis Group.                         son. 2020. “Research in Defense Logistics: Where are we
+Stevenson, W. 2021. Operations Management. 14th ed. McGraw           and Where are we Going?” Journal of Defense Analytics and
+   Hill.                                                             Logistics 4 (1): 3–17. https://doi.org/10.1108/JDAL-07-2019-
+Su, W., and S. Junge. 2023. “Unlocking the Recipe for Organiza-      0012.
+   tional Resilience: A Review and Future Research Directions.”
+   European Management Journal 41 (6): 1086–1105. https://
+   doi.org/10.1016/j.emj.2023.03.002.                              Appendix. Survey for selected manufacturing
+Sydsæter, K., P. Hammond, A. Strøm, and A. Carvajal. 2021.         companies (5)†
+   Essential Mathematics for Economic Analysis. 6th. ed. Hobo-     This survey is intended to characterise the medium-run strat-
+   ken, NJ: Pearson.                                               egy used for production planning. All the information provided
+Tan, W., A. Zhang, and W. Cai. 2019. “A Graph-Based                will be treated with confidentiality and remains anonymous in
+   Model to Measure Structural Redundancy for Supply Chain         any technical report published based on the provided informa-
+   Resilience.” International Journal of Production Research       tion. This questionnaire should be answered by the person in
+   57 (20): 6385–6404. https://doi.org/10.1080/00207543.2019.      charge of the production planning process.
+   1566666.
+Thomas, A., D. Pham, M. Francis, and R. Fisher. 2014. “Creat-      Questionnaire
+   ing Resilient and Sustainable Manufacturing Businesses - A
+   Conceptual Fitness Model.” International Journal of Produc-     (1) To which sector does the manufacturing facility belong?
+   tion Research 53 (13): 3934–3946. https://doi.org/10.1080/              [Please briefly describe the company’s mission]
+   00207543.2014.975850.                                           (2) Does the manufacturing facility plan the aggregate
+Ul Haq, I., J. Colwill, C. Backhouse, and F. Franceschini. 2022.       demand of items?
+   “Effects of Lean Distributed Manufacturing on Factory’s                 [Please briefly describe this process]
+   Resilience: The Current Practice in UK Food Manufactur-         (3) Is the manufacturing environment of the make-to-stock
+   ing Sector.” International Journal of Lean Six Sigma 13 (5):        (MTS) or make-to-order (MTO) type? Any other?
+   1104–1136. https://doi.org/10.1108/IJLSS-07-2021-0124.                  [Please briefly explain your answer]
+Um, J., and N. Han. 2021. “Understanding the Relation-             (4) If the answer to the previous question is MTS, what is the
+   ships Between Global Supply Chain Risk and Supply Chain             planning horizon for the aggregate production plan (APP)
+   Resilience: The Role of Mitigating Strategies.” Supply Chain        in weeks?
+   Management 26 (2): 240–255. https://doi.org/10.1108/SCM-                [4, 8, 12, 16, 24 weeks . . . any other?].
+   06-2020-0248.                                                   (5) For manufacturing planning purposes, does the manu-
+Wang, D., and J. Zhang. 2024. “Flow Shop Scheduling with               facturing facility use optimisation models (e.g. Hassmann-
+   Human-Robot Collaboration: A Joint Chance-Constrained               Hess model, Transportation model, etc.) or a pure strategy
+   Programming Approach.” International Journal of Produc-             (chase, level, or a combination)?
+   tion Research 62 (4): 1297–1317. https://doi.org/10.1080/00             [Please identify as much as you can the manufacturing
+   207543.2023.2181025.                                                strategy used]
+Wang, J., P. Zheng, W. Qin, T. Li, and J. Zhang. 2019. “A          (6) What information is required for the production planning
+   Novel Resilient Scheduling Paradigm Integrating Opera-              process?
+   tion and Design for Manufacturing Systems with Uncer-           (7) What disruptive events have affected the performance of
+   tainties.” Enterprise Information Systems 13 (4): 430–447.          your manufacturing facility?
+   https://doi.org/10.1080/17517575.2018.1526322.                          [Please briefly describe the main disruptive events]
+Wieland, A., and C. Durach. 2021. “Two Perspectives on Sup-
+   ply Chain Resilience.” Journal of Business Logistics 42 (3):    † Borrego, L. 2023. Estrategias puras aplicadas a la planeación
+   315–322. https://doi.org/10.1111/jbl.12271.
+                                                                   agregada de la producción para incrementar la resiliencia en
+Zhang, W., and C. van Luttervelt. 2011. “Toward a Resilient
+                                                                   cadenas de suministro. Unpublished master’s thesis. Universi-
+   Manufacturing System.” CIRP Annals 60 (1): 469–472.
+                                                                   dad Militar Nueva Granada, Bogotá, Colombia.
+   https://doi.org/10.1016/j.cirp.2011.03.041.
+

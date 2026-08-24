@@ -1,0 +1,970 @@
+Deep reinforcement learning for inventory control
+
+Citation for published version (APA):
+Boute, R. N., Gijsbrechts, J., van Jaarsveld, W., & Vanvuchelen, N. (2022). Deep reinforcement learning for
+inventory control: A roadmap. European Journal of Operational Research, 298(2), 401-412.
+https://doi.org/10.1016/j.ejor.2021.07.016
+
+
+
+
+Document license:
+CC BY-NC-ND
+
+
+DOI:
+10.1016/j.ejor.2021.07.016
+
+
+Document status and date:
+Published: 16/04/2022
+
+
+Document Version:
+Publisher’s PDF, also known as Version of Record (includes final page, issue and volume numbers)
+
+
+Please check the document version of this publication:
+• A submitted manuscript is the version of the article upon submission and before peer-review. There can be
+important differences between the submitted version and the official published version of record. People
+interested in the research are advised to contact the author for the final version of the publication, or visit the
+DOI to the publisher's website.
+• The final author version and the galley proof are versions of the publication after peer review.
+• The final published version features the final layout of the paper including the volume, issue and page
+numbers.
+Link to publication
+
+
+
+
+General rights
+Copyright and moral rights for the publications made accessible in the public portal are retained by the authors and/or other copyright owners
+and it is a condition of accessing publications that users recognise and abide by the legal requirements associated with these rights.
+
+       • Users may download and print one copy of any publication from the public portal for the purpose of private study or research.
+       • You may not further distribute the material or use it for any profit-making activity or commercial gain
+       • You may freely distribute the URL identifying the publication in the public portal.
+
+If the publication is distributed under the terms of Article 25fa of the Dutch Copyright Act, indicated by the “Taverne” license above, please
+follow below link for the End User Agreement:
+www.tue.nl/taverne
+
+Take down policy
+If you believe that this document breaches copyright please contact us at:
+openaccess@tue.nl
+providing details and we will investigate your claim.
+
+
+
+
+Download date: 24. Aug. 2026
+                                                          European Journal of Operational Research 298 (2022) 401–412
+
+
+
+                                                                Contents lists available at ScienceDirect
+
+
+                                          European Journal of Operational Research
+                                                           journal homepage: www.elsevier.com/locate/ejor
+
+
+Invited Review
+
+Deep reinforcement learning for inventory control: A roadmap
+Robert N. Boute a,b,∗, Joren Gijsbrechts c, Willem van Jaarsveld d, Nathalie Vanvuchelen a
+a
+  Faculty of Economics and Business, KU Leuven, Belgium
+b
+  Vlerick Business School, Belgium
+c
+  Universidade Católica Portuguesa, Portugal
+d
+  Eindhoven University of Technology, the Netherlands
+
+
+
+
+a r t i c l e         i n f o                             a b s t r a c t
+
+Article history:                                          Deep reinforcement learning (DRL) has shown great potential for sequential decision-making, including
+Received 16 May 2020                                      early developments in inventory control. Yet, the abundance of choices that come with designing a DRL
+Accepted 6 July 2021
+                                                          algorithm, combined with the intense computational effort to tune and evaluate each choice, may hamper
+Available online 16 July 2021
+                                                          their application in practice. This paper describes the key design choices of DRL algorithms to facilitate
+Keywords:                                                 their implementation in inventory control. We also shed light on possible future research avenues that
+Inventory management                                      may elevate the current state-of-the-art of DRL applications for inventory control and broaden their scope
+Machine learning                                          by leveraging and improving on the structural policy insights within inventory research. Our discussion
+Reinforcement learning                                    and roadmap may also spur future research in other domains within operations management.
+Neural networks
+                                                                                                                    © 2021 The Author(s). Published by Elsevier B.V.
+                                                                                                       This is an open access article under the CC BY-NC-ND license
+                                                                                                                 (http://creativecommons.org/licenses/by-nc-nd/4.0/)
+
+
+
+
+1. Introduction                                                                               One such application, at the heart of operations management, is
+                                                                                          inventory control, where replenishment actions must be taken to
+    Reinforcement learning (RL) is an area of machine learning that                       minimize costs. Despite decades of research, the optimal policy to
+focuses on sequential decision-making. It determines how to take                          many inventory control problems remains unknown. Their analytic
+actions in an environment to maximize some notion of cumula-                              intractability simply renders it impossible to derive closed-form
+tive reward. RL algorithms prescribe what to do; this differs from                        expressions of the optimal policy structure and related param-
+supervised and unsupervised learning, two other well-known ar-                            eters. Instead, numerical approaches, e.g., dynamic programming
+eas of machine learning, that focus on description or prediction.                         methods such as value or policy iteration (Puterman, 1994), may
+The introduction of multi-layer perceptrons (MLPs), nowadays also                         be used to solve small (discretized) settings to optimality. As the
+referred to as deep neural networks, in supervised machine learn-                         dimensions of the problem grow, however, these techniques also
+ing, has led to substantial performance improvements. A notable                           become numerically intractable, even for moderate-size problems.
+breakthrough was the impressive win in 2012 of a student team                             DRL can be used to develop near-optimal policies that are hard, if
+from the University of Toronto using neural networks in the visual                        not impossible, to be obtained using conventional approaches, es-
+object recognition competition ImageNet (Krizhevsky, Sutskever, &                         pecially when little is known about the focal problem.
+Hinton, 2012), such that the following year all top ﬁnalists used the                         This paper provides a roadmap on how inventory control may
+then-novel deep learning approach (Gershgorn, 2018). Neural net-                          beneﬁt from DRL. The two main constituents of DRL are Markov
+works are now well-established in (deep) supervised learning, yet                         Decision Processes (MDPs) and neural networks: MDPs are the
+their inclusion in RL, known as deep reinforcement learning (DRL),                        model/language in which the problems solved with DRL must be
+remains notably harder. Garychl (2018) provides some successful                           expressed; neural networks are used both to express and to ﬁnd
+applications of DRL in different ﬁelds, such as robotics, gaming,                         approximate solutions to those problems. Section 2 introduces
+and traﬃc light control, despite several obstacles in the practical                       both. In Section 3 we provide an overview of the different de-
+application of DRL (Dulac-Arnold, Mankowitz, & Hester, 2019).                             sign choices to set up a DRL algorithm for inventory control. Al-
+                                                                                          though DRL algorithms are publicly available off-the-shelf, the sig-
+                                                                                          niﬁcant effort required to choose the correct design may prevent
+  ∗                                                                                       their widespread application in practice. We focus on those aspects
+    Corresponding author at: Vlerick Business School, Vlamingenstraat 83, BE-30 0 0
+Leuven, Belgium.                                                                          of DRL which we believe to be most relevant for inventory control
+    E-mail address: robert.boute@vlerick.com (R.N. Boute).
+
+
+
+https://doi.org/10.1016/j.ejor.2021.07.016
+0377-2217/© 2021 The Author(s). Published by Elsevier B.V. This is an open access article under the CC BY-NC-ND license
+(http://creativecommons.org/licenses/by-nc-nd/4.0/)
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                                       European Journal of Operational Research 298 (2022) 401–412
+
+
+and where we see most potential for future research. These future                                                    → a ∈ argmin q∗ (s, a ),      ∀s ∈ S, ∀a ∈ A.               (4)
+                                                                                                                                a
+research avenues are further explored in Section 4.
+                                                                                                      In many problems, only one action will be cost-minimal leading to
+2. Markov decision problems and neural networks                                                       a deterministic policy. In rare cases, actions might be equivalently
+                                                                                                      cost-eﬃcient (i.e., the argmin of q∗ (s, a ) contains multiple actions)
+    MDPs are widely used in many research domains, and partic-                                        such that the optimal policy may be stochastic. DRL algorithms will
+ularly deep-rooted in the operations community. We give a brief                                       often develop stochastic policies as this may encourage exploration
+introduction here, mainly to introduce notation and terminology                                       of new actions and facilitates gradient-based training. We further
+that will be used throughout the paper; for in-depth discussions                                      discuss this in Section 3.3 (Exploration versus exploitation).
+on MDPs we refer to Bertsekas (1987) and Puterman (1994).                                                Depending on the problem complexity, the optimal policy can
+                                                                                                      sometimes be analytically characterized. For other cases, approxi-
+2.1. Markov decision processes to optimize inventory control                                          mative analysis and/or heuristic arguments are used to identify a
+                                                                                                      class of policies, and analytic approaches may be deployed to ﬁnd
+    At each time step t the MDP can be described by its state s ∈ S,                                  good policy parameters within that class. Apart from these exact
+with S the set of states. An action a is then chosen from a set                                       and approximative analytic approaches, MDPs can also be solved
+of feasible actions A. A deterministic policy maps states to ac-                                      numerically exact or approximate. This yields four partially over-
+tions, such that it prescribes which action to take in each state:                                    lapping approaches to analyze and optimize inventory problems
+π : S → A. A stochastic policy1 prescribes the probability of each                                    using MDPs:
+action in each state: π : A × S → [0, 1], where π (a|s ) is the prob-
+ability of taking action a in state s. That is, if a ∼ π (·|s ) then a is                             1. Analytical and Exact: For relatively simple problems, the op-
+the random action taken by π in s. When taking action a in state                                         timality Eq. (2) serve as a starting point for analytical charac-
+s, the probability to transition to state s is denoted P(s | s, a ). De-                               terization of optimal policies. In those cases the structure of
+note c (s, a ) the expected cost when taking action a from state s.                                      the optimal policy is deeply entangled with the structure of the
+    The expectation of the total discounted cost over an inﬁnite                                         value function. For periodic-review inventory models with pos-
+horizon, when starting in state s and thereafter following policy                                        itive lead times and full backordering, for instance, the seminal
+π is captured by the state-value function vπ (s ). This value function                                   work of Karlin & Scarf (1958) proves that the value function is
+of state s can be recursively related to the value functions of the                                      convex such that the optimal policy structure satisﬁes a base-
+states s that may be reached from state s:                                                              stock policy. Apart from giving insight into the optimal policy
+                                                                                                       structure, these analytical results may also facilitate characteri-
+                                                                                                       zation of the optimal policy parameters: the optimal base-stock
+vπ ( s ) =       π (a|s ) c(s, a ) + γ             P(s | s, a )vπ (s ) ,          ∀s ∈ S,              levels for full backordering systems can be expressed in closed
+             a                                s
+                                                                                                         form using newsvendor fractiles under certain conditions (see
+                                                                                         (1)             for instance Veinott, 1966).
+with 0 < γ ≤ 1 the discount factor. We tacitly assume a discrete                                      2. Analytical and Approximate: For some MDPs, the optimal poli-
+action and transition space in our notation but note that replacing                                      cies have a complex form that is analytically intractable. To de-
+the summation with integrals provides us the continuous counter-                                         rive some analytic insights, it is common to impose a certain
+part. In Section 3.5, we discuss the use of continuous action spaces.                                    class of policies that approximate the optimal policy. E.g., for
+The cost-minimizing state-value functions v∗ (s ) can readily be ob-                                     assemble-to-order inventory systems it is common to assume
+tained by solving the famed Bellman optimality equations (Bellman,                                       base-stock policies even though the optimal policy is not a
+1954):                                                                                                   base-stock policy, yet elegant insights have been derived under
+                                                                                                      this assumption (e.g. Lu & Song, 2005). Similarly, some classes
+v∗ (s ) = min  c (s, a ) + γ   P(s | s, a )v∗ (s ) , ∀s ∈ S.                            (2)            of policies can be shown to be asymptotically optimal, such as
+           a                                                                                             constant order policies for the intractable lost sales problem
+                                      s
+                                                                                                         with long lead times (Goldberg, Katz-Rogozhnikov, Lu, Sharma,
+    Related to the value functions, the action-value functions                                           & Squillante, 2016).
+qπ (s, a ) deﬁne the future expected costs of taking action a in state                                3. Numerical and Exact: Clean analytic characterizations of op-
+s and thereafter reverting to policy π :                                                                 timal solutions to (2) can only be obtained for speciﬁc prob-
+                                                     
+qπ (s, a ) = c (s, a ) + γ            P(s | s, a )        π ( a |s )qπ ( s , a ),                   lems under speciﬁc assumptions. When relaxing assumptions,
+                                s                    a                                                 these characterizations are at best partial, and ﬁnding optimal
+                                                                                                         policies from (2) involves the use of general-purpose exact nu-
+                     ∀s ∈ S, ∀a ∈ A.                                                     (3)
+                                                                                                         merical methods such as policy iteration. The optimal policy for
+The value and action-value functions only differ in the ﬁrst action.                                     inventory models with lost sales and arbitrary lead times, for
+In a similar way to the optimal state-values, the optimal action-                                        instance, does not have a simple form, but it can be obtained
+                                                     
+values q∗ (s, a ) satisfy: q∗ (s, a ) = c (s, a ) + γ s P(s | s, a )v∗ (s ),                          numerically for small problems with short lead times and lim-
+∀s ∈ S, ∀a ∈ A.                                                                                          ited demand support. The optimal policies then serve as a use-
+   The optimal policy π ∗ directly follows from the optimal value                                        ful benchmark for heuristic policies. In case they can also be
+functions v∗ (s ) or action values q∗ (s, a ):                                                           directly applied to business problems, they can be very use-
+                                                                                                      ful, regardless of what is known about their structure (see e.g.
+π ∗ (a | s ) > 0 → a ∈ argmin c(s, a ) + γ   P(s | s, a )v∗ (s ) ,                                     Martagan, Krishnamurthy, Leland, & Maravelias, 2018). When
+                                  a
+                                                              s                                         these exact numerical techniques are not scalable to larger
+                              ∀s ∈ S, ∀a ∈ A,                                                            problem instances, as is the case for many inventory control
+                                                                                                         problems, we have to resort to approximate methods.
+  1
+                                                                                                      4. Numerical and Approximate: Most practical problems formu-
+    For many MDPs, deterministic policies are optimal. We will use the more gen-
+eral notation of the stochastic policy, as they prove to be a crucial element in policy
+                                                                                                         lated as MDPs cannot be solved using exact methods because
+gradient methods (which we discuss later in more detail). Note that if a single ac-                      they have too many states, actions or transitions. For exam-
+tion a is proposed per state and π (a|s ) = 1, we obtain a deterministic policy.                         ple, the state space for lost sales inventory systems grows ex-
+
+                                                                                                402
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                   European Journal of Operational Research 298 (2022) 401–412
+
+
+    ponentially in the lead time: application of exact methods be-           2.2. The use of neural networks to solve MDPs
+    comes cumbersome for lead times above ﬁve and hopeless for
+    lead times above ten. To analyse such problems, the Bellman                  Neural networks are essentially parameterized functions from
+    optimality equations in (2) have been used as the basis for              RN to RM (with N, M ∈ N). Denote such a (generic) function by
+    a vast range of numerical approaches that seek policies with             Nθ (· ), with θ the parameters of the function/network. The pro-
+    satisfactory, yet sub-optimal performance. For such numerical            totypical example of a neural network is the multi-layer per-
+    approaches, the MDP framework is thus used as a modelling                ceptron (MLP). The MLP, like most neural networks, is com-
+    tool.                                                                    posed of multiple operations, denoted as layers. Layer/operation
+                                                                             l ∈ {1, . . . , L} is parameterized by a (weight) matrix A[l] and a
+    DRL belongs to the class of approximate numerical methods. Such          (bias) vector2 b[l] , thus the parameters of the entire network are
+methods have been referred to using various nomenclature such as             θ = {A[1] , b[1] , . . . , A[L] , b[L] }. Each layer also involves an activation
+approximate dynamic programming, neuro-dynamic programming                   function f [l] (· ) : Rk → Rk ; a typical example is f [l] (x ) = max(x, 0 ),
+and reinforcement learning, and these terminologies are essentially          where the max is taken component-wise. The output of each layer
+                                                                                                                                                  [l−1]
+equivalent (cf. Bertsekas, 2019); in what follows we will adopt the          l of the MLP is obtained by operating on the output ψ                      of the
+term reinforcement learning. Deep reinforcement learning refers to           previous layer, i.e., for l ∈ {1, . . . , L}3 :
+the use of neural networks in reinforcement learning to approxi-
+mate the value functions, the (stochastic) policy, or a combination          ψ[l] = f [l] (A[l] ψ[l−1] + b[l] ).
+of both.
+                                                                                                                               [L]         [0]
+    The application of neural networks in MDPs is not new (see e.g.,         The MLP is then deﬁned by Nθ (x ) := ψ , with ψ                     := x, such that
+Bertsekas & Tsitsiklis, 1996; Powell, 2007; Tesauro, 1992; 1994),            ψ   [1]
+                                                                                       = f [1] (A[1] x + b[1] ). In general, the MLP maps vectors x ∈ RN
+but the advances in hardware and software support for neural net-            to vectors Nθ (x ) ∈ RM . For the ﬁnal layer L, the activation function
+works have invigorated their use: the highly parallel structure of           may be used to ensure that the output of the neural network sat-
+modern GPUs has reduced the overall time needed to train neu-                isﬁes certain constraints. E.g., when the output of the MDP must
+ral networks by orders of magnitude in the last decade. In con-              represent a probability distribution over {1, . . . , M}, outputs must
+cert, deep learning frameworks such as PyTorch and Tensorﬂow                 lie on the standard/probability simplex M . This can be accom-
+have signiﬁcantly simpliﬁed the implementation of eﬃcient train-             plished by setting the so-called softargmax/softmax function σ as
+ing algorithms that use such accelerators, resulting in a very broad         activation function4 for layer L, i.e., f [L] (· ) = σ (· ). Alternatively one
+research base and substantial algorithmic advances. A key break-             can use no activation function for the ﬁnal layer, which is equiva-
+through of the use of neural networks in decision-making was Al-             lent to setting f [L] (x ) = x and results in arbitrary output vectors in
+phaZero (Silver et al., 2017), which combines neural networks with           RM .
+clever search techniques to arrive at board game policies for vari-              The MLP can be viewed as the standard/vanilla neural network
+ous games that vastly outperform the state-of-the-art, without us-           but a range of alternative neural network architectures have been
+ing any expert knowledge.                                                    developed over the years. Speciﬁc architectures typically excel at
+    As we have recently witnessed some applications of DRL in                speciﬁc tasks, and the development of suitable architectures for
+inventory management, we believe the technique also bears sub-               tasks such as image processing (convolutional networks) and nat-
+stantial further promise for our ﬁeld. The most apparent strength            ural language processing (recurrent and attention networks) has
+of DRL lies within its use of deep neural networks to model a                been instrumental in breakthroughs in those ﬁelds. While architec-
+diversity of (complex) problems without requiring extensive do-              ture development is the cornerstone of the ﬁeld of deep learning,
+main knowledge or making restrictive assumptions. This contrasts             papers on DRL in inventory control typically adopt the standard
+to classical inventory control solution methods that typically re-           MLP; there is clear future research potential here (cf. Section 4).
+quire thorough domain knowledge or rely on restrictive modelling             The architecture determines the number and form of the parame-
+assumptions. DRL may also provide new opportunities to enable                ters θ , but the numerical values of the parameters θ that provide
+more interaction between the numerical and analytical approaches             the most desirable outcome are determined while training the net-
+described above. Simpler (explainable) heuristics may for instance           work.
+be extracted from policies developed by DRL algorithms or (exist-                Training a network is conceptually similar to ﬁtting the param-
+ing or new) heuristics may be benchmarked against DRL policies               eters of a regression model. It involves minimizing a loss function:
+to build better understanding of their dynamics and performance              a function that measures how well Nθ (· ) matches the desired out-
+(i.e., why or when do they perform better or worse). We also per-            come. For instance, training a neural network to distinguish (im-
+ceive DRL to become a complementary tool in data-driven inven-               ages of) dogs and cats involves a training set of images, and the
+tory control as it enables turning data into decision-making. Think          loss function measures the degree of errors made while categoriz-
+for instance of enriching the state space by big data or learning            ing these images. In general, the loss function guides a gradient-
+inventory policies based on previously collected datasets. We ac-            based iterative search for better values of the parameters θ . While
+knowledge, however, that DRL also has some disadvantages, such               the loss function guides this search, its minimization is not nec-
+as: the learning process of DRL algorithms may not always be sta-            essarily the end goal: for image recognition, for instance, the end
+ble or convergent and its performance may be very sensitive to               goal is to correctly classify images of cats and dogs that were not
+hyperparameters. Further research is thus needed to improve the              part of the training set. In inventory control the end goal is to
+scalability and training performance of DRL algorithms. Nonethe-             develop near-optimal replenishment policies that minimize corre-
+less, we believe DRL to be a promising avenue that can be used               sponding costs.
+on a variety of decision-making problems (among which inventory                  The ability to adapt the parameters θ renders neural networks
+control problems) while simultaneously blurring the lines between            extremely versatile. In DRL, neural networks are employed to rep-
+various solution approaches and paving the way for data-driven in-
+ventory control.
+    As the typical OR/OM researcher may not be familiar with                  2
+                                                                                 Throughout the paper we adopt boldface notation for vectors.
+neural networks, we continue with a brief introduction. In                    3
+                                                                                 These equations are well-deﬁned only if matrix and vector dimensions are such
+Section 3 we elaborate on their role in DRL algorithms for appli-            that all matrix-vector multiplications and vector-vector additions are well-deﬁned.
+                                                                                                                         
+cation in inventory control.                                                   4
+                                                                                 σ : RK → K satisﬁes σ (x )i = exp(xi )/ Kk=1 exp(xk ).
+
+                                                                       403
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                             European Journal of Operational Research 298 (2022) 401–412
+
+
+resent one or more key functions pertaining to the Bellman equa-                                Training a neural network to ﬁnd a good MDP policy is rather
+tions5 :                                                                                    different from training a neural network for classiﬁcation pur-
+                                                                                            poses, such as image recognition. Instead of using a training set
+1. In value-based methods neural networks represent the action                              of images with labeled data, DRL makes use of (simulated or
+   values qθ (s, a ). As such they search for approximations of the                         externally-collected) sequences of states, actions and rewards, of-
+   optimal value functions and not the optimal policy;                                      ten referred to as trajectories, to determine the loss function L(θ ).
+2. In policy-based methods neural networks represent a policy                               The loss function measures how well the neural net approximates
+   πθ (s ). Hence they directly approximate the optimal inventory                           the policy and/or value functions using observations in the trajec-
+   policy;                                                                                  tory and the output of the neural network (see Section 3.5 for
+3. In actor-critic methods neural networks represent the policy                             more details). In every training iteration k + 1, the values of
+   πθ (s ) and the state-value function vθ (s ). This hybrid approach                       the parameters θk are updated based on the gradient of the
+   combines features of both value-based and policy-based meth-                             loss:
+   ods by adding a value-based baseline to guide policy updates.
+                                                                                            θk+1 ← θk − α∇θk L(θk )                                                    (5)
+    Consider for instance a state space S ⊂ RN for some N and a
+ﬁnite action space A, with M = |A|. Any neural network architec-                            The learning rate α > 0 may be optimized based on past gradient
+ture Nθ : RN → M , e.g. some MLP which sets f [L] (· ) := σ (· ), can                      updates, e.g., ADAM (Kingma & Ba, 2015). The ultimate goal is to
+map the state vectors in RN to a stochastic policy vector in M ,                           obtain good approximations of the optimal value functions and/or
+such that the probability to take action a for state s corresponds to                       policy for state and action regions in- and outside those encoun-
+the a’th entry in the vector Nθ (s ), or πθ (a|s ) := (Nθ (s ))a . Then                     tered in the training trajectories. A particular challenge of DRL is
+πθ is a valid stochastic policy for a given set of parameter val-                           that when the loss function depends on θ , it changes over time,
+ues θ . The training algorithm then seeks numerical values for all                          which renders DRL algorithms more diﬃcult to tune compared to
+matrix and vector entries in θ such that πθ is a good policy, i.e.,                         deep learning algorithms for classiﬁcation purposes.
+one with low expected costs. In typical DRL algorithms, it is instru-
+mental that the probabilities πθ (a|s ) are continuous and differen-
+                                                                                            3. How to develop a DRL algorithm?
+tiable w.r.t. (the components of) θ , which explains the popularity
+of stochastic policies in DRL.
+                                                                                                The choice of the most appropriate DRL algorithm for a spe-
+    In a similar way, the action-value function qθ (s, a ) can be repre-
+                                                                                            ciﬁc optimization problem is not trivial. The most important de-
+sented by the neural network, except that N maps from RN to RM
+                                                                                            sign choice of a DRL algorithm relates to the design and purpose
+(instead of to M ), by using the identity function for activation in
+                                                                                            of the neural network. The neural network is the ‘heart’ of the DRL
+the ﬁnal layer. A standard value function vθ (s ) can be represented
+                                                                                            algorithm. As described above, DRL algorithms train neural net-
+by a neural network from RN to R1 . Fig. 1 visualizes how a neu-
+                                                                                            works by learning the numerical values of parameter set θ . That
+ral network can represent the action-values (panel a), the policy
+                                                                                            is, by iteratively updating the parameter set θk in every iteration k
+(panel b), or an actor-critic combination (panel c) with a stochastic
+                                                                                            based on trajectories of actions, states and rewards, stored as tu-
+policy (the actor) and the value function (the critic).
+                                                                                            ples (s, a, c, s ), with c the cost or reward incurred when taking
+Example: For the classical lost-sales inventory system with lead-                           action a in state s. The end goal is to obtain a neural network
+time τ , states are naturally expressed as τ -dimensional vectors                           that approximates the optimal policy πθ (s ) ≈ π ∗ (s ), the optimal
+s ∈ Rτ : The ﬁrst entry (s )1 denotes inventory on hand, and re-                            value function vθ (s ) ≈ v∗ (s ), and/or the optimal action-value func-
+maining entries denote pipeline inventories. We assume that in-                             tion qθ (s, a ) ≈ q∗ (s, a ).
+ventory is discrete, and let x̄ denote the uniform upper bound on                               Once the design of the DRL algorithm is ﬁxed, the neural net-
+the optimal order quantity in any state (cf. Zipkin (2008)). Ac-                            work can be trained. A key element to evaluate the (ﬁnal) policy
+cordingly, A = {0, 1, . . . , x̄}, i.e. |A| = x̄ + 1. Then any network Nθ :                 performance is to evaluate the model for different sets of hyper-
+Rτ → x̄+1 can represent stochastic policies for the lost sales sys-                        parameters. Hyperparameters are the parameters of the DRL algo-
+tem with leadtime τ .                                                                       rithm that need to be set prior to the training process; that is,
+                                                                                            prior to the process of obtaining the weights and biases (param-
+     This representation hinges on speciﬁc assumptions regarding                            eter set θ ) of the neural network. These hyperparameters are for
+the MDP, e.g. that the action space is ﬁnite (we discuss these as-                          instance the number of layers and their activation functions, the
+sumptions further in Section 4).                                                            learning rate, or the length of experience buffers. The parameter
+     Reﬂecting on the sometimes complex structure of optimal in-                            set θ by contrast is updated during the learning process. Several
+ventory policies, one may wonder whether MLPs or other neural                               search techniques exist to identify well-performing hyperparam-
+networks and their simple matrix multiplications could ever rep-                            eter sets including manual search, grid search, random search or
+resent something as complex as a near-optimal (inventory) policy,                           Bayesian optimization (for an in-depth discussion see e.g., Bengio,
+even if matrices are carefully tuned. Actually, repeated aﬃne trans-                        2012; Bergstra, Yamins, & Cox, 2013; Snoek, Larochelle, & Adams,
+formations and non-linearities are more ﬂexible than one may in-                            2012). As different hyperparameter sets can result in different con-
+tuitively think: if neural networks can learn to distinguish between                        ﬁgurations of the neural network (and as such different policies), it
+images of dogs and images of cats, then perhaps they can also                               is thus instrumental to compare different sets on their ﬁnal policy
+develop good inventory policies. Besides, MLPs (even single layer                           performance. To evaluate one speciﬁc hyperparameter set, we must
+neural networks) have been shown to be universal approximators,                             run the DRL algorithm, meaning that it learns values of parameter
+i.e., they are able to approximate continuous functions arbitrary                           set θ that result in good policy performance. During the learning
+well on compact sets (closed and bounded intervals) given a suf-                            process, policy performance is occasionally evaluated through sim-
+ﬁcient number of hidden neurons (Hornik, Stinchcombe, & White,                              ulation. While evaluating, the weights of the neural network are
+1989).                                                                                      not changed as that could change the policy suggested by the net-
+                                                                                            work. This process is repeated for multiple combinations of hyper-
+  5
+    While deep learning typically refers to state-of-the-art neural networks beyond
+                                                                                            parameter sets. The hyperparameter set and the learned weights
+the standard multi-layer perceptron, the term DRL is used to describe algorithms            of the neural network corresponding to it that result in the best
+that seek to solve MDPs using any neural network architecture (including MLP).              policy performance are retained.
+
+                                                                                      404
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                                 European Journal of Operational Research 298 (2022) 401–412
+
+
+
+
+Fig. 1. DRL makes use of neural networks to represent either (a) the action-value functions qθ (s, a ), (b) the stochastic policy πθ (s ) or (c) an actor-critic combination with a
+stochastic policy πθ (s ) (the actor) and the value function vθ (s ) (the critic).
+
+                          Table 1
+                          Overview of inﬂuential DRL algorithms with their typical design speciﬁcations.
+
+                             Design choices
+
+                             Algorithm        Role(s) of neural network   Oﬄine     Online      Model-based     Model-free     Off-policy    On-policy
+
+                             DQN              q-value estimation                                                            
+                             REINFORCE        policy representation                                                                        
+                             A3C              hybrid/actor-critic                                                                          
+                             TRPO             hybrid/actor-critic                                                                          
+                             PPO              hybrid/actor-critic                                                                          
+                             AlphaZero        hybrid                                                                                      
+
+
+
+
+    The evaluation of each design choice requires additional com-                             3.1. Oﬄine versus online
+putation time. Due to the time-consuming process of selecting
+and evaluating the most appropriate designs it may take long                                      A ﬁrst design choice relates to the question whether neural net-
+to obtain decent performance and discourage interested users                                  works are trained based on previously collected data—in the form
+to start with DRL. To speed up this process we shed light                                     of (s, a, c, s ) tuples—or on additional tuples collected during the
+on the main design choices in DRL algorithms and highlight                                    learning process. This refers to oﬄine versus online learning. In of-
+what we believe is most impactful for inventory optimization.                                 ﬂine reinforcement learning algorithms (also referred to as batch
+We do not aim to provide a tutorial on the various DRL algo-                                  reinforcement learning) no new tuples are collected during the
+rithms (for that we refer the interested reader to e.g., François-                            learning process and the neural network is trained using a pre-
+Lavet, Henderson, Islam, Bellemare, & Pineau, 2018).6 Some of                                 deﬁned set of tuples, e.g., based on a static data set with historical
+these design choices are rather trivial for inventory applica-                                demands, orders and inventory levels. In settings where it is diﬃ-
+tions, while other choices require more care because (like the                                cult to create new experience, oﬄine learning may be instrumen-
+role of the neural network) they have important repercussions.                                tal. It enables turning (existing) data into decision-making without
+Table 1 summarizes the design choices of some well-known DRL                                  allowing exploration of new states and actions. To date, various
+algorithms.                                                                                   technical challenges remain within the ﬁeld of oﬄine reinforce-
+                                                                                              ment learning and its full promise has yet to be realized (Levine,
+                                                                                              Kumar, Tucker, & Fu, 2020).
+  6
+    The code of many DRL algorithms is also available online, see for instance                    Online reinforcement learning algorithms, in contrast, create
+https://spinningup.openai.com, https://github.com/openai/baselines and https://
+stable-baselines.readthedocs.io.
+                                                                                              new tuples by interacting with the environment and explore new
+
+
+                                                                                        405
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                European Journal of Operational Research 298 (2022) 401–412
+
+
+regions of the state and action space as learning progresses. This             in inventory management, in contrast to robotics that oftentimes
+interaction can be in the form of physical experiments that col-               learn in a physical world), also model-free algorithms make use
+lect trajectories of states, actions and rewards, or it can be facili-         of a model of the environment. In that case the difference is sub-
+tated using a simulator. Such a simulator generates tuples by mod-             tle: while both model-free and model-based algorithms use the
+elling the environment, i.e., the underlying MDP with its transition           model, model-free algorithms only use the model to simulate new
+function between states and its reward function. Inventory settings            sequences of states, actions and rewards but not for predicting fu-
+typically assume the MDP is well-deﬁned, although the uncertainty              ture states and rewards when taking an action. The key trade-off
+may have to be estimated from data. Nevertheless, they are typi-               for the modeler is to decide whether the (potential) performance
+cally amenable for simulation to generate orders, inventory levels             improvement of exploiting the model offsets the additional com-
+and rewards. For instance, we may not know the true demand dis-                putational effort within every simulated period to predict the im-
+tribution but we may know the inventory balance equation: order-               pact of various decisions.
+ing one item more (compared to an existing tuple in the dataset)                   As can be observed in Table 1, many DRL algorithms are model-
+raises the pipeline inventory level of the transition state s by one.         free. We attribute this to the fact that to date DRL has mostly fo-
+Even when (demand) data are scarce, online algorithms may gen-                 cused on applications with environments that are too complex to
+erate new observations by sampling from the empirical distribu-                model, such as robots or self-driving cars interacting in the real
+tion, or any ﬁtted distribution. Although this inherently results in           world. Besides, they are attractive as a general-purpose technol-
+reduced performance compared to using the true distribution, the               ogy as the same algorithm can be applied to a variety of inventory
+same is true for all optimization models, including heuristic bench-           problems without requiring too much domain knowledge. Model-
+mark policies. Nonetheless, signiﬁcant opportunities exist to make             based algorithms, in contrast, may beneﬁt from less training iter-
+DRL more data-driven, as we discuss in the future research direc-              ations to develop a good policy as they look a few steps ahead
+tions (see Section 4.1).                                                       and take this information into account when making a decision,
+                                                                               albeit at the expense of increased computational effort and re-
+Example: Consider the lost sales problem, where the true inven-
+                                                                               quiring more domain knowledge. Also in classical inventory con-
+tory dynamics may be hard to recover. As we only observe the
+                                                                               trol, state-of-the-art forward-looking heuristics and approximate
+demands that have been fulﬁlled from inventory, the unmet de-
+                                                                               dynamic programming policies consider a few steps ahead when
+mand (when inventory is depleted) remains unobserved. There
+                                                                               placing orders. For example, a myopic lost sales policy chooses
+may also be a correlation between the inventory level and de-
+                                                                               the order that minimizes the cost in the period in which the or-
+mand. The modeler may wish to model these effects and build
+                                                                               der arrives by recursively computing the expected inventory levels
+a simulation model (using a static data set) to support an online
+                                                                               (Zipkin, 2008).
+DRL algorithm. Alternatively, we may also train an oﬄine DRL al-
+gorithm on the existing static dataset without building a simulator.
+In the latter case, however, the agent has no room to explore and
+                                                                               3.3. Exploration versus exploitation
+create new data tuples. Whenever new data comes in, both on-
+line and oﬄine methods may be re-trained on the expanded data
+                                                                                   The exploration exploitation trade-off is inherent to machine
+set.
+                                                                               learning: agents need to choose between exploiting regions and
+                                                                               actions that are known to perform well versus exploring new ac-
+3.2. Model-free versus model-based                                             tions and regions. This is especially relevant when learning online
+                                                                               where balancing well-performing actions against the exploration of
+    A second design choice relates to the question whether the                 new actions is important. Exploitation involves taking the currently
+agent (the decision-maker) uses the model (i.e., the simulator or              best known action from each state while exploration implies we
+MDP) to predict the impact of its actions on the future states and             do not follow the recommendation of our neural network. Various
+rewards before it takes an action. Before deciding on the order                approaches exist to explore new actions: -greedy approaches pick
+quantity, the agent may for instance compute the impact of var-                the best-known action with probability (1 − ) or a different (often
+ious order decisions on subsequent inventory levels and costs. To              random) action else; another exploration approach is to add ‘noise’
+do this, it may use the simulator to perform a Monte Carlo sam-                to the chosen action. The latter has the advantage to pick random
+pling to project future states and costs, or recursively compute               actions that may be closer to the best-known action. Due to their
+projected inventory levels and costs using the transition and/or               probabilistic nature, stochastic policies inherently encourage explo-
+reward function of the MDP. The model may be fully known to                    ration. To ensure that the policies continue to explore over time, it
+the agent or may have to be learnt while training. In the lat-                 is in addition customary to penalize near-deterministic policies in
+ter case, the agent trains on estimations of the transition and re-            the loss function by adding a so-called entropy term to the loss
+ward functions of the MDP. The agent may for instance have ac-                 function.
+cess to the inventory balance equation to predict future states and                Smart and careful exploration may be fruitful—especially when
+costs, but may have to learn the demand distribution while ob-                 the algorithm is exploring good regions, and when taking bad ac-
+serving samples, without having access to the true demand dis-                 tions may result in a sudden transition to poor regions. In inven-
+tribution. Algorithms that use the model when deciding on an ac-               tory management it may take several periods to recover from one
+tion (for instance by looking ahead) are referred to as model-based            bad action. One excessive order, for instance, has to travel through
+algorithms.                                                                    the whole pipeline vector and may take multiple periods to be
+    Model-free algorithms cannot predict the future, and take ac-              consumed by the demand. As such one could constrain the ex-
+tions without explicitly knowing the impact of their actions on                ploration to actions that lie within a speciﬁc distance from the
+the resulting states and rewards. Implicitly model-free value-based            actions proposed by the neural network. At the same time one
+methods also learn (action-)value functions that represent the fu-             may argue that in order to make the model more robust (i.e.,
+ture costs. Yet, they cannot explicitly exploit the underlying model           such that it explores the entire state space), we may want to en-
+to predict future states and rewards to achieve better approxima-              courage more extreme actions to explore rare states or perhaps
+tions: they merely interact with the environment and observe the               even impose uncertainty in e.g., demand or lead times. We discuss
+resulting rewards and subsequent states. We note that, when the                smart exploration in more detail as a future research avenue in
+environment itself is a simulation model (as is often in the case              Section 4.
+
+                                                                         406
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                               European Journal of Operational Research 298 (2022) 401–412
+
+
+3.4. On-policy versus off-policy                                                       like a small step to convert the approximated value function into
+                                                                                       its policy but in general it is unclear how small approximation er-
+    Another design choice refers to which policy is used to generate                   rors in the value functions impact the ﬁnal policy performance. In
+the tuples (s, a, c, s ) that are used to train the neural network. On-               fact, small errors often result in extremely poor policies. To make
+policy algorithms update the weights of the neural network in each                     matters worse, value-based methods tend to be unstable and not
+iteration based on tuples generated by the policy that is proposed                     converge well. Many value-based methods are off-policy and rely
+by the current conﬁguration of the neural network. Off-policy mod-                     on bootstrapping of the value function based on the most recent
+els can use experience from other policies, such as tuples gener-                      version of the neural network. Using the approximation provided
+ated from older versions of the neural network or tuples from a                        by the neural network itself to bootstrap may prevent the neu-
+data set that was collected upfront, which it stores in an experi-                     ral network to converge to stable approximations. In particular,
+ence buffer. Notice the difference between on one hand, online ver-                    the combination of function approximation (neural networks), off-
+sus oﬄine learning and, on the other hand, on-policy versus off-                       policy learning and bootstrapping appears destructive. It is also re-
+policy learning. The former refers to the question if we can gather                    ferred to as the deadly triad (Sutton & Barto, 2018). Tsitsiklis & Van
+additional tuples: online algorithms generate new experience dur-                      Roy (1997) have shown that this deadly triad makes learning un-
+ing the learning process, while oﬄine algorithms do not; the latter                    stable. Our lack of theoretically understanding the performance of
+refers to how online learning algorithms generate new tuples: on-                      value-based methods thus remains a limitation—and likely ham-
+policy methods follow and use the recommendations of the cur-                          pered adoption of these methods in the past. Early experiments in
+rent neural network while off-policy methods also include experi-                      inventory management to combine neural networks and RL such
+ences generated using different policies. Note that oﬄine reinforce-                   as Van Roy, Bertsekas, Lee, & Tsitsiklis (1997) were successful but
+ment learning is naturally off-policy as it uses data that is collected                required manual selection of features.
+upfront according to some policy.                                                          To improve the performance of value-based methods, a number
+    On-policy learning may beneﬁt from theoretical convergence                         of heuristic techniques have been suggested. The DQN implemen-
+properties. The on-policy REINFORCE algorithm, for instance, is                        tation of Mnih et al. (2015), for instance, uses algorithmic “tricks”
+proven to converge to a local optimal policy (Williams, 1992). At                      such as experience replay and target networks to improve the em-
+the same time, the downside of on-policy learning is that it may                       pirical performance of DQN. In the wake of these breakthroughs,
+get stuck in these local optima when only few data are used to                         Oroojlooyjadid, Nazari, Snyder, & Takác (2021) shows how DQN
+feed the neural network. Off-policy algorithms are more “sample                        performs well on the well-known supply chain Beer Game. We re-
+eﬃcient”, as they re-use the same tuples to train the neural net-                      fer to the Rainbow implementation of Hessel et al. (2018) for a
+work. Furthermore, when learning off-policy, the neural network                        comparison of more algorithmic improvements, of which the po-
+can be trained with larger batches of simulation trajectories, as                      tential in inventory control remains largely unexplored to date.
+the experience buffer is orders of magnitudes larger than the tra-                         Value-based DRL methods are most fruitful when sample eﬃ-
+jectories sampled by on-policy algorithms. Feeding the neural net-                     ciency is important, for instance, when data is scarce or gathering
+work with more data allows to exploit the parallelization power                        new data is diﬃcult or unreliable. Alternatively, policy-based meth-
+of GPUs. This may provide more stability in the training process                       ods may be preferred, which we discuss next.
+compared to on-policy learning, yet without any theoretical con-
+vergence properties.                                                                   3.5.2. Policy-based
+                                                                                           Policy-based methods directly approximate the optimal inven-
+3.5. The role of the neural network                                                    tory policy by minimizing the policy loss L(θk ) in each update
+                                                                                       k of the neural network. This policy loss is deﬁned as the ex-
+   The neural network is the core of any DRL algorithm. The most                       pected cumulative (discounted) cost obtained during a trajectory
+                                                                                                                                              T
+inﬂuential choice that distinguishes DRL algorithms is thus its role:                  (of length T ) while following policy πθk : L(θk ) = E[ t=0 γ t ct | πθk ]
+for which component of the MDP do we wish to leverage the ap-                                 
+                                                                                       with ct the cost incurred when taking action at in state st at time
+proximation power of the neural network. We separate between                           step t of the trajectory. Note that for policy-based methods the
+value-based, policy-based, and other hybrid approaches such as                         discount factor may be set to γ = 1, in contrast to (unmodiﬁed)
+actor-critics in the following sections, and discuss their main pros                   value-based methods where the action values would inﬂate to in-
+and cons.                                                                              ﬁnity. In essence, our goal is thus to minimize the expected cost
+                                                                                       of the policy. Similar to value-based methods, the parameters θk
+3.5.1. Value-based                                                                     of the neural network are updated in the direction of the gradient.
+    Value-based methods, such as the seminal Deep Q-Network                            The policy gradient theorem states that the gradient of the policy
+(DQN) use neural networks to approximate the optimal action-                           loss is the expectation of the product of the expected cost and the
+value functions. They do so by minimizing the value loss: the                          gradient of the log of the policy (see Marbach & Tsitsiklis, 2001;
+temporal difference between the estimated action-value function,                       Sutton, McAllester, Singh, Mansour et al., 1999):
+qθ (s, a ), and the observed costs, c, after simulating one (or more)
+period(s), bootstrapped by the value function of the (last) state to                                        
+                                                                                                            T                              
+                                                                                                                                           T
+
+which we transitioned, mina qθ (s , a ). A simple one-period tempo-                   ∇ θk L ( θ k ) = E         ∇θk log πθk (at | st )         γ t ct   .             (6)
+                                                                       
+ral difference for the tuple (s, a, c, s ) would thus be: qθ (s, a ) − c +                                 t=0                            t=0
+
+γ mina qθ (s , a ) ; the loss function to guide a gradient-based iter-                This result is elegant as it allows us to use the sampled tuples
+ative search to update θk then follows using a mean squared er-                       without losing convergence guarantees. Perhaps counter-intuitively,
+ror: L(θk ) = qθk (s, a ) − (c + γ mina qθk (s , a )) 2 . In practice, neural         we do not require the steady-state distribution nor any dynamics
+networks will be fed with many of these tuples, and minimize the                       of the model (such as the exact transition or rewards functions) to
+mean squared error over all tuples. One major advantage of value-                      compute the gradient of the neural network. The REINFORCE algo-
+based methods is that they lend themselves better to off-policy                        rithm (Williams, 1992) for instance, directly follows from the pol-
+learning, making them more sample eﬃcient.                                             icy gradient theorem. These vanilla policy gradient methods suf-
+   Yet, value-based methods search for approximations of the op-                       fer, however, from high variance among the trajectories, i.e., the
+timal value functions and not the optimal policy. Inherently they                      observed costs of parallel trajectories may vary signiﬁcantly. Var-
+are thus set up to optimize the wrong objective. Eq. (4) may seem                      ious expressions exist that effectively reduce this variance, such
+
+                                                                                 407
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                             European Journal of Operational Research 298 (2022) 401–412
+
+
+as subtracting value-based baselines dependent on states we tran-                Cutting-edge algorithms improve on typical architectures. The
+sition to, as is typically done in actor-critic methods. We discuss          neural network architecture used in AlphaZero, for instance,
+these methods next and refer to Schulman, Moritz, Levine, Jordan,            strongly resembles that of actor-critic methods by combining a
+& Abbeel (2015b) for a more in-depth discussion on variance re-              neural network that outputs both a value function and a policy.
+duction.                                                                     In addition to using a complex neural network including a combi-
+    As the gradient update is directly computed using the policy,            nation of convolutional and residual networks, AlphaZero also uses
+policy-based methods have better convergence properties in terms             self-play, in the form of a Monte Carlo Tree Search (MCTS) to im-
+of policy performance (i.e., they converge to a local minimum of             prove the decisions of the actor.
+the cost function); a desired property for inventory control. Un-
+fortunately, the policy gradient theorem no longer holds when tu-            4. Avenues for future research
+ples generated by older policies are used. In fact, we know this
+would introduce ‘bias’, potentially shifting the desired update in               The application of DRL in inventory management is novel and
+the wrong direction. For this reason many policy-based algorithms            largely unexplored (apart from a few exceptions discussed in the
+are on-policy and suffer from weaker sample eﬃciency.                        previous section). In what follows we highlight a number of re-
+                                                                             search avenues that may facilitate the adoption of DRL in practice.
+3.5.3. Actor-critics and other hybrid techniques
+    Actor-critic methods are hybrid approaches that leverage mul-            4.1. DRL for data-driven inventory control
+tiple beneﬁts of both value-based and policy-based methods. For
+instance, actor-critic algorithms add a value-based baseline to                  Traditional inventory control models assume the distribution of
+policy-based methods to reduce the variance caused by relying                the uncertainty, such as the demand or lead time, to be known.
+on sampled trajectories (Mnih et al., 2016). The increased stabil-           To implement these models, a pre-processing step is required by
+ity of adding the baseline of the critic, however, goes at the ex-           ﬁrst estimating or forecasting the uncertainty, before the inven-
+pense of adding an additional value loss function compared to                tory policy can be optimized. Instead of separating the estimation
+pure policy gradient methods. This comes at additional computa-              and optimization, the abundance of (big) data available today gave
+tion requirements. The A3C actor-critic models used by Gijsbrechts,          rise to a new, data-driven research stream within operations, in
+Boute, Zhang, & Van Mieghem (2019) show good performance in                  which both steps are no longer made sequentially, but integrated.
+lost sales, dual sourcing and multi-echelon inventory management,            Prominent works such as Mišić & Perakis (2020) and Simchi-
+thereby demonstrating that DRL resembles a general purpose tech-             Levi (2014) call for further research within data-driven decision-
+nology. They do highlight the computational burden to ﬁnd good               making. The advent of machine learning is deeply entangled with
+hyperparameters while many training runs still result in poor poli-          the availability of lots of data, but the use of data in DRL lags be-
+cies.                                                                        hind its supervised learning counterpart. Most (if not all) papers
+    To cope with these shortcomings, different metrics may be used           that explore DRL in inventory management focus on models where
+to update the policy in a smarter way, often resulting in better             the uncertainty is assumed to be known by the modeler, neglecting
+(sometimes theoretically justiﬁed) convergence, albeit at the ex-            the impact (and potential) of using data. Data-driven decision mak-
+pense of a more expensive computation in each training iteration.            ing is clearly underexplored in DRL. We believe DRL may become
+We speciﬁcally refer to Kakade (2001) for a discussion on natural            a complimentary tool in data-driven decision making and envision
+gradients that may result in convergence to the optimal policy—              the following potential avenues to use DRL in data-driven inven-
+despite being computationally very intensive or even intractable in          tory control:
+practice. Kakade & Langford (2002) shows how conservative policy                 Leverage big data to enrich the state space: A key beneﬁt of DRL
+iteration (when restarting from past states is allowed) converges            is that it allows to capture large state spaces. Therefore we could
+to approximately optimal policies. (Note how the latter implies the          consider augmenting the state space with additional features that
+algorithm is model-based, as we discussed in Section 3.2.) They              are traditionally used for estimation. For instance, we may add his-
+even provide an explicit bound when the policy update is a mix-              torical demands or lead times and exogenous data such as weather,
+ture of the old and new policy. The trust region policy optimization         news events, competitor activity or traﬃc information in the state
+(TRPO) algorithm of Schulman, Levine, Moritz, Jordan, & Abbeel               space. Without explicitly forecasting the (demand or lead time) un-
+(2015a) is directly inspired by Kakade & Langford (2002). It also            certainty, the DRL algorithm may learn to include these features
+improves monotonically in every training iteration by using a hard           in the training of the neural network and the corresponding opti-
+constraint to keep the updates to the new policy within a speciﬁed           mization of the inventory policy.
+range (measured using the KL-distance).                                          Leveraging these big data does raise a few additional challenges.
+    The above methods do not always work well in practice due                For instance, the DRL algorithm might require a model to inter-
+to the excessive computational need in every training step. More             act with and it is not directly obvious how the model can gen-
+empirical approaches were proposed following the aforementioned              erate samples when it only has access to historical data without
+works, such as clipping the distance between the old and new                 understanding the (conditional) probability distributions between
+policy in the proximal policy optimization (PPO) algorithm of                all state and random variables. This is essentially the core of data-
+Schulman, Wolski, Dhariwal, Radford, & Klimov (2017). The PPO                driven optimization: integrating the estimation in the optimization
+algorithm was successfully applied in the joint replenishment in-            by avoiding that small forecast errors propagate into the ﬁnal pol-
+ventory problem by Vanvuchelen, Gijsbrechts, & Boute (2020). The             icy performance. If signiﬁcant data is available we may circumvent
+computational requirements could be further improved. For in-                the need to generate new samples and use an oﬄine learning ap-
+stance, rather than starting from scratch we may start from a well-          proach by exclusively sampling from (a part of the) historically
+known heuristic (or a heuristic currently in use by a company)               observed data samples, without the need to generate additional
+and aim to improve monotonically on this policy as in Kakade &               experience. In most cases, however, we want the DRL algorithm
+Langford (2002). Soft constraints may also be used to penalize de-           to learn online by exploring unobserved states and actions. Sam-
+viations from the heuristic. A similar teacher student framework             pling new data points requires some additional engineering. For in-
+was proposed by Nazari, Jahani, Snyder, & Takác (2019), which may            stance, we may generate new samples by combining bootstrapping
+readily be applied in inventory settings. We elaborate further in            from historically observed samples (and their feature values) and
+the future research avenues.                                                 engineering new samples (for instance by adding random noise on
+
+                                                                       408
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                               European Journal of Operational Research 298 (2022) 401–412
+
+
+existing samples). This noise can be set depending on how closely              to integrate the aforementioned roles by leveraging and obtaining
+the observed state variables resemble an existing data point in the            new structural results using the inherently numerical approach of
+dataset (i.e., we may assume the random variables more closely                 DRL.
+track values of nearest neighbours in the dataset). Alternative to                 Leverage analytical results to improve DRL performance: Inventory
+manually engineering samples, we may also let the DRL algorithm                control is a forerunner in understanding value function structures
+come up with data points to make the resulting policy more ro-                 and related properties for stylized problems. An interesting avenue
+bust, as we discuss next.                                                      for further research is the integration of these results into algo-
+    Develop more robust policies: An alternative data-driven ap-               rithmic design in order to steer the DRL algorithm into the right
+proach that has gained popularity in inventory control is robust               direction. It has for instance been shown that the value function of
+optimization, in which the worst-case cost is minimized rather                 the lost sales inventory problem is L -convex (Zipkin, 2008). This
+than the expected cost. The worst case may be deﬁned based on                  theoretical property has been used to develop excellent heuris-
+the available data samples. We refer to Mamani, Nassiri, & Wagner              tics, such as the Best Weighted Bounds policy (Hua, Yu, Zhang,
+(2017), Bertsimas & Thiele (2006) and the references therein for a             & Xu, 2015) in dual sourcing or approximate dynamic program-
+discussion on the use of robust optimization in inventory control              ming policies that use linear programming to ﬁt the parameters
+but note that the construction of the worst case, which is an es-              of an L -convex function to approximate the value functions of
+sential component of robust optimization, is typically left to the             dual sourcing with stochastic supply and lost sales (Chen & Yang,
+discretion of the modeller. As DRL algorithms are notoriously un-              2019; Sun, Wang, & Zipkin, 2014). In a similar way, we may in-
+stable and non-robust, an interesting avenue to explore is the in-             ject these analytical properties into DRL algorithms by shaping
+clusion of the worst case in the training of the DRL algorithm in or-          the value function through smart elimination of sub-optimal ac-
+der to make the policy more robust to uncertainties. For instance,             tions or states, for instance, by penalizing the loss function when
+we may use an additional neural network (or DRL algorithm) that                its shape does not resemble the desired structure. An additional
+outputs the uncertainty and tries to negatively impact the other               advantage of exploiting these theoretical properties is the poten-
+one: the adversarial DRL algorithm would observe the same state                tial to ﬁnd and compare against clever performance bounds, po-
+but instead of deciding how much to order, it would output the                 tentially even proving worst-case performance bounds of the DRL
+random variables. This is very similar to how Generative Adversar-             algorithm itself. For dual-source inventory models, one could for
+ial Networks (GANs) are being used in supervised learning to make              instance use well-established single-sourcing optimality results to
+algorithms more robust with respect to small deviations in the in-             bound state or action spaces, or as a general upper performance
+puts (Goodfellow et al., 2014). That is, the adversarial network has           bound.
+permission to slightly modify or create new samples (for instance                  Extract simple heuristic policies from DRL outputs: Instead of
+pictures) to fool the initial predictor. The initial network will then         leveraging analytical results to improve the numerical performance
+be retrained and learn to make more robust predictions due to                  of DRL, the numerical policies developed by DRL may also spur the
+the additional challenge imposed by the presence of the adversar-              development of new, simpler heuristic policies that can be ana-
+ial network. This approach can be used to make the policies more               lytically characterized, and are thus easier to implement. A novel
+robust with respect to limited data availability, inaccurate data, or          approach to convert numerical results into analytic insights is pro-
+extreme events that increase the level of uncertainty.                         posed by Bravo & Shaposhnik (2020). They leverage exact numer-
+    Develop policies for dynamic environments: The current DRL ap-             ical methods to ﬁnd the optimal value functions for a range of
+plications in inventory control assume stationary environments,                MDPs, and subsequently use the output as input to a machine
+such as stationary demand or lead times. Many real-life prob-                  learning method to extract analytic insights into the structure of
+lems are inherently dynamic, think of for instance the product                 the optimal policy for a range of problem domains: inventory
+lifetime where the demand distribution evolves over time. In par-              management, queuing admission control, multi-armed bandits, and
+ticular with respect to data-driven decision-making this problem               revenue management. This exciting result thus uses exact numeri-
+becomes apparent as data may quickly become outdated in fast-                  cal methods to derive new analytic insights. Similarly, we could use
+changing environments (for instance, in fast-fashion). Future re-              the approximate numerical methodology of DRL to learn the struc-
+search may focus on developing DRL algorithms that can cope with               ture of well-performing solutions, which may lead to new heuristic
+non-stationary environments. Despite not being explored, this does             policies for challenging problems that have until now resisted ex-
+not seem impossible as speciﬁc conﬁgurations of neural networks                act or approximate analysis. Once their structure is learned, these
+have been developed speciﬁcally to identify patterns and trends.               heuristic policies can be implemented without the need to train
+These network conﬁgurations may also be appropriate to develop                 any neural network.
+replenishment policies for SKUs in dynamic environments such as                    Understand and improve performance of heuristic policies: The
+products with short product life cycles or with strong seasonality.            OR/OM community has a strong focus on knowledge building and
+One of the main modelling challenges will be to adapt the neural               benchmarking these new approaches against existing policies. Ac-
+network to these changes. For instance, in case of a rapid demand              cordingly, most early studies that apply DRL to inventory man-
+growth, the output layer of the neural network may have to be ad-              agement benchmark DRL performance against the state-of-the-
+justed such that the action space stays in line with the increasing            art problem-speciﬁc heuristic policies (see e.g., Gijsbrechts et al.,
+demand realizations.                                                           2019; Vanvuchelen et al., 2020). As DRL matures, we may reverse
+                                                                               this process and use DRL to benchmark the performance of exist-
+4.2. Blending numerical and analytical approaches to optimize                  ing (or new) heuristic policies, and understand why—or when—
+inventory policies                                                             these heuristics perform better or worse. Demonstrating that a
+                                                                               new heuristic matches (or beats) well-designed general-purpose
+   As we have discussed in Section 2, inventory policies can be op-            DRL benchmarks may provide evidence that the heuristic performs
+timized through MDPs in an analytical or numerical way, and using              well. Comparing their performance against the DRL policies may
+exact or approximate methods. To date, the application of DRL to               also identify combinations of problem parameters (e.g., certain cost
+inventory problems falls exclusively in the latter category of nu-             environments) where the heuristic performs poorly. We may then
+merical and approximate methods, aimed at ﬁnding good inven-                   drill down one level and identify the states where the DRL agent
+tory policies. While we acknowledge this has value in an initial re-           takes substantially different actions from the heuristic. This may in
+search stage, we believe there is a lot of untapped potential of DRL           turn allow us to formulate an improved heuristic.
+
+                                                                         409
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                 European Journal of Operational Research 298 (2022) 401–412
+
+
+    Explain DRL policies: Neural network policies are ﬂexible and              initialized neural network. These ideas are studied in a sub-ﬁeld
+performant, but notoriously diﬃcult to interpret. This sharply con-            called behaviour cloning, the simplest form of imitation learning.
+trasts with the often highly intuitive character of policies obtained          Behaviour cloning is a supervised learning problem in which the
+via analytic methods, such as for instance base-stock or constant              neural network learns a policy based on a training set of states and
+order policies. In addition to developing more intuitive policies              expert decisions. The teacher student framework, in addition, en-
+from the complex output of neural networks similar to Bravo &                  ables the decision maker to generate eﬃcient policy improvements
+Shaposhnik (2020), we may also develop models that addition-                   (student) guided by ‘teacher’ advice. The teacher can for instance
+ally explain why an action is proposed. A vast ﬁeld exists on ex-              be a well-performing heuristic or structural knowledge about the
+plaining and interpreting the output of AI models (see also Gilpin             inventory policy. This framework ensures better guidance of the
+et al., 2018). When models not only output actions, but also pro-              learning process towards well-performing state/action regions and
+vide managers the intuition behind the action, the adoption of DRL             policies (see e.g., Nazari et al., 2019 for an example outside in-
+in practice will be fostered.                                                  ventory control). Rewards may also be altered or shaped, known
+                                                                               as reward shaping to speed up the training process and to make
+4.3. Scalability of DRL algorithms                                             training more stable, without losing performance (Ng, Harada, &
+                                                                               Russell, 1999). De Moor, Gijsbrechts, & Boute (2021) recently suc-
+    Since DRL relies only on a general MDP formulation (and basi-              cessfully applied reward shaping to stabilize the learning process
+cally any practical inventory problem can be characterized by an               of DQN for a perishable inventory problem, while their model oc-
+MDP), DRL algorithms may in principle deliver good policies for                casionally outperforms the best-known heuristics.
+any inventory model for which it is diﬃcult to derive simple, well-                Extend to large action spaces: While there appear to be no funda-
+performing heuristics. This observation is an important driver for             mental limits to the size of state spaces that DRL can address, this
+the excitement about DRL for inventory control: DRL could bring                stands in contrast with the limitations for action spaces. Neural
+inventory research closer to practical implementations.                        networks are mappings from RN to RM , where in many models M
+    Apart from providing proof of concept that DRL can be applied              directly corresponds to the number of actions, i.e., M = |A|. Larger
+as a general-purpose technology to classic, yet intractable inven-             values of M (say M = 10 0 0) lead to neural networks with many
+tory problems, Gijsbrechts et al. (2019) also highlighted various              parameters, which are more diﬃcult, if not impossible, to train.
+limitations of the current state-of-the-art DRL algorithms for in-             Without modiﬁcations, this implies that DRL can only be used for
+ventory management: they require extensive tuning to identify the              MDPs/inventory models with discrete action spaces, and |A| small
+best performing set of hyperparameters of the neural network. This             enough. In inventory control, large action spaces may arise when
+is computationally very expensive. Moreover, the inventory mod-                no upper bound can be proven on the size of orders or when this
+els considered in these early studies are still restricted to stylized         upper bound is very large, and also when orders take values in
+models in the sense that they consist of a single SKU and one or               a continuous interval. Discretizing the set of potential orders may
+a few locations. This is in contrast with the complexity of typi-              lead to theoretical performance loss.
+cal practical inventory systems such as for instance the one con-                  An even more pressing concern arises in inventory models
+sidered in Kranenburg & Van Houtum (2009). They consider a re-                 where multiple actions need to be taken simultaneously, e.g., when
+alistic case study of a lost sales inventory system at the manu-               there are multiple SKUs or when inventory at a location must be
+facturer ASML, who produces photolithography machines that are                 allocated for shipment to multiple down-stream locations.
+used in the production of computer chips. Their setting consists of
+                                                                               Example: When managing inventory for multiple products, one
+19 warehouses/locations, 27 machine groups, and 1451 SKUs. To fa-
+                                                                               has to decide how much to replenish for each item. Let I denote
+cilitate the implementation of DRL for inventory control with a re-
+                                                                               the number of items and x̄i the upper bound on the optimal order
+alistic scale, it is clear that we should go beyond the current state-
+                                                                               quantity for item i in any state, and assume for simplicity x̄i = x̄
+of-the-art of DRL applications. Various future research avenues per-
+                                                                               for all i ∈ {1, . . . , I} and zero lead times. The latter implies that the
+tain to this ambition:
+                                                                               state space is I-dimensional, consisting of the inventory levels of
+    Better DRL training algorithms: Researchers in OR/OM may con-
+                                                                               each product. The number of actions (i.e., the order quantity for
+tinue to draw from innovations within the active ﬁeld of DRL. From
+                                                                               each item), and the resulting number of output nodes of the neural
+Vanvuchelen et al. (2020), for instance, it appears that PPO re-
+                                                                               network in a standard DQN or policy-based algorithm then equals
+quires less tuning compared to A3C as employed by Gijsbrechts
+                                                                               |A| = (x̄ + 1 )I and the action-value or policy functions can be rep-
+et al. (2019), though it should be noted that the algorithms were
+                                                                               resented by a neural network, Nθ : RI → R(x̄+1 ) .
+                                                                                                                                      I
+not compared on the same problem. In particular, model-based al-
+gorithms may be tailored to inventory research with the option to                  As the number of output nodes of the neural network increases
+generalize well across problems, just like MuZero learned to play              exponentially in the number of items, standard DRL algorithms
+multiple games at master class level (Schrittwieser et al., 2020),             become less suitable for inventory problems with a large action
+or one may even develop DRL algorithms speciﬁcally tailored to                 space. Most inventory models that are important in practice fea-
+the theoretical characteristics of inventory problems obtained after           ture such simultaneous actions (see e.g. Kranenburg & Van Hou-
+decades of in-depth research, as we discuss next.                              tum, 2009), and overcoming this limitation is a foundational av-
+    Improve training performance: To speed up the training process,            enue for future research into increasing scalability of DRL. We next
+we may leverage the structural knowledge of the heuristics that                discuss various ideas that have appeared in literature for dealing
+are known to perform well. The transfer of such external expert                with multi-dimensional action spaces.
+knowledge when training a neural network is studied in imitation                   The policy (and as such the action space) may be both discrete
+learning, which is a popular research ﬁeld in supervised learning              and continuous. The action space of continuous policies are typi-
+as it may signiﬁcantly improve training performance and reduce                 cally represented in a neural network by letting the output repre-
+computational requirements. To date, this ﬁeld remains largely un-             sent the ﬁrst moments of a pre-speciﬁed distribution from which
+explored in DRL and especially in inventory control. One approach              the action is sampled. Moreover, action spaces may be multi-
+to leverage known heuristics or structural knowledge would be to               dimensional, as is often apparent in robotics where multiple joints
+start the training process from a neural network that trains on                need to be steered simultaneously. These techniques are rather
+samples generated by a well-performing heuristic. This might im-               new and have potential for multi-product or multi-sourcing inven-
+prove training performance compared to starting from a randomly                tory problems in particular, and multi-dimensional action spaces in
+
+                                                                         410
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                   European Journal of Operational Research 298 (2022) 401–412
+
+
+general. As such, continuous action spaces may be useful also for            5. Conclusion
+discrete inventory problems with large action spaces as continuous
+policies require less output nodes compared to discrete policies.                Despite being coined as a promising technique to tackle com-
+Until now no such models have been successfully trained within               plex sequential decision-making problems for which analytical or
+inventory control; it is not clear how representing the order size           exact numerical solution methods fall short, applications of DRL
+in a single output node will affect the ability to effectively train         algorithms in inventory control remain rather scarce. A signiﬁcant
+the neural networks.                                                         effort is needed to construct and train DRL algorithms, making it
+    Another approach that may be taken is to train a separate neu-           notably harder to use than its supervised deep learning counter-
+ral network for each action that needs to be taken. Apart from is-           part, often without performance guarantees. We shed light on how
+sues with regards to the computational demands of training many              neural networks may effectively be employed as an approximate
+neural networks, a challenge here is that actions may be interde-            numerical approach to optimize inventory problems that are mod-
+pendent (e.g., products are transported in the same truck or when            eled as MDPs. In addition to shedding light on the essential de-
+inventory is allocated over multiple downstream locations). Several          sign choices of DRL algorithms we highlight new research avenues
+approaches have been proposed to overcome this (see for instance             which have not been explored to date.
+Baker et al., 2020; Kaynov, 2021; Pirhooshyaran & Snyder, 2020).                 As an operations community, and especially within inventory
+To reduce the computational demands of training various neural               control, we have invested strongly in theory building—one of the
+networks, Pirhooshyaran & Snyder (2020) propose in addition to               strengths of our ﬁeld. While it is common to use results from
+share the weights for the ﬁrst few layers of the neural network.             pioneering works from decades ago, the ﬁeld of AI, and partic-
+Alternatively, multi-agent DRL (Baker et al., 2020), in which mul-           ularly machine learning, is newer, less structured and often less
+tiple agents optimize individual or (partly) shared objective func-          supported theoretically. We believe that as DRL for inventory con-
+tions may be a good ﬁt to tackle large, multi-dimensional action             trol becomes a more established ﬁeld, it must also have focus on
+spaces. We may, for instance, model products as individual agents            theory building. Blending the numerical approach of DRL with an-
+that have their own service level penalties but share inventory or           alytical results may be fruitful for inventory control.
+transportation space.                                                            As DRL is extremely versatile to tackle diverse problems with-
+    Another approach to deal with simultaneous actions is to lever-          out prior knowledge, we hope our paper may inspire beyond the
+age symmetry in the problem. In inventory control, this idea was             boundaries of inventory control within operations management
+originally proposed by Van Roy et al. (1997) in the context of a             and management science.
+symmetric one-warehouse multi-retailer inventory setting. For that
+                                                                             References
+case, it suﬃces to train a single neural network to make all allo-
+cation decisions, as those decisions will be the same because the            Baker, B., Kanitscheider, I., Markov, T., Wu, Y., Powell, G., McGrew, B., et al. (2020).
+retailers are identical. While complete symmetry is not so com-                  Emergent tool use from multi-agent autocurricula. Proceedings of the 8th inter-
+mon in practice, partial symmetry is much more common and per-                   national conference on learning representations (ICLR).
+                                                                             Bellman, R. (1954). The theory of dynamic programming. Bulletin of the American
+haps there are ways to similarly use that. Think for instance of                 Mathematical Society, 60(6), 503–515.
+the replenishment process of items that only differ in cost pa-              Bengio, Y. (2012). Practical recommendations for gradient-based training of deep
+rameters and/or lead times. In the ﬁeld of deep learning, trans-                 architectures. In Neural networks: Tricks of the trade (pp. 437–478). Springer.
+                                                                             Bergstra, J., Yamins, D., & Cox, D. (2013). Making a science of model search:
+fer learning uses previously trained neural networks for some task               Hyperparameter optimization in hundreds of dimensions for vision architec-
+as a starting point to learn a different (potentially related) task.             tures. In Proceedings of the 30th international conference on machine learning
+These dissimilarities are by no means limited to the examples pre-               (pp. 115–123).
+                                                                             Bertsekas, D. P. (1987). Dynamic programming: Deterministic and stochastic models.
+viously given. Instead, these tasks can differ in several aspects of
+                                                                                 Englewood Cliffs, NJ: Prentice-Hall.
+the MDP: state/ action space, reward function or the transition              Bertsekas, D. P. (2019). Reinforcement learning and optimal control. Belmont, MA:
+dynamics. To date, only Oroojlooyjadid et al. (2021) employs this                Athena Scientiﬁc.
+                                                                             Bertsekas, D. P., & Tsitsiklis, J. N. (1996). Neuro-dynamic programming. Belmont, MA:
+technique for inventory control. They use a neural network trained
+                                                                                 Athena Scientiﬁc.
+for one agent in the Beer supply game and use transfer learning              Bertsimas, D., & Thiele, A. (2006). A robust optimization approach to inventory the-
+to quickly adapt the network to other agents and other parame-                   ory. Operations Research, 54(1), 150–168.
+ter settings. Their results are promising as they were able to re-           Bravo, F., & Shaposhnik, Y. (2020). Mining optimal policies: A pattern recognition
+                                                                                 approach to model analysis. INFORMS Journal on Optimization, 2(3), 145–166.
+duce training time by one order of magnitude. A ﬁnal approach                Chen, W., & Yang, H. (2019). A heuristic based on quadratic approximation for dual
+to cope with large action spaces, is meta-learning. This is essen-               sourcing problem with general lead times and supply capacity uncertainty. IISE
+tially learning how to learn. The ultimate goal is learning a model              Transactions, 51(9), 943–956.
+                                                                             De Moor, B. J., Gijsbrechts, J., & Boute, R. N. (2021). Reward shaping to improve the
+that can eﬃciently adapt (i.e. only require a small amount of train-             performance of deep reinforcement learning in inventory management. Avail-
+ing iterations) to solve new test tasks by training the model on a               able at SSRN: https://doi.org/10.2139/ssrn.3804655.
+variety of different training tasks. We may for instance use meta-           Dulac-Arnold, G., Mankowitz, D., & Hester, T. (2019). Challenges of real-world rein-
+                                                                                 forcement learning. arXiv:1904.12901
+learning when a ﬁrm has a large amount of products: rather than              François-Lavet, V., Henderson, P., Islam, R., Bellemare, M. G., & Pineau, J. (2018). An
+training a DRL algorithm for each product individually, we may                   introduction to deep reinforcement learning. Foundations and Trends in Machine
+train one meta-learning across a set of SKUs such that with only                 Learning, 11(3–4), 219–354.
+                                                                             Garychl (2018). Applications of Reinforcement Learning in Real World. Re-
+minor additional training time it can be trained to the speciﬁc
+                                                                                 trieved April 13, 2021, from https://towardsdatascience.com/applications-of-
+SKUs.                                                                            reinforcement- learning- in- real- world- 1a94955bcd12.
+    DQN and other value-based DRL methods are less suitable for              Gershgorn, D. (2018). There’s only been one AI breakthrough. Retrieved April
+                                                                                 13, 2021, from https://qz.com/1419346/ai- has- had- just- one- breakthrough- says-
+dealing with large state spaces. However, under the banner of ap-
+                                                                                 kai- fu- lee.
+proximate dynamic programming (ADP), a vast range numerical                  Gijsbrechts, J., Boute, R., Zhang, D., & Van Mieghem, J. (2019). Can deep reinforce-
+and approximate methods have been proposed that utilize lin-                     ment learning improve inventory management? Performance on dual sourc-
+ear function approximators to approximate the value function, see                ing, lost sales and multi-echelon problems. Available at SSRN: https://doi.org/
+                                                                                 10.2139/ssrn.3302881.
+e.g., Powell (2007). Those approaches fall outside the scope of              Gilpin, L. H., Bau, D., Yuan, B. Z., Bajwa, A., Specter, M., & Kagal, L. (2018). Explaining
+this review paper because they do not use deep neural networks,                  explanations: An overview of interpretability of machine learning. In Proceedings
+but their adoption of linear value function approximations enables               of the 5th ieee international conference on data science and advanced analytics
+                                                                                 (DSAA) (pp. 80–89).
+them to exploit problem structure to eﬃciently deal with high-               Goldberg, D. A., Katz-Rogozhnikov, D. A., Lu, Y., Sharma, M., & Squil-
+dimensional action spaces.                                                       lante, M. S. (2016). Asymptotic optimality of constant-order policies for lost
+
+
+                                                                       411
+R.N. Boute, J. Gijsbrechts, W. van Jaarsveld et al.                                                                           European Journal of Operational Research 298 (2022) 401–412
+
+
+    sales inventory models with large lead times. Mathematics of Operations Re-                      Oroojlooyjadid, A., Nazari, M., Snyder, L. V., & Takác, M. (2021). A deep q-network for
+    search, 41(3), 745–1160.                                                                              the Beer Game: deep reinforcement learning for inventory optimization. Manufac-
+Goodfellow, I. J., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S.,                     turing & Service Operations Management.
+    et al. (2014). Generative adversarial nets. In Proceedings of the 27th international             Pirhooshyaran, M., & Snyder, L. V. (2020). Simultaneous decision making for stochas-
+    conference on neural information processing systems (pp. 2672–2680).                                  tic multi-echelon inventory optimization with deep neural networks as decision
+Hessel, M., Modayil, J., Van Hasselt, H., Schaul, T., Ostrovski, G., Dabney, W.,                          makers. arXiv:2006.05608
+    et al. (2018). Rainbow: Combining improvements in deep reinforcement                             Powell, W. B. (2007). Approximate dynamic programming: Solving the curses of dimen-
+    learning. In Proceedings of the 32nd aaai conference on artiﬁcial intelligence                        sionality. Hoboken, NJ: John Wiley & Sons.
+    (pp. 3215–3222).                                                                                 Puterman, M. L. (1994). Markov decision processes: Discrete stochastic dynamic pro-
+Hornik, K., Stinchcombe, M., & White, H. (1989). Multilayer feedforward networks                          gramming. Hoboken, NJ: John Wiley & Sons, Inc..
+    are universal approximators. Neural Networks, 2(5), 359–366.                                     Schrittwieser, J., Antonoglou, I., Hubert, T., Simonyan, K., Sifre, L., Schmitt, S.,
+Hua, Z., Yu, Y., Zhang, W., & Xu, X. (2015). Structural properties of the optimal pol-                    et al. (2020). Mastering Atari, Go, Chess and Shogi by planning with a learned
+    icy for dual-sourcing systems with general lead times. IIE Transactions, 47(8),                       model. Nature, 588(7839), 604–609.
+    841–850.                                                                                         Schulman, J., Levine, S., Moritz, P., Jordan, M. I., & Abbeel, P. (2015a). Trust region
+Kakade, S., & Langford, J. (2002). Approximately optimal approximate reinforcement                        policy optimization. arXiv:1502.05477
+    learning. In Proceedings of the 19th international conference on machine learning                Schulman, J., Moritz, P., Levine, S., Jordan, M. I., & Abbeel, P. (2015b). High-
+    (pp. 267–274).                                                                                        dimensional continuous control using generalized advantage estimation. arXiv:
+Kakade, S. M. (2001). A natural policy gradient. Advances in Neural Information Pro-                      1506.02438
+    cessing Systems, 14, 1531–1538.                                                                  Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal pol-
+Karlin, S., & Scarf, H. (1958). Inventory models of the Arrow–Harris–Marschak type                        icy optimization algorithms. arXiv:1707.06347
+    with time lag. In Studies in the mathematical theory of inventory and production                 Silver, D., Schrittwieser, J., Simonyan, K., Antonoglou, I., Huang, A., Guez, A.,
+    (pp. 155–178)). Stanford University Press.                                                            et al. (2017). Mastering the game of Go without human knowledge. Nature,
+Kaynov, I. (2021). Deep Reinforcement Learning for Asymmetric One-Warehouse                               550(7676), 354–359.
+    Multi-Retailer Inventory Management. Available at: https://research.tue.nl/en/                   Simchi-Levi, D. (2014). OM forum-OM research: From problem-driven to data-driven
+    studentTheses/deep-reinforcement-learning-for-asymmetric-one-warehouse-                               research. Manufacturing and Service Operations Management, 16(1), 2–10.
+    multi-re.                                                                                        Snoek, J., Larochelle, H., & Adams, R. P. (2012). Practical Bayesian optimization of
+Kingma, D. P., & Ba, J. (2015). Adam: A method for stochastic optimization. Proceed-                      machine learning algorithms. Advances in Neural Information Processing Systems,
+    ings of the 3rd international conference on learning representations (ICLR).                          25, 2951–2959.
+Kranenburg, A., & Van Houtum, G.-J. (2009). A new partial pooling structure for                      Sun, P., Wang, K., & Zipkin, P. (2014). Quadratic approximation of cost functions in lost
+    spare parts networks. European Journal of Operational Research, 199(3), 908–921.                      sales and perishable inventory control problems.
+Krizhevsky, A., Sutskever, I., & Hinton, G. E. (2012). Imagenet classiﬁcation with deep              Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.).
+    convolutional neural networks. Advances in Neural Information Processing Sys-                         MIT Press Cambridge.
+    tems, 25, 1097–1105.                                                                             Sutton, R. S., McAllester, D. A., Singh, S. P., Mansour, Y., et al. (1999). Policy gradi-
+Levine, S., Kumar, A., Tucker, G., & Fu, J. (2020). Oﬄine reinforcement learning: Tu-                     ent methods for reinforcement learning with function approximation.. In Pro-
+    torial, review, and perspectives on open problems. arXiv:2005.01643                                   ceedings of the 12th International Conference on Neural Information Processing
+Lu, Y., & Song, J.-S. (2005). Order-based cost optimization in assemble-to-order sys-                     (pp. 1057–1063).
+    tems. Operations Research, 53(1), 151–169.                                                       Tesauro, G. (1992). Practical issues in temporal difference learning. Machine Learning,
+Mamani, H., Nassiri, S., & Wagner, M. R. (2017). Closed-form solutions for robust                         8, 257–277.
+    inventory management. Management Science, 63(5), 1625–1643.                                      Tesauro, G. (1994). TD-Gammon, a self-teaching Backgammon program, achieves
+Marbach, P., & Tsitsiklis, J. N. (2001). Simulation-based optimization of Markov re-                      master-level play. Neural Computation, 6(2), 215–219.
+    ward processes. IEEE Transactions on Automatic Control, 46(2), 191–209.                          Tsitsiklis, J. N., & Van Roy, B. (1997). An analysis of temporal-difference learn-
+Martagan, T., Krishnamurthy, A., Leland, P. A., & Maravelias, C. T. (2018). Performance                   ing with function approximation. IEEE Transactions on Automatic Control, 42(5),
+    guarantees and optimal puriﬁcation decisions for engineered proteins. Opera-                          674–690.
+    tions Research, 66(1), 18–41.                                                                    Van Roy, B., Bertsekas, D. P., Lee, Y., & Tsitsiklis, J. N. (1997). A neuro-dynamic pro-
+Mišić, V. V., & Perakis, G. (2020). Data analytics in operations management: A re-                       gramming approach to retailer inventory management. Proceedings of the 36th
+    view. Manufacturing and Service Operations Management, 22(1), 158–169.                                IEEE Conference on Decision and Control.
+Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T. P., & Harley, T. et al. (2016).         Vanvuchelen, N., Gijsbrechts, J., & Boute, R. (2020). Use of proximal policy optimiza-
+    Asynchronous methods for deep reinforcement learning. arXiv:1602.01783                                tion for the joint replenishment problem. Computers in Industry, 119, 103239.
+Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G.,                    Veinott, A. F. (1966). The status of mathematical inventory theory. Management Sci-
+    et al. (2015). Human-level control through deep reinforcement learning. Nature,                       ence, 12(11), 745–777.
+    518(7540), 529–533.                                                                              Williams, R. J. (1992). Simple statistical gradient-following algorithms for connec-
+Nazari, M., Jahani, M., Snyder, L. V., & Takác, M. (2019). Don’t forget your teacher: A                   tionist reinforcement learning. Machine Learning, 8(3), 229–256.
+    corrective reinforcement learning framework. arXiv:1905.13562                                    Zipkin, P. (2008). Old and new methods for lost-sales inventory systems. Operations
+Ng, A. Y., Harada, D., & Russell, S. (1999). Policy invariance under reward transfor-                     Research, 56(5), 1256–1263.
+    mations: Theory and application to reward shaping. In Proceedings of the 16th
+    international conference on machine learning (pp. 278–287).
+
+
+
+
+                                                                                               412
+

@@ -1,0 +1,1556 @@
+                                                         Review of Large-Scale Simulation Optimization
+
+                                                                                            Weiwei Fan
+                                                            School of Economics and Management, Tongji University, Shanghai, China
+
+                                                                                            L. Jeff Hong
+                                                      School of Management and School of Data Science, Fudan University, Shanghai, China
+
+
+
+
+arXiv:2403.15669v1 [math.OC] 23 Mar 2024
+                                                                                         Guangxin Jiang
+                                                   School of Management, Harbin Institute of Technology, Harbin, Heilongjiang Province, China
+
+                                                                                              Jun Luo
+                                                  Antai College of Economics and Management, Shanghai Jiao Tong University, Shanghai, China
+
+
+                                                                                         March 26, 2024
+
+
+                                                                                              Abstract
+
+                                                Large-scale simulation optimization (SO) problems encompass both large-scale ranking-and-selection
+                                                problems and high-dimensional discrete or continuous SO problems, presenting significant challenges
+                                                to existing SO theories and algorithms. This paper begins by providing illustrative examples that
+                                                highlight the differences between large-scale SO problems and those of a more moderate scale. Sub-
+                                                sequently, it reviews several widely employed techniques for addressing large-scale SO problems, such
+                                                as divide and conquer, dimension reduction, and gradient-based algorithms. Additionally, the paper
+                                                examines parallelization techniques leveraging widely accessible parallel computing environments to
+                                                facilitate the resolution of large-scale SO problems.
+
+
+
+                                           1    Introduction
+
+                                           Simulation optimization (SO) pertains to a category of optimization problems in which the objective
+                                           and/or constraints lack analytical forms and can only be evaluated through running simulation experi-
+                                           ments based on a well-specified simulation model. Specifically, we address SO problems in the form
+
+                                                                                      max {f (x) := E[F (x)]},                                          (1.1)
+                                                                                      x∈X
+
+                                           where x represents the vector of decision variables; X denotes the feasible set, often defined by determin-
+                                           istic or explicit functions; and F (x) is a real-valued random variable, reflecting the stochastic response
+                                           of the simulation model evaluated at x. The distribution of F (x) is an unknown function of x, but
+                                           its realizations may be observed through running simulation experiments at X. There are numerous
+                                           instances of SO problems. For example, in inventory management, one may determine the base-stock
+                                           levels of the products to minimize the expected total inventory cost, using a simulation model that
+                                           captures the dynamics of an inventory system and calculates the total (stochastic) inventory cost over
+                                           a time period (Glasserman and Tayur, 1995; Wang and Hong, 2023). In hospital management, one may
+
+
+
+                                                                                                   1
+need to determine the schedule of the surgeries to minimize the expected total waiting and overtime cost
+(Fan et al., 2020).
+   Compared to other formulations of stochastic optimization, SO presents distinct advantages and
+disadvantages. The primary advantage lies in the generalizability of simulation modeling, enabling the
+modeling of complex process dynamics and the incorporation of intricate operational details that are
+otherwise challenging to represent. Consequently, SO can theoretically be applied to any problem for
+which a simulation model can be constructed. Another clear advantage is the segregation of modeling
+and optimization. In most optimization techniques, models are constructed based on the techniques
+used to solve them. For example, linear programming solvers necessitate the modeling of objectives
+and constraints using linear functions. In contrast, simulation models are often constructed for multiple
+purposes and can be utilized across various optimization problems. This segregation allows modelers
+to create more realistic models and utilize them repeatedly. However, these advantages also present
+challenges for SO. The generalizability of simulation modeling often results in models with lower levels
+of abstraction and greater incorporation of dynamics and details. Consequently, evaluating simulation
+models is significantly more time-consuming compared to models with explicit formulas commonly used
+in other stochastic optimization problems. As a result, SO problems typically require considerably more
+computational effort to solve. Additionally, the segregation of modeling and optimization often leads to
+a lack of effective structure for optimization. Consequently, simulation models are frequently treated as
+black boxes, and structural information beyond gradients is seldom utilized in SO algorithms.
+   According to the structure of the feasible set X, SO problems of Equation (1.1) may be categorized
+as follows:
+
+   • Ranking and Selection (R&S): In this category, X is a finite set with a relatively small number of
+      solutions (alternatives), and all the solutions can be simulated to identify the best solution with
+      high confidence.
+
+   • Continuous SO: In this category, the decision variable x is a continuous vector, and the feasible set
+      X is a subset of Rd .
+
+   • Discrete SO: In this category, the decision variable x is discrete (often integer-ordered), and the
+      feasible set X is an integer lattice.
+
+Readers may refer to Hong and Nelson (2009) for a more detailed description of these three categories.
+It is important to note that these divisions are not exclusive. For example, there are mixed integer SO
+problems that include both continuous and discrete decision variables (Wang, 2012). Furthermore, the
+divisions are sometimes blurred depending on the formulation as well as the computational budget/time.
+For example, for a problem with continuous decision variables, one may discretize the feasible region
+into a set of grid points. Then, the problem may be solved either as an R&S problem or a discrete SO
+problem, often depending on whether there is sufficient computation budget/time to simulate all grid
+points.
+   There are numerous outstanding reviews on the problems of Equation (1.1). Fu (2002) and Hong and Nelson
+(2009) are excellent review articles that provide comprehensive overviews of the development of the en-
+tire field of SO at their respective times. Additionally, Fu (2015a) is a handbook containing many
+articles that provide excellent reviews on different subareas/methodologies of SO. In recent years, there
+has been a surge in reviews focusing on different subjects of SO due to their increasing popularity.
+For example, Frazier (2018) reviewed Bayesian optimization techniques commonly used to solve vari-
+
+
+                                                    2
+ous SO problems, Hong and Zhang (2021) reviewed surrogate-based SO methods popular in handling
+expensive simulations, and Hong et al. (2021) reviewed the recent development of R&S as it becomes
+increasingly popular. Furthermore, there have been a few excellent reviews on the applications of SO
+in specific fields, such as Wang and Demeulemeester (2023) reviewing the application of SO methods
+to healthcare resource planning, Zhou et al. (2021) reviewing SO in the field of maritime logistics, and
+Jalali and Nieuwenhuyse (2015) reviewing SO in inventory replenishment. Most recently, with the rise
+of artificial intelligence (AI), some SO methods have been applied in AI, and Peng et al. (2023) reviewed
+how these methods underpin modern AI techniques.
+   In this paper, we focus on large-scale SO problems, also in the form of Equation (1.1). There are
+several reasons for this focus. Firstly, due to the rapid development of computational technologies, such as
+the widespread availability of massive parallel computing hardware like graphic processing units (GPUs)
+and the easy accessibility of efficient computational software frameworks like TensorFlow (Abadi et al.,
+2016), we are now able to simulate more complex and larger systems, explore larger solution spaces,
+and consider more decision variables. All of these factors contribute to larger-scale SO problems, with
+either a larger number of feasible solutions, higher-dimensional decision variables, or both. Secondly,
+previous research has repeatedly demonstrated that large-scale problems are inherently challenging and
+cannot be simply extrapolated from moderate-scale problems. Algorithms that are efficient for moderate-
+scale problems may perform poorly for large-scale problems, and vice versa. Often, large-scale problems
+require a completely different mindset or framework for solution and warrant careful reconsideration of
+related theories and algorithms. Thirdly, the use of parallel computing is essential for solving large-scale
+problems. However, efficiently leveraging parallel computing for large-scale SO is a non-trivial task. A
+thorough review of the related literature is itself very valuable. For these reasons, this paper chooses to
+focus on large-scale SO problems and their solution algorithms. In Section 2, we discuss the differences
+between large-scale SO problems and moderate-scale problems. In Sections 3, 4, and 5, we review three
+types of frameworks/algorithms for solving large-scale SO problems: divide and conquer, dimension
+reduction, and gradient-based algorithms. The issue of efficient parallelization in SO is considered in
+Section 6, followed by conclusions in Section 7.
+   Before proceeding to the next section, it is important to note that some problems related to SO do
+not conform to the framework presented in Equation (1.1). For example, in a simulation-based decision-
+making scenario, one might be interested in multiple performance measures derived from a simulation
+model. For instance, in the previously mentioned inventory example, one might seek to consider both
+the inventory cost and the fill rate. Such problems can be formulated as either multi-objective SO
+problems (refer to Hunter et al. (2019) for a recent review) or constrained SO problems with stochastic
+constraints involving simulation output (see Andradóttir and Kim (2010) for an article on constrained
+R&S and Hong et al. (2015) for an article on chance-constrained programs). Another type of SO problem
+not covered by the framework of Equation (1.1) is online SO, also known as contextual SO or SO with
+covariates. The primary distinctions between online SO and conventional problems lie in the ability to
+observe and utilize new information during problem-solving, as well as the real-time or near real-time
+nature of the problems. Analogous to Problem (1.1), the online SO problem may be formulated as:
+
+                                       max {fA (x) := E[F (x)|A]},
+                                      x∈X(A)
+
+where A represents the newly observed information during problem-solving. The information set A can
+take various forms. A common scenario is when A is in the form of {Y = y}, and the objective function
+is given by E[F (x)|Y = y], where Y represents the covariates in the simulation model with observed
+values y—i.e., the simulation model parameters that are only revealed at the moment. For such problems,
+
+                                                     3
+Hong and Jiang (2019) propose the general framework of “offline learning online optimization” to address
+them. Interested individuals may also refer to Shen et al. (2021) and Du et al. (2024) for algorithms that
+solve online R&S problems.
+
+
+
+2     Large Is Different
+
+For SO problems, the term “scale” can have varying interpretations depending on the type of problem.
+In the context of R&S problems where all solutions are simulated, the scale parameter pertains to
+the number of solutions. Classical R&S algorithms typically address problems with up to a few hundred
+solutions, which are referred to as moderate-scale problems in this paper. In recent R&S literature, large-
+scale problems are characterized by thousands to even millions of solutions. However, it is important to
+note that the classification of large scale is influenced by available computing power. For example, a paper
+by Nelson et al. (2001) considers R&S problems with 500 solutions as large-scale, but with advancements
+in computing technology, such problems are now classified as moderate-scale. In the context of continuous
+and discrete SO problems, the scale parameter often denotes the dimension of the decision vector, i.e.,
+the number of decision variables. Problems considered moderate-scale in the literature typically involve
+up to ten dimensions, while large-scale problems may encompass tens to even hundreds or thousands
+of dimensions. For example, Wang and Hong (2023) consider an extremely large-scale continuous SO
+problem that has 500,000 decision variables. It is important to observe that the size of the feasible region
+typically grows exponentially with the dimension. Consequently, SO problems with high dimensions are
+generally more challenging than those with large feasible regions.
+    For moderate-scale SO problems, the scale parameter is often not explicitly taken into account when
+designing algorithms, or at least is not considered as crucial as some other parameters. However, it is
+frequently observed that overlooking this factor may lead to unexpected consequences when applying
+these algorithms to solve large-scale problems. In other words, algorithms that are effective and efficient
+for moderate-scale problems may perform poorly for large-scale problems. Conversely, algorithms that
+perform poorly for moderate-scale problems may surprisingly perform well for large-scale problems.
+These observations convince us that large-scale SO problems are fundamentally different. They cannot be
+simply extrapolated or straightforwardly extended from moderate-scale problems. They require different
+theories, different algorithms, and most importantly, different mindsets.
+    In the remainder of this section, we present four examples from our research experience to illustrate
+the distinctions between large-scale and moderate-scale SO problems, and to emphasize the need for
+different mindsets to tackle these challenges.
+
+
+2.1    Sample Optimality for Fixed-Budget R&S
+
+Consider a R&S problem in which the feasible set is denoted as X = {x1 , x2 , . . . , xk }. Without loss of
+generality, let xk represent the optimal solution of Problem (1.1), and the objective is to correctly select
+xk from X. Suppose that we have a total budget of N simulation observations, and our goal is to allocate
+them to the k feasible solutions to maximize the probability of correct selection. This problem, known
+as a fixed-budget R&S problem, has been extensively studied in the literature (Hong et al., 2021).
+    To simplify notation, we use F̄i (ni ) to represent the sample mean of F (xi ) calculated with ni inde-
+pendent simulation observations at xi for all i = 1, 2, . . . , k. Many R&S algorithms aim to approximate
+
+
+
+                                                     4
+the optimal solution to the following problem:
+                                   
+                              max P F̄k (nk ) ≥ F̄i (ni ), ∀ i = 1, . . . , k − 1                     (2.1)
+                               s.t.   n1 + n2 + · · · + nk = N
+                                      ni ≥ 1,   ∀ i = 1, . . . , k.
+
+Here, the objective is the probability of correct selection (PCS), as the solution with the largest sample
+mean is typically selected as the best. It is important to note that even when F (xi ) follows a normal
+distribution with known mean and variance for all i = 1, . . . , k, Problem (2.1) still has no closed-form
+solution. Many fixed-budget R&S algorithms first find an approximate solution to the problem and then
+sequentially approximate the approximate solution by learning the unknown distributional parameters
+(e.g., the means and variances under the normal assumption). These algorithms include the optimal
+computing budget allocation (OCBA) algorithms (Chen et al., 2000), the large-deviation algorithms
+(Glynn and Juneja, 2004), and many variants of these two influential algorithms.
+   While algorithms that approximate the optimal solution of Problem (2.1) are highly efficient for
+moderate-scale fixed-budget R&S problems, Hong et al. (2022) have demonstrated that even the alloca-
+tion based on the true optimal solution of Problem (2.1) performs poorly for large-scale problems. They
+have shown that if the total budget N grows at a rate slower than k log k, the optimal PCS achieved by
+Problem (2.1) tends to zero. For example, if the total budget grows linearly in k (e.g., the per solution
+budget is fixed), the PCS of large-scale problems (i.e., when k is large) approaches zero. Numerical evi-
+dence supports these findings and indicates that algorithms based on Problem (2.1), such as the OCBA
+algorithm, may perform poorly when k reaches 105 or more (Hong et al., 2022; Li et al., 2023).
+   Hong et al. (2022) demonstrate that, in order to ensure that the PCS remains bounded away from
+zero, the total budget must increase at least in the order of k. They refer to algorithms that achieve this
+order as “sample optimal” for large-scale fixed-budget R&S problems. They have developed an algorithm
+based on the knockout tournament concept proposed by Zhong and Hong (2022) to attain this “sample
+optimality”. According to this definition of sample optimality, it is evident that the OCBA algorithms
+and the large-deviation algorithms do not meet the sample optimality criteria. The numerical findings
+of Hong et al. (2022) indicate that the new algorithm indeed exhibits significantly better performance
+for large-scale problems, even though its performance for moderate-scale problems is not as competitive
+as the OCBA algorithm.
+   Recently, Li et al. (2023) discover and prove that the greedy algorithm, which always allocates the
+next simulation observation to the current sample best, is sample optimal for large-scale fixed-budget
+R&S problems. This is a truly surprising finding because the greedy algorithm is generally perceived
+as a naı̈ve and inefficient algorithm for R&S problems. However, the finding is supported by numerical
+evidence. Such a simple and naı̈ve algorithm typically has very poor performance for moderate-scale
+problems, yet it may perform significantly better than the OCBA algorithm when k is large.
+
+
+2.2    Uniform Sampling of COMPASS
+
+The COMPASS algorithm, as presented by Hong and Nelson (2006), is one of the most popular and
+efficient random search algorithms for discrete SO problems (Li et al., 2015). At each iteration, the algo-
+rithm establishes a most promising area (MPA) surrounding the current best sample solution. This MPA
+is a closed and bounded polyhedron, defined by linear constraints, encompassing all feasible solutions
+closer to the current best sample solution than any other previously visited solutions. The algorithm
+
+                                                       5
+then proceeds to randomly sample (and simulate) a handful of feasible solutions from the MPA using a
+uniform sampling distribution over the feasible solutions within the MPA (Hong and Nelson, 2006).
+   The rationale for employing a uniform sampling distribution lies in the fact that the MPA, as defined,
+encompasses all solutions that appear more promising than others. It seems natural, therefore, to
+uniformly sample from these promising solutions in order to discover better solutions. COMPASS works
+well in solving discrete SO problems of up to ten dimensions. However, Hong et al. (2010) note that the
+algorithm’s performance deteriorates rapidly as dimensionality increases, with the algorithm typically
+exhibiting poor performance for problems featuring more than 15 dimensions.
+   The study by Hong et al. (2010) reveals an intriguing finding: the decline in performance of COM-
+PASS for high-dimensional problems is attributed to uniform sampling, which appears innocuous at
+first. The MPA operates on the basic premise that better solutions are more likely to be found among
+those that are close to the current best sample. However, as the dimensionality increases, the proportion
+of solutions within the MPA that are close to the sample best diminishes rapidly, rendering it highly
+improbable for the uniform sampling to identify these solutions. This discovery can be illustrated by
+considering a d-dimensional sphere inscribed in a d-dimensional cube. The cube represents the MPA,
+while the sphere denotes the desirable solutions. It becomes evident that the proportion of the sphere
+to the cube (i.e., the ratio of the sphere’s volume to the cube’s volume) decreases swiftly as d increases.
+For instance, the ratio is 0.785 when d = 2, 0.081 when d = 6, 0.0025 when d = 10, 2.46 × 10−8 when
+d = 20, and 1.54 × 10−28 when d = 50. This simple model elucidates why uniform sampling is ineffective
+in identifying better solutions for high-dimensional problems. It is worth noting that Hong et al. (2010)
+utilized a slightly more complex model to represent the MPA, but the fundamental concept remains
+unchanged. To address this issue, Hong et al. (2010) propose replacing uniform sampling with coordi-
+nate sampling, which uniformly samples a coordinate direction and then uniformly samples from the
+feasible solutions within the MPA along the coordinate direction from the current best sample solution.
+They demonstrate that this simple modification significantly enhances the performance of the resulting
+COMPASS algorithm for high-dimensional discrete SO problems, enabling it to handle problems with
+up to 50 dimensions.
+
+
+2.3      Higher-Order Smoothness Matters
+
+For continuous SO problems, the smoothness of the objective function with respect to the decision
+variables has always played a crucial role in algorithm design. However, most algorithms only require
+up to the second-order smoothness (e.g., second-order continuous differentiability). For example, convex
+SO algorithms or local SO algorithms may require the gradient or sometimes the Hessian, to guild
+the search process (Robbins and Monro, 1951; Kiefer and Wolfowitz, 1952; Spall, 2009) or to construct
+local quadratic approximations (Chang et al., 2013); while global SO algorithms may need continuity
+or differentiability to achieve certain levels of rates of convergence (Wang et al., 2023; Zhang and Hu,
+2022).
+   For high-dimensional continuous SO problems, global SO algorithms often encounter the curse of
+dimensionality. For example, Wang et al. (2023) demonstrate that the Gaussian-process based search
+algorithms have a worst-case rate of convergence of approximately N −1/(2+d) , where N is the total
+number of simulation observations and d is the dimension of the decision vector. Consequently, as the
+dimension d increases, the rate of convergence deteriorates rapidly. This is not unexpected, as global SO
+algorithms typically utilize a surrogate model to guide the random search and classical nonparametric
+
+
+                                                    6
+surrogate models that approximate the objective function often have an optimal worst-case rate of
+convergence of N −c1 /(c2 +d) , where c1 and c2 are small positive constants (Stone, 1982; Döring et al., 2018;
+Gao and Zhou, 2020). These classical nonparametric surrogate models usually require up to second-order
+smoothness and encounter significant challenges when fitting high-dimensional surfaces.
+   The recent research on high-dimensional surface fitting, such as reproducing kernel Hilbert space
+(RKHS), has reshaped our understanding of the curse of dimensionality. It is now evident that the
+dimension itself is not necessarily the primary challenge in high-dimensional surface fitting. Instead, the
+difficulty may be influenced by a combination of dimension and smoothness. If the smoothness parameter
+ν of the surface is known, numerous studies have demonstrated that certain surface fitting algorithms
+can achieve a rate of convergence of approximately n−ν/(2ν+d) . For example, see Raskutti et al. (2014),
+Yang and Dunson (2013), Hamm and Steinwart (2021), and Ding et al. (2023). This finding indicates
+that, when the smoothness of the target surface is comparable to the dimension d, the curse of dimen-
+sionality does not apply. In the extreme scenario where the target surface is infinitely smooth (i.e.,
+ν = ∞), these nonparametric surface fitting algorithms can achieve a rate of convergence of approxi-
+mately n−1/2 , which aligns with the performance of many parametric surface fitting algorithms such as
+linear regression.
+   When employing these surface fitting algorithms in surrogate-based SO algorithms, a higher rate of
+convergence may also be achieved. However, the challenge often lies in integrating these surface fitting
+algorithms with the optimization algorithms. A recent study by Ding et al. (2021) demonstrated that
+by combining a sparse grid and kernel ridge regression with a Brownian field kernel, their SO algorithm
+may achieve an approximate rate of convergence of N −1/6 or N −3/10 , under respective smoothness
+assumptions, which does not depend on the dimension of the decision vector. Their numerical results
+indicate that the algorithm performs effectively for test problems of up to 100 dimensions.
+
+
+2.4    Cost of IPA
+
+The abbreviation “IPA” in this context does not stand for India pale ale, but rather refers to “infinitesimal
+perturbation analysis,” a popular approach for computing the sample-path gradient of a stochastic
+simulation model (Ho et al., 1983; Fu, 2008). By leveraging the sample-path gradient, one can apply
+popular stochastic gradient descent (SGD) algorithms to solve continuous SO problems, including those
+with high-dimensional decision spaces. For example, in their work, Wang and Hong (2023) utilize SGD
+algorithms to solve a simulation-based inventory optimization problem featuring up to 500,000 decision
+variables.
+   The IPA method computes a gradient estimator, i.e., a sample-path gradient, concurrently with the
+simulation process. In the classical literature of simulation gradient estimation, IPA is recognized as
+an efficient algorithm, providing an unbiased gradient estimator with minimal computational overhead
+when applicable (Fu, 2008). However, in situations where the dimension of the decision vector is high,
+the resulting high-dimensional gradient may lead to a significant computational overhead, diminishing
+the efficiency and desirability of IPA.
+   To illustrate the concept, let’s consider a straightforward dynamic simulation that computes the
+stochastic function F (x), which can be represented as follows:
+
+                       F (x) = HT (HT −1 (· · · (H1 (x)))) = HT ◦ HT −1 ◦ · · · ◦ H1 (x),                 (2.2)
+
+where H1 : ℜd → ℜd1 , Ht : ℜdt−1 → ℜdt for t = 2, . . . , T − 1, and HT : ℜdT −1 → ℜ are all stochastic
+
+
+                                                       7
+functions, and ◦ denotes function composition. For simplicity, we can set d0 = d and dT = 1. Then,
+Ht : ℜdt−1 → ℜdt for all t = 1, . . . , T .
+    Given the input decision variables x, a simulation algorithm takes T steps. It first calculates H1 :=
+H1 (x), then H2 := H2 (H1 ), and so on, finally outputting F (x) = HT := HT (HT −1 ). For a function
+g : ℜu → ℜv , it’s often reasonable to assume that its computational complexity is in the order of u · v.
+Consequently, the computational complexity of the simulation algorithm can be expressed as
+                                                              T
+                                                                        !
+                                                             X
+                          Complexity of Simulation = O           dt−1 dt .                              (2.3)
+                                                                    t=1
+
+
+    Now consider the IPA algorithm that produces a gradient estimation alongside the simulation process.
+Let H0 (x) = x and D0 be the Jacobian matrix of H0 with respect to x. Notice that D0 is a d × d identity
+matrix. Let Jt denote the Jacobian matrix of Ht (Ht−1 ) with respect to Ht−1 and let Dt denote the
+Jacobian matrix of Ht ◦ Ht−1 ◦ · · · ◦ H1 (x) with respect to x. It is observed that Jt is a dt × dt−1 matrix
+and Dt is a dt × d matrix. For each step t = 1, . . . , T , once the simulation algorithm computes Ht , the
+IPA algorithm computes Jt and sets Dt = Jt · Dt−1 . Thus, the IPA gradient estimator is ∇x F (x) = DT′ .
+Assuming that the effort required to compute an element of any Jacobian matrix, i.e., ∂Ht,i /∂Ht−1,j , is
+constant, it becomes evident that the computational complexity of the IPA algorithm is given by
+                                               T                     T
+                                                           !                   !
+                                              X                     X
+                     Complexity of IPA = O        dt−1 dt d = O d       dt−1 dt .               (2.4)
+                                                  t=1                        t=1
+
+Therefore, the computational complexity of the IPA algorithm is an order of d higher than that of the
+simulation algorithm. In high-dimensional SO, when d is large, the cost of computing IPA estimators
+may be significantly higher than that of simulation, and this cannot be overlooked.
+    Another method for computing the sample-path gradient is the back-propagation (BP) algorithm,
+which is widely used in training neural networks (Rumelhart et al., 1986). Instead of computing the
+gradient alongside the simulation process, the BP algorithm calculates the gradient after the entire
+simulation process is completed. Let ∇HT F = 1 because F = HT . Then, the BP algorithm takes a
+backward approach, starting from the last step T . For each step t = T − 1, T − 2, . . . , 0, the BP algorithm
+                  ′
+computes ∇Ht F = Jt+1 · ∇Ht+1 F . It is important to note that H0 (x) = x. Therefore, the BP gradient
+estimator is ∇x F (x) = ∇H0 F . Assuming that the effort of computing an element of any Jacobian matrix,
+i.e., ∂Ht,i /∂Ht−1,j , is constant, the computational complexity of the BP algorithm can be expressed as
+                                                             T
+                                                                             !
+                                                             X
+                                     Complexity of BP = O          dt−1 dt       .                      (2.5)
+                                                             t=1
+
+Hence, based on (2.3), (2.4), and (2.5), it can be concluded that the BP algorithm and the simulation
+algorithm have the same order of computational complexities, while both are an order d faster than the
+IPA algorithm. Therefore, for high-dimensional problems, the BP algorithm is clearly more advantageous
+than the IPA algorithm when calculating sample-path gradients.
+    Wang and Hong (2023) consider the more specific example of simulation-based inventory optimiza-
+tion. They demonstrate that the orders of computational complexity for their simulation, IPA, and BP
+algorithms are T d2 , T d3 , and T d2 , respectively. These correspond to our situation with dt = d for all
+t = 1, . . . , T − 1. In their problems, d may be as high as 500,000. It is not surprising that they observe,
+compared to the IPA algorithm, the BP algorithm achieves speedups of more than tens of thousands of
+times when d is large.
+
+
+                                                        8
+3     Divide and Conquer
+
+The concept of divide-and-conquer has been effectively employed to tackle large-scale SO problems. Due
+to the high computational complexity of such problems, divide-and-conquer strategies aim to break down
+the original problem into smaller sub-problems and address each of these individually. The solutions to
+these sub-problems are then combined to yield the final solution to the original problem. There are
+various algorithms that utilize such strategies, differing primarily in terms of the division rules based on
+problem structures or optimization methods. For instance, in R&S problems, solutions (or alternatives)
+may be divided into different groups, while in discrete and continuous SO problems, feasible regions may
+be partitioned into disjoint sets.
+    We begin by discussing divide-and-conquer strategies in R&S procedures in Section 3.1. This approach
+involves dividing the solutions into different groups and estimating them in parallel to achieve sample-
+size efficiency. Additionally, we explore the use of divide-and-conquer strategies in random search and
+Bayesian optimization algorithms for solving discrete and continuous SO problems. Specifically, we
+examine the construction of the most promising area for random search algorithms in Section 3.2, and
+introduce the multiresolution framework for partitioning the entire feasible region into disjoint sub-regions
+to identify a promising sub-region for Bayesian optimization in Section 3.3.
+
+
+3.1    Divide-and-Conquer in R&S Algorithms
+
+In moderate-scale R&S problems, the computational cost of comparison and elimination is assumed to
+be negligible compared to the simulation cost. This is because the number of solutions, denoted as k, is
+usually small, and each simulation replication may take orders of magnitude longer than the O(k 2 ) all-
+pairwise comparisons. However, as k becomes large as in large-scale R&S problems, the comparison time
+may become the bottleneck of the R&S procedures. To address this issue, Ni et al. (2017) propose the
+good selection procedure (GSP), which utilizes the idea of divide-and-conquer. The procedure divides the
+k solutions into m groups, thereby reducing the computational complexity of comparisons from O(k 2 ) to
+O(k 2 /m2 ). Specifically, after dividing into m groups, the intra-group comparison is performed first, and
+then the local optimal solutions from each group are compared to obtain the global optimal solution. To
+further improve the elimination efficiency, under the master-worker parallel computing framework, the
+master retrieves the m local bests from the m groups at the beginning of each local comparison round
+to find the global best, and then sends the global best to the m groups for additional comparisons.
+    In addition to improving comparison efficiency, the use of divide-and-conquer in R&S can also help
+achieve a lower growth rate in the expected total sample size. Zhong and Hong (2022) establish a lower
+bound of O(k) for the growth rate of the expected sample size for fixed-precision R&S procedures, which
+is known as “sample optimality” and is particularly meaningful for large-scale problems. However, tradi-
+tional R&S procedures face challenges in achieving this sample optimality due to their decomposition of
+the optimization into all-pairwise comparisons, where the solutions compete with each other to eliminate
+others. To address this sample inefficiency, Zhong and Hong (2022) introduce the knockout tournament
+(KT) procedure, which adopts a divide-and-conquer strategy, and proved that the KT procedure achieves
+the sample optimality. The procedure proceeds in a round-wise manner. In each round, the procedure
+first pairs the solutions that are still in contention, and then constructs a match between every pair of
+solutions using an existing R&S procedure. The winner of each match can advance to the next round of
+the selection, and the other one is eliminated. Since the procedure follows a decentralized structure, it
+can be easily implemented in a parallel computing environment. In particular, in a parallel computing
+
+                                                     9
+environment with m processors, the set of solutions can be equally divided, and the KT procedure can
+be applied to each subset on a separate processor. After each subset determines a local best solution, a
+stage-wise procedure is employed to select the global best among them.
+   In the realm of fixed-budget R&S procedures, Hong et al. (2022) introduce the concept of the rate
+for maintaining correct selection (RMCS), which signifies the minimal growth rate of the total sampling
+budget required to prevent the probability of correct selection (PCS) from dropping to zero. A lower-
+order RMCS ensures a relatively high PCS within a limited budget. Thus, RMCS offers a theoretical
+framework for comparing different fixed-budget procedures in the context of large-scale R&S. The lower
+the order of RMCS, the more efficient the procedure. Traditional fixed-budget R&S procedures, such as
+the OCBA and its variants, have an RMCS lower bounded by O(k log k). In pursuit of better RMCS,
+Hong et al. (2022) propose the fixed-budget KT (FBKT) procedure, inspired by the KT procedure,
+which achieves an improved RMCS to the order of O(k), known as the optimal rate (see Section 2.1). To
+implement the procedure in parallel computing environments with multiple processors, the solutions are
+equally divided among groups, and each processor is assigned to one group. Similar to the KT procedure,
+the FBKT procedure conducts a two-phase selection. In the first phase, each processor identifies the
+local best solution, while in the second phase, processors use the remaining budget to generate additional
+observations for the local best solutions, selecting the solution with the largest sample mean as the global
+best one.
+
+
+3.2    Divide-and-Conquer in Random Search Algorithms
+
+Random search algorithms are widely used for solving discrete SO problems. In each iteration, these
+algorithms typically sample a number of candidate solutions from the neighborhood of the current sample
+best solution, evaluate them (possibly with some other previously sampled solutions), and select the best
+solution of this iteration as the current sample best solution. In practice, when dealing with large-
+scale problems, the focus of algorithm design often lies in exploring promising areas, which are typically
+constructed based on divide-and-conquer strategies. Many of these algorithms can be proven to have
+either global convergence or local convergence.
+   For globally convergent random search algorithms, the nested partitions (NP) framework proposed
+by Shi and Olafsson (2000) is well-known. At each iteration, the algorithm divides the feasible region
+and identifies the most promising area. If a better solution is found in the current most promising area,
+the area is further explored through partitioning. Otherwise, NP backtracks to its parent region or to the
+whole feasible region. A similar iterative approach of constructing and partitioning the promising area
+is employed in the stochastic branch-and-bound algorithm (SB&B) by Norkin et al. (1998a,b). SB&B
+is an extension of the branch-and-bound algorithms used in solving deterministic integer optimization
+problems. The SB&B algorithm iteratively divides the feasible region into smaller subregions, estimates
+the boundary of the objective function for these subregions by solving bounding problems, and selects the
+subregion with the maximum or minimum bound as the promising area. However, finding the estimator
+of the boundary is challenging, and the partition structure becomes larger, hindering the application
+of the SB&B algorithm. To address these issues, Xu and Nelson (2013) propose the empirical SB&B
+algorithm. They address the first problem by estimating the boundary based on the performance of the
+sampled solutions in the subregion. Meanwhile, they adopt the idea of the NP to integrate the regions
+that are not the most promising area as a region to reduce the large partition structure.
+   Global convergence in random search algorithms requires the evaluation of all feasible solutions with
+
+
+                                                    10
+an infinite number of observations, which is computationally expensive and impractical. In contrast,
+locally convergent random search algorithms with an implementable stopping rule may be more useful.
+Unlike globally convergent algorithms, locally convergent algorithms only need to consider the solutions
+in their local neighborhood to check the local optimality of a solution. An ideal approach is to divide
+the original feasible region and assign positive probability to a promising subset. For example, the
+COMPASS algorithm by Hong and Nelson (2006) adopts a unique structure for the most promising
+area, which includes all solutions closer to x∗n than any other simulated solution, where x∗n represents the
+solution with the optimal cumulative sample average at the end of iteration n (i.e., the current sample
+best solution). COMPASS focuses the search effort in the most promising area, which adapts at each
+iteration based on the information collected on all simulated solutions. As COMPASS iterates, the most
+promising area eventually will only contain x∗n . When this occurs, a statistical local optimality test is
+performed on x∗n and its neighbors to determine whether it is a local optimal solution.
+   The COMPASS algorithm experiences a significant slowdown as the problem’s dimension increases,
+as discussed in Section 2.2. To address this challenge, Hong et al. (2010) propose replacing uniform
+sampling of the most promising area with coordinate sampling. This adjustment increases the likelihood
+of sampling solutions that are close to the current sample best solution. Xu et al. (2013) take a different
+approach by suggesting the construction of the most promising area using a hyperbox and still uniformly
+sampling from it. Their algorithm, the adaptive hyperbox algorithm (AHA), defines the most promising
+area as the largest hyperbox enclosing the current sample best solution and having all other simulated
+solutions either on the boundary or outside. This construction results in a much smaller hyperbox
+compared to the most promising area in the COMPASS algorithm, encompassing mostly solutions close
+to the current sample best. This design enables AHA to scale effectively in high-dimensional problems.
+Recently, Zhou et al. (2023) apply the AHA algorithm to solve large-scale SO problems in car-sharing
+service design, demonstrating its effectiveness.
+   To further enhance the finite-time performance of the COMPASS algorithm and adapt it for com-
+mercial solvers, Xu et al. (2010) develop an industrial strength COMPASS (ISC) algorithm. This ISC
+algorithm retains the core of the COMPASS algorithm while incorporating additional steps to enhance
+its efficiency in solving practical large-scale problems. The optimization process in ISC is divided into
+three stages: a global search stage, a local search stage, and a final clean-up stage. Specifically, the
+ISC algorithm utilizes a niching genetic algorithm for the global stage to explore the entire feasible set
+and identify several promising regions with potentially competitive locally optimal solutions. For the
+local stage, the COMPASS algorithm is employed to exploit local information and find a locally optimal
+solution for each of the identified regions from the global stage. Lastly, a R&S procedure is used for the
+clean-up stage to select the best solution from all the locally optimal solutions identified. It is notewor-
+thy that within the ISC framework, AHA can also be utilized as the local search algorithm instead of
+COMPASS.
+
+
+3.3    Divide-and-Conquer in Bayesian Optimization
+
+Bayesian optimization is a well-established method for addressing discrete and continuous SO problems
+(Sun et al., 2014; Xie et al., 2016; Pearce et al., 2022). Despite its success in various fields such as
+material engineering (Chen et al., 2022), hyperparameter tuning (Snoek et al., 2012), and drug design
+(Negoescu et al., 2011), the application of Bayesian optimization is limited to problems of moderate
+scale. One of the primary challenges lies in the computational burden associated with estimating the
+
+
+
+                                                    11
+surrogate model (Hong and Zhang, 2021), often a Gaussian process. As the surrogate model involves
+numerically inverting a large matrix to process the simulation data, it becomes increasingly demanding
+in computation when the number of design points is large and may eventually become more expensive
+than the simulation model. To address this challenge, an intriguing idea is to employ a multiresolution
+framework that adopts a divide-and-conquer strategy. Specifically, the multiresolution framework aims
+to partition the entire feasible set into disjoint local regions. Subsequently, a promising local region can
+be identified using a region-level model, and a solution-level model within the selected region is fitted to
+guide detailed search within this region.
+   For large-scale discete SO problems, Salemi et al. (2019) propose the Gaussian Markov improvement
+algorithm (GMIA) to identify the global optimal solution. Specifically, GMIA models the objective
+function at different points as a realization of a discrete Gaussian Markov random field (GMRF) in
+order to understand the spatial relationships, and then generates a suitable acquisition function known
+as complete expected improvement (CEI) to balance exploration and exploitation. The GMIA can be
+applied in a multiresolution framework to enhance the efficiency of the algorithm for problems with large
+solution spaces. The multiresolution framework operates as follows: it initially divides the solution space
+into distinct regions and utilizes a region-level GMRF to understand the quality (i.e., response) of these
+regions. Within each region, it then constructs a solution-level GMRF to learn the quality of all feasible
+solutions in that region. On one hand, for the region-level GMRF, regions are modeled as nodes in a
+connected graph, with edges connecting adjacent regions. The response associated with a region (i.e.,
+node) is the average of the objective function values of all solutions in that region, upon which a GMRF
+can be fitted on these nodes to provide global guidance in finding promising nodes by comparing the
+corresponding CEIs among all nodes. On the other hand, the quality of individual solutions within a
+region is represented as a solution-level GMRF, which can help target the most promising solution in this
+region. This approach significantly reduces the number of points used to calculate the inversion of the
+covariance matrix for each GMRF, thus saving the computation time. However, such a multiresolution
+approach may ultimately be limited by the size of the solution-level GMRF it can handle, as it involves
+calculating CEI for each individual solution. Semelhago et al. (2021) propose the rapid Gaussian Markov
+improvement algorithm (rGMIA) to further enhance solution-level efficiency. This algorithm partitions
+the solutions in each region into two sets: the search set and the fixed set. In comparison to the original
+GMIA, rGMIA introduces several rapid search steps. During each rapid search step, it only updates the
+CEI for the solutions in the search set while fixing the CEI for the solutions in the fixed set. The rationale
+behind this approach is that the acquisition functions for most solutions remain largely unchanged when
+new simulation observations are included. By restricting the CEI computation within a small subset
+of promising solutions for several iterations (i.e., the rapid search steps), computational benefits can be
+fully exploited.
+   The multiresolution framework is also well-suited for addressing continuous SO problems. Meng et al.
+(2022) introduce the combined global and local search for optimization (CGLO) algorithm, which in-
+volves the initial division of the feasible set into separate local regions. A promising region is then selected
+through optimization over a global model constructed from a finite set of global candidate points. Sub-
+sequently, a local search is conducted within the chosen region based on a local model. The algorithm
+switches back to the global step upon finding a good local solution. In comparison to other Bayesian
+optimization baseline methods (Quan et al., 2013; Jalali et al., 2017), the global and local nature of the
+algorithm enables CGLO to escape suboptimal regions and converge towards the global optimal solution
+more rapidly, particularly crucial in scenarios with highly multi-modal response functions.
+
+
+
+                                                      12
+4     Dimension Reduction
+
+Solving high-dimensional SO problems, particularly in the pursuit of global optimal solutions, is known
+to be extremely difficult. This difficulty is largely attributed to the “curse of dimensionality,” which
+presents itself in several distinct ways. Firstly, as the problem dimension (i.e., the number of decision
+variables) increases, the search space for optimal solutions expands at an exponential rate. Consequently,
+SO algorithms must navigate through an increasing number of potential solutions before reaching con-
+vergence. Secondly, the number of simulation observations required to obtain a reliable evaluation of
+the objective function tends to grow exponentially with the dimensionality, often reaching levels that
+may be unmanageable given available computing power. Finally, SO algorithms may easily become
+trapped in local optimal solutions, as high-dimensional SO problems are more likely to contain numer-
+ous such solutions. To address these challenges, a common strategy involves judiciously transforming a
+high-dimensional problem into a lower-dimensional one, which is typically easier to solve.
+
+
+4.1    Low Effective Dimension
+
+In many practical scenarios, although the objective function may involve a large number of variables,
+the actual impact on the function is often exerted by a relatively small subset of these variables. For
+example, in portfolio optimization, only a few select stocks or bonds may predominantly determine the
+portfolio’s returns or associated risks, despite numerous potential investments being available. Similar
+patterns can be observed in the field of machine learning, where hyper-parameter optimization for neural
+networks and deep belief networks frequently reveals that only specific key parameters substantially
+affect model performance (Bergstra and Bengio, 2012). This phenomenon is referred to as “low effective
+dimension” (LED) and forms a strong basis for the application of dimension reduction strategies in
+solving high-dimensional optimization problems.
+    One line of research papers exploits the concept of LED by concentrating on identifying the “effec-
+tive” variables or, alternatively, screening out the “ineffective” ones. Effective variables are those that
+significantly impact the objective function. Once these are determined, optimization can be carried out
+more efficiently by focusing solely on the effective variables and keeping others at constant or nominal
+values, resulting in a low-dimensional SO problem. In this context, variable-screening (also known as
+factor-screening) methods are integrated as a preliminary phase in traditional SO algorithms. These
+methods typically undertake a series of simulation runs to assess the influence of each input variable on
+the objective function and statistically eliminate ineffective ones. While various screening methods are
+available, the ideal one for high-dimensional SO should be able to efficiently identify effective variables
+from a large pool with minimal simulation runs. Sequential bifurcation (SB), a technique originally
+applied to simulation by Cheng (1997) and Kleijnen et al. (2006), enhances efficiency through sequential
+group screening. It divides the surviving variables into two subgroups at each step and then discards the
+entire subgroup if it is collectively deemed ineffective. Building upon this, Wan et al. (2006) introduce
+a controlled sequential bifurcation (CSB) procedure, which combines multistage hypothesis testing with
+the original SB to control both type I error and power for screening. The efficiency of the CSB procedure
+is further improved in subsequent research by Wan et al. (2010).
+    In parallel, another line of research bypasses the initial step of identifying effective variables and
+instead focuses on directly streamlining the search process for solutions with LED. Pioneering work by
+Bergstra and Bengio (2012) demonstrates that, in the context of hyper-parameter optimization, random
+search is often more effective than widely used methods such as grid search and manual search. This is
+
+                                                    13
+attributed to the thorough exploration of the solution space that random search can conduct, is essential
+for an SO algorithm to locate a global optimal solution. With the assumption of LED, the original
+high-dimensional space can be embedded into a low-dimensional subspace. This means that dense cov-
+erage of the subspace can be achieved through random sampling in each dimension, without the need
+to determine effective variables in advance. Building on this, Wang et al. (2016) propose a random em-
+bedding Bayesian optimization (REMBO) algorithm, which operates within a low-dimensional subspace
+and projects solutions back to the high-dimensional space. REMBO operates under the assumption that
+the embedding is linear, though subsequent research (e.g., Jaquier and Rozo, 2020) has expanded upon
+this to consider the potential of nonlinear embeddings.
+
+
+4.2    Utilizing Special Structures
+
+In a high-dimensional SO problem where all variables are meaningful, the LED hypothesis might not
+hold true. Therefore, screening any variable or compressing the problem in a low-dimensional subspace
+may result in a distorted solution. In such cases, an alternative approach to dimensionality reduction
+could involve exploiting the inherent structure of the objective function itself.
+   A common approach is to leverage the additive structure within the objective function, assuming
+that the high-dimensional objective function can be decomposed into a sum of lower-dimensional func-
+tions, each defined on a subset of the underlying variables. Kandasamy et al. (2015) exploit this additive
+structure by postulating that these subsets are disjoint. This allows each lower-dimensional function to
+be optimized independently, thus simplifying the high-dimensional optimization challenge. They propose
+the Additive Gaussian Process Upper Confidence Bound (Add-GP-UCB) algorithm and prove that it
+can achieve a regret that grows only linearly in the dimension of the original problem. Building on
+this approach, Rolland et al. (2018) explore a more flexible additive structure that permits overlap be-
+tween subsets of lower-dimensional components, modeling the interactions between subsets with a graph.
+However, a challenge in practice is that the decomposition is often unknown and must be inferred. To
+identify an effective decomposition, Rolland et al. (2018) employ a technique involving random sam-
+pling of possible decompositions and selecting the one that maximizes the likelihood. Addressing the
+vast number of potential additive structures in high-dimensional spaces, Gardner et al. (2017) apply a
+Metropolis–Hastings algorithm to efficiently navigate through the space of possible structures.
+   Leveraging the smoothness of the objective function for dimension reduction in optimization problems
+is also a widely adopted strategy. On one hand, we may utilize the gradient and Hessian information to
+identify low-dimensional subspaces that are critical to optimization. Numerous methods have been devel-
+oped to explore such information. For instance, Constantine et al. (2014) introduce the active subspace
+methods, which employ the gradient of the objective function to uncover influential directions, enabling
+the approximation of the objective function within low-dimensional subspaces without sacrificing critical
+information. Griebel (2006) introduces the sparse grids approach, employing a multi-level hierarchical
+framework that selectively combines grid points from different resolutions, utilizing mixed derivatives up
+to the second order to achieve dimension reduction in high-dimensional problems by emphasizing areas of
+significant variation and de-emphasizing regions of lesser importance. On the other hand, with an under-
+standing of a function’s smoothness, we can target a much smaller subspace for efficient approximation.
+For example, Zhang et al. (2021) demonstrate that a function under certain smoothness restrictions lies
+in the reproducing kernel Hilbert space (RKHS) induced by a Brownian field kernel. The exploration of
+higher-order derivatives for dimension reduction remains relatively underdeveloped. However, there is an
+
+
+
+                                                    14
+intuitive understanding that as the degree of smoothness in a function increases, the dimensionality of
+the subspace containing that function decreases (see for detailed discussion of this issue in Section 2.3).
+Consequently, harnessing insights from higher-order smoothness could provide substantial improvements
+in dimension reduction, offering a promising avenue for refining optimization strategies.
+
+
+
+5     Gradient-Based Algorithms
+
+The gradient-based algorithm is a crucial method for continuous simulation optimization. It depends on
+estimating the gradient of the objective function to determine suitable search directions and utilizes an
+iterative approach to achieve an optimal solution. The general form of the gradient-based algorithm can
+be expressed as:                                                 
+                                                           ˆ (xn ) ,
+                                        xn+1 = ΠX xn − γn K∇f                                                 (5.1)
+
+where ∇f (x) represents an estimation of the gradient of the objective function f (x), ΠX indicates a
+projection back into the feasible region X ⊆ ℜd , and γn and K are the step size and an appropriate
+matrix, respectively, used to determine the search length along each dimension of the solution.
+    Stochastic approximation is a prominent algorithm within the realm of gradient-based algorithms.
+Initially, it was devised to address the root-finding problem g(x) = 0 for x ∈ X, and has since found wide-
+ranging applications in finding (local) optimal solutions or stationary points, such that ∇f (x) = 0. When
+ˆ serves as an unbiased estimator of ∇f , the stochastic approximation algorithm is commonly recog-
+∇f
+nized as being of the Robbins-Monro (RM) type (Robbins and Monro 1951), where {γn , n = 1, 2, . . .}
+                                                      P∞                   P∞ 2
+represents a sequence of positive constants satisfying i=1 γn = ∞ and        i=1 γn < ∞. In cases where
+ˆ
+∇f is only asymptotically unbiased, for instance, when using a finite difference estimate with the differ-
+ence approaching zero at an appropriate rate, the algorithm is referred to as being of the Kiefer-Wolfowitz
+(KW) type (Kiefer and Wolfowitz 1952). This implies that
+                                        F (x+cn e1 ,ξ1+ )−F (x−cn e1 ,ξ1− )
+                                                                           
+                                                        2c  n
+                                                         ..
+                                                                           
+                           ˆ (x) = 
+                           ∇f                                               ,
+                                                                            
+                                                                                                              (5.2)
+                                    
+                                                         .                 
+                                        F (x+cn en ,ξd+ )−F (x−cn en ,ξd− )
+                                                             2cn
+
+where ei is a vector with the ith component as 1 and the rest as 0, and ξi+ and ξi− are random variables
+in the performance function. The sequences {γn , n = 1, 2, . . .} and {cn , n = 1, 2, . . .} should satisfy
+                                  ∞
+                                  X                ∞
+                                                   X                     ∞
+                                                                         X
+                       cn → 0,          γn = ∞,         γn cn < ∞, and         γn2 c−2
+                                                                                    n < ∞.
+                                  n=1             n=1                    n=1
+
+    In the realm of large-scale machine learning, stochastic gradient descent (SGD), stemming from
+stochastic approximation, has emerged as a popular algorithm based on gradients. Consider a data set
+with k input-output pairs {(si , yi ), i = 1, . . . , k} and a loss function ℓ(h(s, x), y), where h(s, x) and y
+denote the predicted and true outputs, respectively. The objective of SGD is to minimize the empirical
+                      Pk
+risk function fn (x) = i=1 ℓ(h(si , x), yi )/k. The update rule for SGD is given by
+
+                                                            ˆ in (xn )),
+                                         xn+1 = ΠX (xn − γn ∇f                                                (5.3)
+
+where ˆ
+      ∇fin (xn ) represents an estimate of the gradient with respect to the sample in , and the sample
+in is chosen randomly from {1, · · · , k}. Typically, explicit forms of the loss function ℓ and the predicted
+function h(s, x) are available and, therefore, unbiased estimates of the gradient of the empirical loss can
+be obtained. The stepsize γn is the same as in the RM algorithm.
+
+                                                        15
+   It is evident from the aforementioned algorithms that the estimation of gradients is a critical step
+in constructing gradient-based algorithms. Therefore, in the subsequent section, we first review the
+development of gradient estimation methods over the past two decades, followed by a review of gradient-
+based algorithms for solving large-scale problems.
+
+
+5.1    Gradient Estimation
+
+Gradient estimation, also referred to as sensitivity analysis, is essential not only for developing gradient-
+based algorithms but also for evaluating the significance of model parameters. In the realm of finance,
+the gradient of financial product prices in relation to model parameters is sometimes known as Greeks,
+and is utilized for risk hedging. Therefore, gradient estimation stands as a critical research issue in
+simulation and has been a subject of study for many years. Gradient estimation methods can be broadly
+categorized into indirect and direct techniques. Indirect methods primarily involve estimating gradient
+values using sample functions and gradient representations, with specific methods including the finite
+difference method and the simultaneous perturbation method. On the other hand, direct gradient es-
+timation methods utilize information from sample functions, their gradients, and the distribution of
+random variables to estimate gradient values, with perturbation analysis and likelihood ratio (LR)/score
+function methods being common approaches. For a deeper understanding of these methods, please refer
+to Fu (2015b).
+   Over the last two decades, research into gradient estimation has primarily focused on addressing
+discontinuities in simulation samples, estimating gradients of non-expectation form functions (e.g., quan-
+tiles), and developing effective gradient estimators for large-scale problems. In addressing discontinuities,
+Hong and Liu (2009a) develop an estimator for probability sensitivities, enabling the estimation of prob-
+ability sensitivities using the same simulation observations used to estimate probabilities for both termi-
+nating and steady-state simulations. Additionally, it applies importance sampling to accelerate the rate
+of convergence of the estimator. Liu and Hong (2010) introduce a generalized pathwise method accom-
+modating the discontinuities and propose kernel estimators that require minimal analytical expressions
+and are easy to implement. Peng et al. (2018) propose a new unbiased gradient estimator, the generalized
+likelihood ratio (GLR) estimator, to handle discontinuous sample performances with structural param-
+eters. It extends existing methods, such as IPA and LR, to a broader framework. Glynn et al. (2021)
+propose a new sensitivity estimator for distortion risk measures that can handle discontinuous sample
+paths and distortion functions and establish a central limit theorem for the new estimator. Peng et al.
+(2020) develop unbiased estimators for the density and its derivatives for the output of a generic stochas-
+tic model using Monte Carlo simulation and propose a gradient-based simulated maximum likelihood
+estimation method to estimate unknown parameters in stochastic models without assuming an analytical
+likelihood function.
+   Previous research on gradient estimation has typically focused on functions in the form of expecta-
+tion, such as f (x) = E[F (x, ξ)]. There has been relatively less research on functions that are not in
+the form of expectations, such as quantiles. Hong (2009) demonstrates that quantile sensitivities can
+be expressed as conditional expectations and introduces a batched estimator based on IPA. Fu et al.
+(2009) propose to estimate quantile sensitivities using conditional Monte Carlo simulations and develop
+a framework to estimate quantile sensitivities efficiently by incorporating conditional expectations and
+probabilities. Jiang and Fu (2015) provide an alternative derivation of the IPA estimator for quantile
+sensitivity, simplifying the proofs for strong consistency and convergence rate of the unbatched estima-
+
+
+
+                                                     16
+tor, and establish strong consistency and a central limit theorem for the batched estimator. Apart from
+quantiles, Hong and Liu (2009b) derive a closed-form expression for conditional Value-at-Risk (CVaR)
+sensitivity and introduce an estimator of the CVaR sensitivity with asymptotic properties.
+   In large-scale optimization problems, such as training neural networks, the BP method is a com-
+monly used approach for gradient estimation. The BP method has a strong connection to the classical
+IPA method (Peng et al. 2021), but its computational complexity surpasses that of IPA, as discussed in
+Section 2.4. Recent works on the BP focus on improving its computational efficiency, such as reducing
+memory consumption (Gruslys et al. 2016) and meta learning (Kirsch and Schmidhuber 2021). Apart
+from the BP, automatic differentiation, initially proposed by Linnainmaa (1970), has also garnered atten-
+tion and is now integrated into many programming languages and packages (van Merriënboer et al. 2017;
+Paszke et al. 2017). Automatic differentiation can be seen as an interpretation of a computer program
+that includes the calculation of derivatives alongside the standard computation process. Essentially, any
+numerical computation can be broken down into a series of basic operations for which derivatives are
+well defined. By applying the chain rule to combine the derivatives of these basic operations, we can
+determine the derivative of the entire computation (Rall and Corliss 1996).
+
+
+5.2    Gradient-Based Algorithms in Large-Scale Problems
+
+Despite being an early proposed method, gradient-based algorithms have undergone significant advance-
+ments in both methodology and application over the past two decades. Particularly with the rapid
+progress in computer science, gradient-based algorithms have become an important method for solving
+large-scale optimization problems such as training neural networks. Therefore, in this subsection, we fo-
+cus on reviewing the development of gradient-based algorithms, especially those of the SGD, in addressing
+large-scale problems. For further exploration into the development of other variants of gradient-based
+algorithms, please refer to Lan (2020) for more details.
+   Generally, gradient descent (GD) is a commonly used method for training machine learning models.
+However, for problems with large data sizes, SGD proves superior to GD. Bottou (2010) reveals the
+tradeoffs for the case of small-scale and large-scale learning problems and demonstrates the superiority
+of SGD in large-scale problems. Specifically, let ε > 0 denote the preset training error. The total number
+of iterations required to achieve an optimization accuracy of ε is proportional to log(1/ε) when the loss
+function is strongly convex. This implies that, with k samples, the total computational cost for achieving
+ε-optimality for GD is proportional to k log(1/ε). Conversely, for SGD, the total computational cost of
+ε-optimality is proportional to 1/ε. Notice that the ε-optimality of SGD does not depend on the size of
+the data set k, so SGD is a more suitable approach for handling large-scale datasets compared to GD.
+   Recent research has primarily focused on two aspects to enhance the efficiency of SGD. The first
+aspect aims to alleviate the negative impact of noisy gradient estimates, which can hinder SGD’s conver-
+gence under a fixed stepsize setting and lead to slow, sub-linear convergence rates when using decreasing
+stepsizes. Previous studies have explored three noise reduction methods to address this issue: dynamic
+sampling, gradient aggregation, and iterate averaging. Dynamic sampling techniques progressively en-
+large the mini-batch size during gradient computation to reduce noise, leading to more precise gradient
+estimates as the optimization progresses (Byrd et al. 2012; Hashemi et al. 2014). Gradient aggregation
+techniques enhance the accuracy of the search directions by retaining gradient estimates corresponding
+to samples utilized in prior iterations, revising some of these estimates in each iteration, and defining
+the search direction as a weighted average of these estimates. Representative variants include stochastic
+
+
+                                                   17
+variance reduced gradient (Johnson and Zhang, 2013), stochastic average gradient (Roux et al. 2012),
+and SAGA (Defazio et al. 2014). Iterate averaging techniques achieve noise reduction by maintaining an
+average of iterates computed during the optimization process, rather than averaging gradient estimates
+(Polyak 1990; Polyak and Juditsky 1992; Nemirovski et al. 2009).
+    The second aspect involves mitigating the adverse effects of the high nonlinearity and ill-conditioning
+of the objective function by integrating second-order information. These techniques enhance the conver-
+gence rates of batch methods or improve the constants in front of the sub-linear convergence rate of the
+SGD. Algorithms incorporating second-order information typically take the following form:
+
+                                    xn+1 = ΠX (xn − γn K−1 ˆ
+                                                        k ∇fin (xn )).                                   (5.4)
+
+Here, Kk represents the second-order information of the objective function. Intuitively, methods such as
+the Gauss-Newton method and the quasi-Newton method compute the Hessian matrix or its inverse and
+use it as the second-order information. The Gauss-Newton method generates an estimate of the Hessian
+using only first-order data, ensuring positive semi-definiteness even in cases where the Hessian is indefinite
+(Schraudolph 2002). Quasi-Newton methods, like BFGS (Dennis and Schnabel, 1983) and L-BFGS
+(Dennis and Moré 1974) and L-BFGS (Liu and Nocedal 1989; Schraudolph et al. 2007), dynamically
+update a Hessian approximation using an algorithm instead of computing the actual Hessian at each
+iteration. These methods are effective for optimizing problems with millions of variables, making them
+suitable for large-scale optimization problems. In addition to Hessian-based second-order information,
+the natural gradient method defines a search direction in the space of realizable distributions rather than
+within the space of the real parameter vector, utilizing the Fisher information matrix as the second-order
+information (Park et al. 2000; Marceau-Caron and Ollivier 2016; Martens 2020). Furthermore, to tackle
+larger-scale problems, some algorithms aim to avoid matrix multiplications. For instance, the conjugate
+gradient method updates iterations using Hessian vector products instead of the full Hessian matrix
+(Dembo et al. 1982; Byrd et al. 2011; Roosta-Khorasani and Mahoney 2019), while RMSprop, Adadelta,
+and AdaGrad methods restrict attention to diagonal or block-diagonal scaling matrices (Duchi et al. 2011;
+Tieleman and Hinton 2012; Zeiler 2012; Kingma and Ba 2014).
+
+
+
+6     Parallelization
+
+In practical terms, large-scale SO problems require simulating thousands to millions of solutions, each
+with multiple observations, which may result in unmanageable computational costs. With the advance-
+ment of multi- to many-core environments, it is natural to harness parallel computing to expedite large-
+scale SO. There are two distinct approaches to parallel SO. The first approach involves parallelizing the
+optimization process while maintaining the simulation of a single replication on a single processor. The
+second approach encompasses parallelizing not only the optimization process, but also the simulation
+itself. For the first approach, the challenges lie in synchronizing different simulation replications handled
+on different processors. These challenges are discussed for parallel R&S in Section 6.1, and parallel
+Bayesian optimization in Section 6.2, respectively. As for the second approach, the difficulty lies in
+finding a general parallel computing framework that is applicable to different simulation models. The
+concept of tensorization is discussed to take advantage of widely available parallel computing tools and
+to significantly reduce the barrier of parallelization in Section 6.3. It is important to note that paral-
+lelization naturally incorporates the idea of divide-and-conquer, which has been extensively introduced
+in Section 3. Therefore, this section focuses more on the problems created by parallelization and how to
+
+
+                                                     18
+address them, rather than on the implementation of parallelization in the divide-and-conquer scheme.
+
+
+6.1    Parallel R&S
+
+R&S procedures typically involve simulating each alternative with multiple replications and then com-
+paring the average performance of the alternatives to determine the best option. It is clear that these
+procedures are well-suited for parallelization due to the ease of parallelizing the simulation replications.
+However, difficulties arise when the replication times of different alternatives are different or stochastic,
+making it challenging to synchronize multiple processors. Careless handling of this issue can lead to
+significant loss of efficiency.
+   Many R&S procedures attempt to address this issue by avoiding synchronization. In a master-
+worker parallel computing environment, widely used for parallel R&S procedures, a master processor
+dispatches the jobs (i.e., simulation replications for different alternatives) to multiple worker processors.
+The asynchronous handling of the simulation observations typically means that the order of the job
+completions (referred to as the output sequence) from the workers may differ from the order in which the
+master assigns the jobs (referred to as the input sequence). This misalignment may lead to significant
+statistical issues for classical sequential R&S procedures when the simulation run times depend on the
+simulation results (Luo et al., 2015). Several studies in the literature have focused on adapting the
+existing fully-sequential procedures (e.g., the KN procedure of Kim and Nelson (2001)) to accommodate
+this situation. One natural approach is to restore the order of the input sequence in the output sequence.
+This approach is termed “vector filling” by Luo et al. (2015) and “zipping” by Ni et al. (2013). However,
+this approach may require a large amount of memory and could potentially lead to issues in the event of
+communication interruptions (i.e., significant delays in returning a simulation result to the master). To
+tackle these challenges, Luo et al. (2015) introduce the asymptotic parallel selection (APS) procedure,
+which demonstrates that the error resulting from ignoring the difference between the input and output
+sequences is negligible in a reasonable asymptotic regime.
+   In addition to the synchronization issue, all-pairwise comparisons (often needed for fully-sequential
+R&S procedures) on the master and the communications between the master and workers are also crucial
+concerns in parallel R&S (Hong et al., 2021), especially for very large-scale R&S problems. Zhong et al.
+(2022) propose the parallel Paulson’s procedure (PPP), which modifies the well-known Paulson’s pro-
+cedure (Paulson, 1964), and breaks all-pairwise comparisons into comparisons with the “best”, thus
+reducing the complexity of comparison calculation from O(k 2 ) to O(k), which is different from and more
+efficient than the divide-and-conquer method used by Ni et al. (2017) (also introduced in Section 3.2). To
+reduce the frequent communication between processors, the PPP procedure divides the surviving alter-
+natives into m groups and instructs each worker to perform the simulations for one group of alternatives,
+significantly reducing the communication times.
+   Similarly, Pei et al. (2018) introduce a framework known as parallel adaptive survivor selection
+(PASS), which involves individual comparisons of alternatives to a standard that dynamically adapts
+as surviving alternative observations accumulate. In the bisection-PASS (bi-PASS) variant (Pei et al.,
+2024), the standard is estimated by the weighted sample mean of current not-yet-eliminated alternatives.
+Within such a framework, the complexity of comparison becomes O(k), and the elimination process be-
+comes more efficient than other procedures, due to the large number of eliminated alternatives at each
+iteration. It is evident that both the PASS and bi-PASS procedures facilitate relatively fast communi-
+cation, as only a few scalar quantities are communicated between the master and any worker. However,
+
+
+                                                     19
+these procedures do not guarantee a single selection, but aim to retain all good alternatives. To assess
+the performance of the retained set, Pei et al. (2024) propose a new guarantee on the expected false
+elimination rate (EFER), which emphasizes retaining a proportion of good systems relative to the total
+number of good systems, instead of using the classical PCS guarantee.
+
+
+6.2    Parallel Bayesian Optimization
+
+Traditional Bayesian optimization algorithms typically comprise two primary components: a surrogate
+model and an acquisition function. The surrogate model, often implemented as a Gaussian process,
+offers a Bayesian posterior probability distribution of the objective function f (x) at a candidate solution
+x. Upon observing f at a new solution, this posterior distribution is updated. The acquisition function
+gauges the potential effectiveness of a solution x if it were to be evaluated, based on the current posterior
+distribution of f . Subsequently, the acquisition function is optimized to select the most suitable solution
+for evaluation next.
+   Bayesian optimization algorithms are inherently sequential, typically evaluating one solution at a
+time. When implementing these algorithms in parallel computing environments, it becomes necessary to
+evaluate multiple solutions simultaneously. While this does not pose a significant challenge for building
+surrogate models, it does complicate the selection of suitable solutions using the acquisition function.
+Two fundamental approaches exist to address this issue: the synchronous approach and the asynchronous
+approach.
+   The synchronous approach involves selecting a batch of solutions based on the acquisition function,
+assigning them to multiple processors, and waiting until all of them are evaluated before moving to the
+next iteration. While the concept of this approach is straightforward, the challenge lies in optimizing
+the acquisition function to select multiple solutions. Many methods propose addressing this challenge by
+considering a multi-solution approximation of the original acquisition function that is easier to optimize,
+or by proposing approximation algorithms that solve the optimization problem approximately. For
+instance, Ginsbourger et al. (2008) extend the expected improvement (EI) function to the q-EI fucntion,
+allowing the selection of q solutions simultaneously. Wang et al. (2020) develop an efficient algorithm,
+combining the IPA gradient estimator and multi-start gradient descent, to optimize the q-EI function.
+Shah and Ghahramani (2015) extend the acquisition function of Hernández-Lobato et al. (2014) and
+propose the predictive entropy search (PES). Wu and Frazier (2016) develop the parallel version of the
+knowledge gradient algorithm (referred as q-KG) and proposed to maximize the q-KG using a similar
+algorithm as Wang et al. (2020).
+   The asynchronous approach does not wait for all solutions to be evaluated. Instead, it selects the next
+solution to evaluate whenever a processor becomes idle, significantly reducing waiting time, especially
+when the simulation times of different solutions are different or stochastic. However, the challenge lies in
+considering the solutions being evaluated on other processors. Ignoring these solutions may result in the
+selection of a solution similar to the running solutions, thereby reducing the efficiency of parallel comput-
+ing. To overcome this challenge, some studies attempt to promote diversity in exploration by integrating
+the location information of the running solutions into the acquisition function. For instance, building on
+the Gaussian process upper confidence bound (GP-UCB) algorithm proposed by Srinivas et al. (2010),
+Desautels et al. (2014) introduce the Gaussian process batch upper confidence bound (GP-BUCB) al-
+gorithm, which takes into account the impact of the running solutions on the posterior variance of the
+Gaussian process. By updating the variance using all the solutions, including those whose observations
+
+
+                                                     20
+are not yet available, GP-BUCB can encourage exploration in regions that have not been sampled yet.
+Wang et al. (2020) constrain the remaining solutions in the q-EI optimization to be different from the
+previous simulated solutions as well as the running solution, thus ensuring some variation among them.
+
+
+6.3    Tensorization of Simulation Model
+
+The previously mentioned approaches concentrate on parallelizing the optimization process, but do not
+address parallelizing the individual simulation replications. However, there are simulation optimization
+challenges where the simulation itself poses a difficulty. This scenario often arises when the simulation is
+utilized to model an exceedingly complex system, and its execution may consume a considerable amount
+of time using traditional simulation algorithms. For example, Wang and Hong (2023) examine the in-
+ventory optimization issue in a production system with potentially 500,000 products, where traditional
+simulation algorithms may require hours to execute a single replication. With the evolution of deep
+learning, various computational tools like TensorFlow (Abadi et al., 2016) and PyTorch (Paszke et al.,
+2019) have been designed for rapid tensor operations. These tools can effectively harness the parallel
+computing capabilities offered by multi-core CPUs and many-core GPUs to expedite calculations in com-
+plex models. Therefore, to achieve substantial acceleration for large-scale simulation models, a crucial
+lesson gleaned from the success of deep learning is the tensorization of the simulation model. In this
+section, we explore the recent advancements in the parallelization of single replications across diverse
+simulation models using tensorization.
+   The inventory simulation model discussed above shares a critical resemblance with recurrent neu-
+ral networks (RNN), as noted by Wang and Hong (2023). They propose an RNN-inspired simulation
+approach that significantly accelerates simulations, enabling the resolution of large-scale inventory opti-
+mization problems within reasonable timeframes. A key aspect of their approach involves tensorization
+of the simulation model, enabling the use of efficient computational tools available in software packages
+and substantially reducing the barriers to parallelization. Their numerical experiments demonstrate that
+while tensorization does not enhance the theoretical computational complexity, it dramatically reduces
+the runtime of the simulation algorithm by orders of magnitude.
+   The simulation of queueing networks often relies on discrete-event simulation as a popular method.
+However, parallelizing queue network simulation using discrete-event simulation presents challenges due
+to the need for a global event list to maintain the correct event order and capture the effects of event
+interactions. Addressing the effective management of large-scale queueing networks, Hong et al. (2024)
+introduce a simulation method tailored for large-scale Markovian queueing networks by incorporating an
+Euler approximation. This method can accommodate time-varying dynamics and is optimized for effi-
+cient implementation through vectorization (or tensorization) techniques. By formulating the algorithms
+in terms of vector and matrix operations, they enable the utilization of parallel computing capabilities
+inherent in multi-core CPU and many-core GPU architectures, along with leveraging efficient computa-
+tional tools designed for vector operations. The use of vectorization allows for the simultaneous handling
+of multiple node tasks, leading to a significant acceleration in computation speed and rendering this
+method highly suitable for simulating large-scale queueing networks.
+
+
+
+
+                                                    21
+7        Concluding Remarks
+
+There are several remarks that we want to make to conclude this review article. Firstly, large-scale SO
+problems differ fundamentally from their moderate counterparts, requiring different theories, algorithms,
+and, above all, a completely different mindset to solve them. Secondly, large-scale R&S problems have
+been extensively researched, with potential for further enhancing the efficiency of algorithms. However,
+the potential for fundamental breakthroughs may be limited. Thirdly, insufficient attention has been
+given to high-dimensional SO, including both discrete and continuous problems, leaving ample room
+for the development of new theories and algorithms. We believe that both dimension reduction and
+the utilization of high-order smoothness are crucial for the development of efficient high-dimensional
+SO algorithms. Finally, parallelization is essential for large-scale SO, and the effective utilization of
+many-core GPUs presents a significant opportunity for advancing theory and algorithm design in this
+field.
+
+
+
+Statement
+
+During the preparation of this paper, the authors used ChatGPT in order to improve the readability
+and the English language of this paper. After using this service, the authors reviewed and edited the
+content as needed and take full responsibility for the content of the paper.
+
+
+
+References
+Abadi, M., Agarwal, A., Barham, P., Brevdo, E., Chen, Z., Citro, C., Corrado, G. S., Davis, A., Dean,
+    J., Devin, M., et al. (2016). TensorFlow: Large-scale machine learning on heterogeneous distributed
+    systems. arXiv preprint arXiv:1603.04467. Software available from tensorflow.org.
+
+Andradóttir, S. and Kim, S. H. (2010). Fully sequential procedures for comparing constrained systems
+    via simulation. Naval Research Logistics, 57(5):403–421.
+
+Bergstra, J. and Bengio, Y. (2012). Random search for hyper-parameter optimization. Journal of
+    Machine Learning Research, 13(2):281–305.
+
+Bottou, L. (2010). Large-scale machine learning with stochastic gradient descent. In Proceedings of
+    COMPSTAT’2010 :19th International Conference on Computational Statistics Paris France, pages
+    177–186. Physica-Verlag HD.
+
+Byrd, R. H., Chin, G. M., Neveitt, W., and Nocedal, J. (2011). On the use of stochastic Hessian
+    information in optimization methods for machine learning. SIAM Journal on Optimization, 21(3):977–
+    995.
+
+Byrd, R. H., Chin, G. M., Nocedal, J., and Wu, Y. (2012). Sample size selection in optimization methods
+    for machine learning. Mathematical Programming, 134(1):127–155.
+
+Chang, K. H., Hong, L. J., and Wan, H. (2013). Stochastic trust-region response-surface method
+    (STRONG)—a new response-surface framework for simulation optimization. INFORMS Journal on
+    Computing, 25(2):230–243.
+
+
+
+
+                                                    22
+Chen, C. H., Lin, J., Yücesan, E., and Chick, S. E. (2000). Simulation budget allocation for further
+  enhancing the efficiency of ordinal optimization. Discrete Event Dynamic Systems, 10:251–270.
+
+Chen, Y., Zhang, Q., Li, M., and Cai, W. (2022). Sequential selection for accelerated life testing via
+  approximate Bayesian inference. Naval Research Logistics, 69(2):336–351.
+
+Cheng, R. C. H. (1997). Searching for important factors: Sequential bifurcation under uncertainty. In
+  Andradóttir, S., Healy, K. J., and Nelson, B. L., editors, Proceedings of the 1997 Winter Simulation
+  Conference, pages 275–280. IEEE.
+
+Constantine, P. G., Dow, E., and Wang, Q. (2014). Active subspace methods in theory and practice:
+  Applications to kriging surfaces. SIAM Journal on Scientific Computing, 36(4):A1500–A1524.
+
+Defazio, A., Bach, F. R., and Lacoste-Julien, S. (2014). SAGA: A fast incremental gradient method with
+  support for non-strongly convex composite objectives. In Advances in Neural Information Processing
+  Systems, volume 1, pages 1646–1654. Curran Associates, Inc.
+
+Dembo, R. S., Eisenstat, S. C., and Steihaug, T. (1982). Inexact Newton methods. SIAM Journal on
+  Numerical Analysis, 19(2):400–408.
+
+Dennis, J. E. and Moré, J. J. (1974). A characterization of superlinear convergence and its application
+  to quasi-Newton methods. Mathematics of Computation, 28(126):549–560.
+
+Desautels, T., Krause, A., and Burdick, J. W. (2014). Parallelizing exploration-exploitation tradeoffs in
+  Gaussian process bandit optimization. Journal of Machine Learning Research, 15:3873–3923.
+
+Ding, L., Hu, T., Jiang, J., Li, D., Wang, W., and Yao, Y. (2023). Random smoothing regularization in
+  kernel gradient descent learning. arXiv preprint arXiv:2305.03531.
+
+Ding, L., Tuo, R., and Zhang, X. (2021). High-dimensional simulation optimization via Brownian fields
+  and sparse grids. arXiv preprint arXiv:2107.08595.
+
+Döring, M., Györfi, L., and Walk, H. (2018). Rate of convergence of k-nearest-neighbor classification
+  rule. Journal of Machine Learning Research, 18(227):1–16.
+
+Du, J., Gao, S., and Chen, C.-H. (2024). A contextual ranking and selection method for personalized
+  medicine. Manufacturing & Service Operations Management, 26(1):167–181.
+
+Duchi, J., Hazan, E., and Singer, Y. (2011). Adaptive subgradient methods for online learning and
+  stochastic optimization. Journal of Machine Learning Research, 12(7):2121–2159.
+
+Fan, W., Hong, L. J., and Zhang, X. (2020). Distributionally robust selection of the best. Management
+  Science, 66(1):190–208.
+
+Frazier, P. I. (2018). A tutorial on Bayesian optimization. arXiv preprint arXiv:1807.02811.
+
+Fu, M. C. (2002). Optimization for simulation: Theory vs. practice. INFORMS Journal on Computing,
+  14(3):192–215.
+
+Fu, M. C. (2008). What you should know about simulation and derivatives. Naval Research Logistics,
+  55(8):723–736.
+
+Fu, M. C. (2015a). Handbook of simulation optimization. Springer.
+
+
+                                                   23
+Fu, M. C. (2015b). Stochastic gradient estimation. In Fu, M. C., editor, Handbook of Simulation
+  Optimization, volume 216, pages 105–147. Springer, New York.
+
+Fu, M. C., Hong, L. J., and Hu, J. Q. (2009). Conditional monte carlo estimation of quantile sensitivities.
+  Management Science, 55(12):2019–2027.
+
+Gao, W. and Zhou, Z. H. (2020). Towards convergence rate analysis of random forests for classification. In
+  Advances in Neural Information Processing Systems, volume 33, pages 9300–9311. Curran Associates,
+  Inc.
+
+Gardner, J., Guo, C., Weinberger, K., Garnett, R., and Grosse, R. (2017). Discovering and exploiting
+  additive structure for Bayesian optimization. In Artificial Intelligence and Statistics, pages 1311–1319.
+  PMLR.
+
+Ginsbourger, D., Le Riche, R., and Carraro, L. (2008). A Multi-points Criterion for Deterministic Parallel
+  Global Optimization based on Gaussian Processes. Technical report, Ecole Nationale Supérieure des
+  Mines.
+
+Glasserman, P. and Tayur, S. (1995). Sensitivity analysis for base-stock levels in multiechelon production-
+  inventory systems. Management Science, 41(2):263–281.
+
+Glynn, P. and Juneja, S. (2004). A large deviations perspective on ordinal optimization. In Ingalls, R. G.,
+  Rossetti, M. D., Smith, J. S., and Peters, B. A., editors, Proceedings of the 2004 Winter Simulation
+  Conference, pages 565–573. IEEE.
+
+Glynn, P. W., Peng, Y., Fu, M. C., and Hu, J. Q. (2021). Computing sensitivities for distortion risk
+  measures. INFORMS Journal on Computing, 33(4):1520–1532.
+
+Griebel, M. (2006). Sparse grids and related approximation schemes for higher dimensional problems.
+  In Pardo, L. M., Pinkus, A., Endre, S., and Todd, M. J., editors, Foundations of Computational
+  Mathematics, Santander 2005, pages 106–161. Cambridge University Press.
+
+Gruslys, A., Munos, R., Danihelka, I., Lanctot, M., and Graves, A. (2016). Memory-efficient back-
+  propagation through time. In Advances in Neural Information Processing Systems, volume 29, page
+  4132–4140. Curran Associates Inc.
+
+Hamm, T. and Steinwart, I. (2021). Adaptive learning rates for support vector machines working on
+  data with low intrinsic dimension. The Annals of Statistics, 49(6):3153–3180.
+
+Hashemi, F. S., Ghosh, S., and Pasupathy, R. (2014). On adaptive sampling rules for stochastic re-
+  cursions. In Buckley, S. J. and Miller, J. A., editors, Proceedings of the 2014 Winter Simulation
+  Conference, pages 3959–3970. IEEE.
+
+Hernández-Lobato, J. M., Hoffman, M. W., and Ghahramani, Z. (2014). Predictive entropy search for
+  efficient global optimization of black-box functions. In Advances in Neural Information Processing
+  Systems, volume 27, pages 918–926. Curran Associates, Inc.
+
+Ho, Y. C., Cao, X., and Cassandras, C. (1983). Infinitesimal and finite perturbation analysis for queueing
+  networks. Automatica, 19(4):439–445.
+
+Hong, L. J. (2009). Estimating quantile sensitivities. Operations Research, 57(1):118–130.
+
+
+
+                                                    24
+Hong, L. J., Fan, W., and Luo, J. (2021). Review on ranking and selection: A new perspective. Frontiers
+  of Engineering Management, 8(3):321–343.
+
+Hong, L. J. and Jiang, G. (2019). Offline simulation online application: A new framework of simulation-
+  based decision making. Asia-Pacific Journal of Operational Research, 36(6):1940015.
+
+Hong, L. J., Jiang, G., and Zhong, Y. (2022). Solving large-scale fixed-budget ranking and selection
+  problems. INFORMS Journal on Computing, 34(6):2930–2949.
+
+Hong, L. J. and Liu, G. (2009a). Pathwise estimation of probability sensitivities through terminating or
+  steady-state simulations. Operations Research, 58(2):357–370.
+
+Hong, L. J. and Liu, G. (2009b). Simulating sensitivities of conditional value at risk. Management
+  Science, 55(2):281–293.
+
+Hong, L. J., Luo, J., and Nelson, B. L. (2015). Chance constrained selection of the best. INFORMS
+  Journal on Computing, 27(2):317–334.
+
+Hong, L. J. and Nelson, B. L. (2006). Discrete optimization via simulation using COMPASS. Operations
+  Research, 54(1):115–129.
+
+Hong, L. J. and Nelson, B. L. (2009). A brief introduction to optimization via simulation. In Rossetti,
+  M. D., Hill, R. R., A, D., and Ingalls, R. G., editors, Proceedings of the 2009 Winter Simulation
+  Conference, pages 75–85. IEEE.
+
+Hong, L. J., Nelson, B. L., and Xu, J. (2010). Speeding up COMPASS for high-dimensional discrete
+  optimization via simulation. Operations Research Letters, 38(6):550–555.
+
+Hong, L. J., Song, Y., and Wang, T. (2024). Fast discrete-event simulation of Markovian queueing
+  networks through Euler approximation. arXiv preprint arXiv:2402.13259.
+
+Hong, L. J. and Zhang, X. (2021). Surrogate-based simulation optimization. In Tutorials in Operations
+  Research: Emerging Optimization Methods and Modeling Techniques with Applications, pages 287–311.
+  INFORMS.
+
+Hunter, S. R., Applegate, E. A., Arora, V., Chong, B., Cooper, K., Rincón-Guevara, O., and Vivas-
+  Valencia, C. (2019). An introduction to multiobjective simulation optimization. ACM Transactions
+  on Modeling and Computer Simulation, 29(1):1–36.
+
+Jalali, H. and Nieuwenhuyse, I. V. (2015). Simulation optimization in inventory replenishment: A
+  classification. IISE Transactions, 47(11):1217–1235.
+
+Jalali, H., Van Nieuwenhuyse, I., and Picheny, V. (2017). Comparison of kriging-based algorithms
+  for simulation optimization with heterogeneous noise. European Journal of Operational Research,
+  261(1):279–301.
+
+Jaquier, N. and Rozo, L. (2020). High-dimensional Bayesian optimization via nested Riemannian mani-
+  folds. In Advances in Neural Information Processing Systems, volume 33, pages 20939–20951. Curran
+  Associates, Inc.
+
+Jiang, G. and Fu, M. C. (2015). Technical note—on estimating quantile sensitivities via infinitesimal
+  perturbation analysis. Operations Research, 63(2):435–441.
+
+
+                                                  25
+Johnson, R. and Zhang, T. (2013). Accelerating stochastic gradient descent using predictive variance
+  reduction. In Advances in Neural Information Processing Systems, volume 26, pages 315–323. Curran
+  Associates, Inc.
+
+Kandasamy, K., Schneider, J., and Póczos, B. (2015). High dimensional Bayesian optimisation and
+  bandits via additive models. In International Conference on Machine Learning, volume 84, pages
+  298–307. PMLR.
+
+Kiefer, J. and Wolfowitz, J. (1952). Stochastic estimation of the maximum of a regression function.
+  Annals of Mathematical Statistics, 23(3):462–466.
+
+Kim, S.-H. and Nelson, B. L. (2001). A fully sequential procedure for indifference-zone selection in
+  simulation. ACM Transactions on Modeling and Computer Simulation, 11(3):251–273.
+
+Kingma, D. P. and Ba, J. (2014). Adam: A method for stochastic optimization. arXiv preprint
+  arXiv:1412.6980.
+
+Kirsch, L. and Schmidhuber, J. (2021). Meta learning backpropagation and improving it. In Advances
+  in Neural Information Processing Systems, volume 34, pages 14122–14134. Curran Associates, Inc.
+
+Kleijnen, J. P. C., Bettonvil, B., and Persson, F. (2006). Screening for the important factors in large
+  discrete-event simulation models: Sequential bifurcation and its applications. In Dean, A. and Lewis,
+  S., editors, Screening: Methods for Experimentation in Industry, Drug Discovery, and Genetics, pages
+  287–307. Springer, New York.
+
+Lan, G. (2020). First-order and Stochastic Optimization Methods for Machine Learning. Springer Nature,
+  New York.
+
+Li, H., Lee, L. H., Chew, E. P., and Lendermann, P. (2015). MO-COMPASS: A fast convergent search
+  algorithm for multi-objective discrete optimization via simulation. IISE Transactions, 47(11):1153–
+  1169.
+
+Li, Z., Fan, W., and Hong, L. J. (2023). The (surprising) rate optimality of greedy procedures for
+  large-scale ranking and selection. arXiv preprint arXiv:2303.02951.
+
+Linnainmaa, S. (1970). The representation of the cumulative rounding error of an algorithm as a Taylor
+  expansion of the local rounding errors. Master’s thesis, University of Helsinki.
+
+Liu, D. C. and Nocedal, J. (1989). On the limited memory BFGS method for large scale optimization.
+  Mathematical Programming, 45(1-3):503–528.
+
+Liu, G. and Hong, L. J. (2010). Kernel estimation of the Greeks for options with discontinuous payoffs.
+  Operations Research, 59(1):96–108.
+
+Luo, J., Hong, L. J., Nelson, B. L., and Wu, Y. (2015). Fully sequential procedures for large-scale
+  ranking-and-selection problems in parallel computing environments. Operations Research, 63(5):1177–
+  1194.
+
+Marceau-Caron, G. and Ollivier, Y. (2016). Practical Riemannian neural networks. arXiv preprint
+  arXiv:1602.08007.
+
+Martens, J. (2020). New insights and perspectives on the natural gradient method. Journal of Machine
+  Learning Research, 21(1):5776–5851.
+
+                                                   26
+Meng, Q., Wang, S., and Ng, S. H. (2022). Combined global and local search for optimization with
+  Gaussian process models. INFORMS Journal on Computing, 34(1):622–637.
+
+Negoescu, D. M., Frazier, P. I., and Powell, W. B. (2011). The knowledge-gradient algorithm for se-
+  quencing experiments in drug discovery. INFORMS Journal on Computing, 23(3):346–363.
+
+Nelson, B. L., Swann, J., Goldsman, D., and Song, W. (2001). Simple procedures for selecting the best
+  simulated system when the number of alternatives is large. Operations Research, 49(6):950–963.
+
+Nemirovski, A., Juditsky, A. B., Lan, G., and Shapiro, A. (2009). Robust stochastic approximation
+  approach to stochastic programming. SIAM Journal on Optimization, 19(4):1574–1609.
+
+Ni, E. C., Ciocan, D. F., Henderson, S. G., and Hunter, S. R. (2017). Efficient ranking and selection in
+  parallel computing environments. Operations Research, 65(3):821–836.
+
+Ni, E. C., Hunter, S. R., and Henderson, S. G. (2013). Ranking and selection in a high performance
+  computing environment. In Pasupathy, R., Kim, S. H., Tolk, A., Hill, R., and Kuhl, M. E., editors,
+  Proceedings of the 2013 Winter Simulations Conference, pages 833–845. IEEE.
+
+Norkin, V. I., Ermoliev, Y. M., and Ruszczyński, A. (1998a). On optimal allocation of indivisibles under
+  uncertainty. Operations Research, 46(3):381–395.
+
+Norkin, V. I., Pflug, G. C., and Ruszczyński, A. (1998b). A branch and bound method for stochastic
+  global optimization. Mathematical Programming, 83:425–450.
+
+Park, H., Amari, S.-I., and Fukumizu, K. (2000). Adaptive natural gradient learning algorithms for
+  various stochastic models. Neural Networks, 13(7):755–764.
+
+Paszke, A., Gross, S., Chintala, S., Chana, G., Yang, E., DeVito, Z., Lin, Z., Desmaison, A., Antiga, L.,
+  and Lerer, A. (2017). Automatic differentiation in pytorch. In NIPS Workshop.
+
+Paszke, A., Gross, S., Massa, F., Lerer, A., Bradbury, J., Chanan, G., Killeen, T., Lin, Z., Gimelshein,
+  N., Antiga, L., et al. (2019). Pytorch: An imperative style, high-performance deep learning library. In
+  Advances in Neural Information Processing Systems, volume 32, page 8024–8035. Curran Associates,
+  Inc.
+
+Paulson, E. (1964). A sequential procedure for selecting the population with the largest mean from k
+  normal populations. The Annals of Mathematical Statistics, 35(1):174–180.
+
+Pearce, M. A. L., Poloczek, M., and Branke, J. (2022). Bayesian optimization allowing for common
+  random numbers. Operations Research, 70(6):3457–3472.
+
+Pei, L., Nelson, B. L., and Hunter, S. (2018). A new framework for parallel ranking & selection using an
+  adaptive standard. In Rabe, M., Juan, A. A., Mustafee, N., Skoogh, A., Jain, S., and Johansson, B.,
+  editors, Proceedings of the 2018 Winter Simulation Conference, pages 2201–2212. IEEE.
+
+Pei, L., Nelson, B. L., and Hunter, S. R. (2024). Parallel adaptive survivor selection. Operations Research,
+  72(1):336 – 354.
+
+Peng, Y., Chen, C. H., and Fu, M. C. (2023). Simulation optimization in the new era of AI. In Tutorials
+  in Operations Research: Advancing the Frontiers of OR/MS: From Methodologies to Applications,
+  pages 82–108. INFORMS.
+
+
+                                                    27
+Peng, Y., Fu, M. C., Heidergott, B., and Lam, H. (2020). Maximum likelihood estimation by monte
+  carlo simulation: Toward data-driven stochastic modeling. Operations Research, 68(6):1896–1912.
+
+Peng, Y., Fu, M. C., Hu, J. Q., and Heidergott, B. (2018). A new unbiased stochastic derivative
+  estimator for discontinuous sample performances with structural parameters. Operations Research,
+  66(2):487–499.
+
+Peng, Y., Xiao, L., Heidergott, B., Hong, L., and Lam, H. (2021). A new likelihood ratio method for
+  training artificial neural networks. INFORMS Journal on Computing, 34(1):638–655.
+
+Polyak, B. (1990). New method of stochastic approximation type. Automation and Remote Control,
+  51:937–946.
+
+Polyak, B. T. and Juditsky, A. B. (1992). Acceleration of stochastic approximation by averaging. SIAM
+  Journal on Control and Optimization, 30(4):838–855.
+
+Quan, N., Yin, J., Ng, S. H., and Lee, L. H. (2013). Simulation optimization via kriging: a sequential
+  search using expected improvement with computing budget constraints. IISE Transactions, 45(7):763–
+  780.
+
+Rall, L. B. and Corliss, G. F. (1996). An introduction to automatic differentiation. Computational
+  Differentiation: Techniques, Applications, and Tools, 89:1–18.
+
+Raskutti, G., Wainwright, M. J., and Yu, B. (2014). Early stopping and non-parametric regression: An
+  optimal data-dependent stopping rule. The Journal of Machine Learning Research, 15(1):335–366.
+
+Robbins, H. and Monro, S. (1951). A stochastic approximation method. The Annals of Mathematical
+  Statistics, 22(3):400–407.
+
+Rolland, P., Scarlett, J., Bogunovic, I., and Cevher, V. (2018). High-dimensional Bayesian optimization
+  via additive models with overlapping groups. In International Conference on Artificial Intelligence
+  and Statistics, pages 298–307. PMLR.
+
+Roosta-Khorasani, F. and Mahoney, M. W. (2019). Sub-sampled Newton methods. Mathematical Pro-
+  gramming, 174:293–326.
+
+Roux, N. L., Schmidt, M., and Bach, F. R. (2012). A stochastic gradient method with an exponential
+  convergence rate for finite training sets. In Advances in Neural Information Processing Systems,
+  volume 2, pages 2663–2671. Curran Associates, Inc.
+
+Rumelhart, D. E., Hinton, G. E., and Williams, R. J. (1986). Learning representations by back-
+  propagating errors. Nature, 323(6088):533–536.
+
+Salemi, P. L., Song, E., Nelson, B. L., and Staum, J. (2019). Gaussian Markov random fields for discrete
+  optimization via simulation: Framework and algorithms. Operations Research, 67(1):250–266.
+
+Schraudolph, N. N. (2002). Fast curvature matrix-vector products for second-order gradient descent.
+  Neural Computation, 14(7):1723–1738.
+
+Schraudolph, N. N., Yu, J., and Günter, S. (2007). A stochastic quasi-Newton method for online convex
+  optimization. In Artificial Intelligence and Statistics, pages 436–443. PMLR.
+
+
+
+
+                                                   28
+Semelhago, M., Nelson, B. L., Song, E., and Wächter, A. (2021). Rapid discrete optimization via
+  simulation with Gaussian Markov random fields. INFORMS Journal on Computing, 33(3):915–930.
+
+Shah, A. and Ghahramani, Z. (2015). Parallel predictive entropy search for batch global optimization
+  of expensive objective functions. In Advances in Neural Information Processing Systems, volume 28,
+  pages 3330–3338. Curran Associates, Inc.
+
+Shen, H., Hong, L. J., and Zhang, X. (2021). Ranking and selection with covariates for personalized
+  decision making. INFORMS Journal on Computing, 33(4):1500–1519.
+
+Shi, L. and Olafsson, S. (2000). Nested partitions method for global optimization. Operations Research,
+  48(3):390–407.
+
+Snoek, J., Larochelle, H., and Adams, R. P. (2012). Practical Bayesian optimization of machine learning
+  algorithms. In Advances in Neural Information Processing Systems, volume 25, pages 2951–2959.
+  Curran Associates, Inc.
+
+Spall, J. C. (2009). Feedback and weighting mechanisms for improving Jacobian estimates in the adaptive
+  simultaneous perturbation algorithm. IEEE Transactions on Automatic Control, 54(6):1216–1229.
+
+Srinivas, N., Krause, A., Kakade, S., and Seeger, M. (2010). Gaussian process optimization in the bandit
+  setting: No regret and experimental design. In Proceedings of the 27th International Conference on
+  Machine Learning, pages 1015–1022. Omnipress.
+
+Stone, C. J. (1982). Optimal global rates of convergence for nonparametric regression. The Annals of
+  Statistics, 10(4):1040–1053.
+
+Sun, L., Hong, L., and Hu, Z. (2014). Balancing exploitation and exploration in discrete optimization
+  via simulation through a Gaussian process-based search. Operations Research, 62(6):1416–1438.
+
+Tieleman, T. and Hinton, G. (2012). Rmsprop: Divide the gradient by a running average of its recent
+  magnitude. COURSERA: Neural Networks for Machine Learning, 17.
+
+van Merriënboer, B., Wiltschko, A. B., and Moldovan, D. (2017). Tangent: Automatic differentiation
+  using source code transformation in python. arXiv preprint arXiv:1711.02712.
+
+Wan, H., Ankenman, B. E., and Nelson, B. L. (2006). Controlled sequential bifurcation: A new factor-
+  screening method for discrete-event simulation. Operations Research, 54(4):743–755.
+
+Wan, H., Ankenman, B. E., and Nelson, B. L. (2010). Improving the efficiency and efficacy of controlled
+  sequential bifurcation for simulation factor screening. INFORMS Journal on Computing, 22(3):482–
+  492.
+
+Wang, H. (2012). Retrospective optimization of mixed-integer stochastic systems using dynamic simplex
+  linear interpolation. European Journal of Operational Research, 217(1):141–148.
+
+Wang, J., Clark, S. C., Liu, E., and Frazier, P. I. (2020). Parallel Bayesian global optimization of
+  expensive functions. Operations Research, 68(6):1850–1865.
+
+Wang, L. and Demeulemeester, E. (2023). Simulation optimization in healthcare resource planning: A
+  literature review. IISE Transactions, 55(10):985–1007.
+
+
+
+
+                                                  29
+Wang, T. and Hong, L. J. (2023). Large-scale inventory optimization: A recurrent neural networks–
+  inspired simulation approach. INFORMS Journal on Computing, 35(1):196–215.
+
+Wang, X., Hong, L. J., Jiang, Z., and Shen, H. (2023). Gaussian process-based random search for
+  continuous optimization via simulation. Operations Research, forthcoming.
+
+Wang, Z., Hutter, F., Zoghi, M., Matheson, D., and De Feitas, N. (2016). Bayesian optimization in a
+  billion dimensions via random embeddings. Journal of Artificial Intelligence Research, 55:361–387.
+
+Wu, J. and Frazier, P. (2016). The parallel knowledge gradient method for batch Bayesian optimiza-
+  tion. In Advances in Neural Information Processing Systems, volume 29, pages 3134–3142. Curran
+  Associates, Inc.
+
+Xie, J., Frazier, P. I., and Chick, S. E. (2016). Bayesian optimization via simulation with pairwise
+  sampling and correlated prior beliefs. Operations Research, 64(2):542–559.
+
+Xu, J., Nelson, B. L., and Hong, J. L. (2010). Industrial strength COMPASS: A comprehensive algo-
+  rithm and software for optimization via simulation. ACM Transactions on Modeling and Computer
+  Simulation, 20(1):1–29.
+
+Xu, J., Nelson, B. L., and Hong, L. J. (2013). An adaptive hyperbox algorithm for high-dimensional
+  discrete optimization via simulation problems. INFORMS Journal on Computing, 25(1):133–146.
+
+Xu, W. L. and Nelson, B. L. (2013). Empirical stochastic branch-and-bound for optimization via simu-
+  lation. IISE Transactions, 45(7):685–698.
+
+Yang, Y. and Dunson, D. (2013). Bayesian manifold regression. The Annals of Statistics, 44(2):876–905.
+
+Zeiler, M. D. (2012). Adadelta: An adaptive learning rate method. arXiv preprint arXiv:1212.5701.
+
+Zhang, Q. and Hu, J. (2022). Actor-critic–like stochastic adaptive search for continuous simulation
+  optimization. Operations Research, 70(6):3519–3537.
+
+Zhang, S., Yang, F., Yan, C., Zhou, D., and Zeng, X. (2021). An efficient batch-constrained Bayesian
+  optimization approach for analog circuit synthesis via multiobjective acquisition ensemble. IEEE
+  Transactions on Computer-Aided Design of Integrated Circuits and Systems, 41(1):1–14.
+
+Zhong, Y. and Hong, L. J. (2022). Knockout-tournament procedures for large-scale ranking and selection
+  in parallel computing environments. Operations Research, 70(1):432–453.
+
+Zhong, Y., Liu, S., Luo, J., and Hong, L. J. (2022). Speeding up Paulson’s procedure for large-scale
+  problems using parallel computing. INFORMS Journal on Computing, 34(1):586–606.
+
+Zhou, C., Ma, N., Cao, X., Lee, L. H., and Chew, E. P. (2021). Classification and literature review
+  on the integration of simulation and optimization in maritime logistics studies. IISE Transactions,
+  53(10):1157–1176.
+
+Zhou, T., Fields, E., and Osorio, C. (2023). A data-driven discrete simulation-based optimization algo-
+  rithm for car-sharing service design. Transportation Research Part B: Methodological, 178:102818.
+
+
+
+
+                                                  30
+

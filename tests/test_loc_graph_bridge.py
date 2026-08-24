@@ -66,11 +66,13 @@ def test_graph_mode_reproduces_the_shipped_science_exactly(serial, graph):
     assert graph["payload"] == serial["payload"]
 
 
-# Frozen 2026-08-02 from the verified bridge, on the burned unit-test tape (SEED 5_200_001,
-# WEEKS=52 with R22_FREQUENCY=6.0, split_v1, non-fungible). Anchors the null OUTSIDE the code
-# path it guards. The tape parameters belong in this comment because the hash is meaningless
-# without them -- an earlier version said 12 weeks after the tape had already been lengthened.
-GOLDEN_SERIAL_PAYLOAD_SHA256 = "371c5975386868a57c3fa71b16fd02df082d3c90d74408a8cc75b3f303e2bbc1"
+# Re-frozen 2026-08-24 with explicit PI authorization ("reconozcamos que el golden
+# nunca fue correcto y requémoslo"), same forensics as the CSSU bridge anchor:
+# docs/CUSTODIA_ANCHORS_RECONGELADO_2026-08-24.md. The original constant was never
+# produced by any committed tree; the value below is what the committed physics and
+# this burned tape (SEED 5_200_001, WEEKS=52 with R22_FREQUENCY=6.0, split_v1,
+# non-fungible) actually yield under the pinned interpreter.
+GOLDEN_SERIAL_PAYLOAD_SHA256 = "eb65748e31c1cfb9663387d00492b44220e4629a40ecc85d2f0343f6288e12c0"
 
 
 def test_the_null_is_anchored_to_a_frozen_hash(serial):

@@ -1,0 +1,1699 @@
+                                                                Int. J. Production Economics 297 (2026) 109995
+
+
+                                                                    Contents lists available at ScienceDirect
+
+
+                                         International Journal of Production Economics
+                                                            journal homepage: www.elsevier.com/locate/ijpe
+
+
+
+
+Multi-agent reinforcement learning-based resilience reconfiguration
+approach of supply chain system-of-systems under disruption risks
+Wei Ding a , Zhenjun Ming b,*, Guoxin Wang c , Yan Yan c , Deyi Zhang a
+a
+  School of Mechanical Engineering, Suzhou University of Science and Technology, No.55 Changjiang Road, High-tech District, Suzhou City, Jiangsu, 215009, China
+b
+  School of Artificial Intelligence, Beijing Institute of Technology, No. 5 Zhongguancun South Street, Haidian District, Beijing, 100081, China
+c
+  School of Mechanical Engineering, Beijing Institute of Technology, No. 5 Zhongguancun South Street, Haidian District, Beijing, 100081, China
+
+
+
+
+A R T I C L E I N F O                                     A B S T R A C T
+
+Keywords:                                                 The rapid globalization of supply chains (SC) has opened vast prospects but also increased disruption risks and
+Supply chain system-of-systems                            substantial uncertainties in supply chain systems-of-systems (SCSoSs). Supply chain reconfiguration (SCR) has
+Resilience reconfiguration                                emerged as a pivotal strategy for mitigating these risks. This paper proposes a multi-agent reinforcement
+Multi-agent reinforcement learning
+                                                          learning-based resilience reconfiguration approach for SCSoSs to address the agile, stable, and spatio-temporal
+Disruption risks
+Partially observable markov decision process
+                                                          requirements of SCR under disruption risks. It begins by detailing the SCR issue involving suppliers, manufac­
+                                                          turers, distributors, and consumers amid disruption risks and introduces three resilience strategies: filling,
+                                                          repairing, and recruiting. A three-phase model for calculating resilience and reconfiguration costs is then
+                                                          developed, grounded in the supply chain directed network (SCDN). Following this, the reconfiguration process is
+                                                          modeled as a partially observable Markov decision process (POMDP), with the state space representing SC el­
+                                                          ements and the action space including available strategies. The reward function balances resilience and costs
+                                                          considerations. Utilizing the multi-agent proximal policy optimization (MAPPO) technique, the method enables
+                                                          dynamic reconfiguration of SCSoSs, demonstrating its effectiveness through experimental simulations. The
+                                                          analysis also explores how different attributes affect reconfiguration outcomes. Results indicate that the MAPPO
+                                                          approach substantially enhances reconfiguration performance under disruption risks compared to other base­
+                                                          lines, providing valuable insights for modern SC management.
+
+
+
+Nomenclature and Abbreviations                                                                   (continued )
+                                                                                                  QMIX          Monotonic value function factorisation for deep multi-agent
+    SC         Supply chains                       SoSs     System-of-systems                                   reinforcement learning
+    SCSoSs     Supply chain system-of-             SCR      Supply chain
+               systems                                      reconfiguration
+    RL         Reinforcement learning              DRL      Deep reinforcement
+                                                            learning
+    MARL       Multi-agent reinforcement           SCDN     Supply chain directed
+               learning                                     network                             1. Introduction
+    ND         Network density                     DC       Degree centrality
+    CC         Clustering coefficient              HC       Homogeneity coefficient
+                                                                                                    With the rapid advancement of information technology and growing
+    MC         Maximum connectivity                AD       Average distance
+    MDP        Markov decision process             GAE      Generalized advantage               industrial investment, interconnections among enterprises have evolved
+                                                            estimation                          into highly complex and networked structures. The traditional linear
+    MAPPO      Multi-agent proximal policy       ​         ​                                    model of supply chains (SC) (Shukla et al., 2011) has shifted consider­
+               optimization                                                                     ably toward an intricate, non-linear network that spans the entire pro­
+    POMDP      Partially observable Markov decision process
+    MADDPG     Multi-agent deep deterministic policy gradient
+                                                                                                duction and distribution lifecycle, from raw material suppliers to end
+                                                                                                consumers. This evolution means SC are no longer static processes; they
+                                                             (continued on next column)
+                                                                                                have become dynamic systems that continuously adapt to a variety of
+
+
+ * Corresponding author.
+   E-mail addresses: dingwei@usts.edu.cn (W. Ding), zhenjun.ming@bit.edu.cn (Z. Ming), wangguoxin@bit.edu.cn (G. Wang), Yanyan331@bit.edu.cn (Y. Yan),
+deyi1108@126.com (D. Zhang).
+
+https://doi.org/10.1016/j.ijpe.2026.109995
+Received 13 October 2025; Received in revised form 22 February 2026; Accepted 2 March 2026
+Available online 3 March 2026
+0925-5273/© 2026 Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.
+W. Ding et al.                                                                                          International Journal of Production Economics 297 (2026) 109995
+
+
+internal and external challenges. In recent years, the strategic landscape          inadequate for modern requirements in three key aspects: First, they
+of SC has become increasingly polarized. On one hand, globalization has             struggle with the agile and real-time demands of dynamic SCR. Second,
+extended networks worldwide in pursuit of efficiency and scale. On the              conventional optimization methods require precise environmental
+other hand, rising geopolitical tensions, trade uncertainties, and                  models that are difficult to establish given real-world uncertainties.
+persistent disruption risks have spurred strong counter-globalization               Third, they fail to adequately address the multi-agent nature of SCSoSs.
+trends toward SC regionalization, localization, and the formation of                These limitations motivate our adoption of multi-agent reinforcement
+strategic alliances. These globalization or counter-globalization efforts           learning (MARL) (Canese et al., 2021), which overcomes these chal­
+aim to enhance resilience, reduce dependency, and gain strategic au­                lenges through three corresponding advantages: 1) It enables dynamic,
+tonomy. A pertinent example reflecting this dual trend is China's SC pilot          adaptive decision-making without requiring pre-defined environmental
+cities initiative, which seeks to strengthen regional SC robustness within          models (Rolf et al., 2023; Yan et al., 2022); 2) It supports online adap­
+a globalized context.                                                               tation to changing conditions through continuous interaction with the
+    Building on this evolving context, modern SC increasingly exhibit               environment; 3) It naturally accommodates the distributed
+characteristics of system-of-systems (SoSs) architectures regardless of             decision-making structure of SCSoSs, where each entity (supplier,
+their geographic span, whether global, regional, or local. These inter­             manufacturer, or distributor) operates as an autonomous agent opti­
+connected networks, comprising suppliers, manufacturers, distributors,              mizing its strategy based on local information to maximize long-term
+and consumers, form what we refer to as supply chain system-of-systems              cumulative rewards.
+(SCSoSs) (Choi, 2018; Jaradat et al., 2017). This integrated whole spans                This superiority of MARL becomes decisively apparent when
+multiple production stages, from raw material procurement (e.g., metals             considering the stochastic nature of real-world SC. While conventional
+and plastics), through manufacturing and distribution, to meet diverse              optimization methods excel in deterministic environments, they struggle
+consumer demands. Whether a firm pursues a globalized or a regional­                profoundly with uncertainties in supply, demand, and logistics. It is
+ized strategy, its SCSoSs remains exposed to a common set of disruption             these very uncertainties that transform the SCR problem from a
+risks (El Baz and Ruel, 2021; Li et al., 2021), including:                          combinatorial optimization task into a sequential decision-making
+                                                                                    problem under uncertainties. The three capabilities of MARL outlined
+● Geopolitical and trade factors such as tariff adjustments, export                 above make it uniquely equipped to handle this transformed problem: its
+  controls, and shifts in trade agreements, which can abruptly alter                model-free nature tackles the lack of precise models; its online adapta­
+  sourcing patterns and increase logistics costs.                                   tion capability meets the need for real-time response; and its distributed
+● Environmental and climatic factors including floods, typhoons, and                architecture supports the partial observability that characterizes real-
+  extreme temperatures, which may cause transportation halts, infra­                world SCSoSs. Research confirms that MARL outperforms traditional
+  structure damage, or regional production shutdowns.                               methods in handling dynamic, large-scale SCR challenges, establishing it
+● Public health crises as exemplified by recent pandemics, leading to               as a superior approach for modern SC management.
+  labor shortages, facility closures, quarantine delays, and sudden                     In summary, this paper presents a novel MARL-based approach for
+  demand surges or drops.                                                           dynamic reconfiguration of SCSoSs under disruption risks. This method
+                                                                                    characterizes the SCR process as a partially observable Markov decision
+    These disruptions often manifest as hard disruptions (e.g., complete            process (POMDP), where the state space comprises elements of the SC,
+exit of a supplier due to trade sanctions) or soft disruptions (e.g., partial       the action space represents reconfiguration strategies, and the reward
+capacity reduction owing to port congestion or workforce absenteeism).              function incorporates both resilience and costs objectives. Through
+They directly impair the operational capabilities of suppliers, manu­               MARL training, this framework enables agile, efficient, and intelligent
+facturers, and distributors, thereby underscoring the pressing need for             reconfiguration of SCSoSs.
+agile and resilient reconfiguration mechanisms.                                         The primary contributions of this work can be summarized as
+    In this regard, prompt and judicious supply chain reconfiguration               follows.
+(SCR) is imperative to maintain the stability of the entire SC. The SCR is
+viewed as a process of dynamically optimizing existing links and re­                  (1) This paper introduces a SCR problem under disruption risks
+sources in response to disruption risks. Academics have extensively                       centered around the concept of SoSs, which encompasses sup­
+explored this topic: studies such as (Tian and Guo, 2019) and (Guo et al.,                pliers, manufacturers, distributors and consumers, accompanied
+2018) demonstrate that reconfiguring SC can enhance operating income                      by a corresponding mathematical definition.
+and reduce reconfiguration costs while meeting customer requirements.                 (2) During disruption risks, the resilience-oriented reconfiguration
+However, existing SCR models predominantly focus on dual-objective                        strategies that are named “filling”, “repairing”, and “recruiting”
+optimization, maximizing profits and minimizing costs, with occa­                         are given. Utilizing the SCDN, a three-phase quantitative resil­
+sional consideration of time-related metrics. Few studies integrate the                   ience model is developed, incorporating SoSs resilience and costs
+concept of resilience into SC optimization frameworks.                                    into the optimization criteria for reconfiguration.
+    Resilience, inherent to the SCSoSs, is crucial in addressing disruption           (3) To ensure the agility and dynamics of SCR, MARL technology is
+risks like natural disasters and market fluctuations (Tukamuhabwa                         used to characterize the reconfiguration process as a POMDP,
+et al., 2015). Through reasonable resource allocation and resilience                      with the state space representing each SC element and the action
+reconfiguration, SC managers can swiftly restore core functionalities,                    space corresponding to the reconfiguration strategies employed
+minimize production halts or delays, and maintain high service levels                     by these elements, while integrating resilience and costs into the
+and operational efficiency. For instance, Dixit et al. (2016) developed a                 reward function.
+multi-objective stochastic mixed integer programming model incorpo­                   (4) The experimental simulation analysis verifies the method's
+rating supply demand and resilience costs, while Fattahi et al. (2020)                    effectiveness across various scenarios. Results indicate that, in
+employed a novel resilience index to optimize the design of                               comparison to closely related MARL methods, such as QMIX
+disruption-driven SC networks by random methods. Therefore, the                           (Rashid et al., 2018) and MADDPG, the MAPPO offers markedly
+resilience-based optimization is pivotal in SC management. These de­                      superior reconfiguration performance under disruption risks.
+velopments underscore how resilience-based optimization provides both                     Further, the analysis explores how factors such as suppliers,
+standards and direction for the dynamic reconfiguration of SCSoSs.                        manufacturers, and distributors impact the reconfiguration
+    However, current approaches face significant limitations in                           outcomes.
+achieving this resilience. Most existing studies rely on heuristic algo­
+rithms for SCR, which, while effective in static settings, prove                       The remainder of this paper is organized as follows: Section 2
+
+                                                                                2
+W. Ding et al.                                                                                                       International Journal of Production Economics 297 (2026) 109995
+
+
+provides essential background and related work. Section 3.1 defines the                       2.1. SC optimization design
+SCSoSs under uncertainty and clarifies the issue of reconfiguration
+under disruption risks. Section 3.2 gives the resilience reconfiguration                          SC optimization aims to systematically enhance overall efficiency,
+strategies, defining the three-phase SC resilience and associated recon­                      reduce costs, and meet customer demands. Existing literature has pri­
+figuration costs. Section 3.3 studies the SCR using MARL. Specifically,                       marily focused on two interrelated problems: design (Melnyk et al.,
+Section 3.3.1 introduces the POMDP, Section 3.3.2 details the state                           2014; Garcia and You, 2015; Meixell and Gargeya, 2005) and redesign
+space, action space, and reward function, and Section 3.3.3 elaborates                        (reconfiguration) (Tian and Guo, 2019; Hewitt, 1994). These efforts
+on the network training process employing MAPPO. In Section 4, we                             span key areas: 1) SC network design and redesign; 2) inventory man­
+conduct simulation verifications across various scenarios and explores                        agement and optimization; 3) risk management and sustainability.
+the impact of different factors on the reconfiguration. Section 5 con­                        Table 1 presents a summary and comparison of the relevant works.
+cludes this paper and provides an outlook for future work.
+                                                                                                 ● Design (Han et al., 2024; Shekarabi et al., 2024; Mohammed et al.,
+2. Background and related work                                                                     2023) focuses on establishing optimal initial network structures
+                                                                                                   among suppliers, manufacturers, distributors, and consumers, typi­
+    With the advancement of Intelligent Manufacturing 4.0 and the                                  cally formulated as NP-hard combinatorial optimizations.
+burgeoning Internet economy, the SC model centered around network                                ● Redesign (Fathollahi-Fard, 2024; Panchal et al., 2023) focuses on
+chain structures has emerged as the prevailing paradigm. As this field                             what measures should be taken to restore the SC process to normal or
+evolves, research into SC optimization design has significantly influ­                             original functions when the built matching relationship is disrupted
+enced this landscape. Among the challenges faced, reconfiguration has                              by internal or external factors, and also involves enhancing the SC
+emerged as a core issue, with resilience now recognized as a crucial                               resilience to disruptions.
+factor in sustaining the efficient operation of SC processes, garnering
+substantial attention from experts in the field. Furthermore, the devel­                          Recent studies in design problem have evolved from deterministic
+opment of RL technology offers a powerful tool for SC design, optimi­                         models to those incorporating uncertainty, risk, and resilience. For
+zation, and reconfiguration, facilitating the creation of more refined                        example, Gital and Bilgen (2024) examined biomass SC network design
+solutions. The following sections will review the representative research                     under such conditions, while Zhang et al. (2025a) studied a collabora­
+in the three fields of SC optimization design, systems resilience, and                        tive robust SC network model under demand uncertainties. Meanwhile,
+reinforcement learning, highlighting key intersections and identifying                        Guillén et al. (2005) investigated the SCSoSs, comprising multiple pro­
+the literature gaps.                                                                          duction facilities, warehouses, and associated distribution systems, to
+                                                                                              identify optimal designs according to selected multi-objectives.
+
+
+Table 1
+Summary and comparison of SC optimization design.
+  Topic                           Literature                                   Method                       Main Advantage/Limitation
+
+  Humann et al. (Shukla et al.,   Rule-based                                   Box-pushing problem          Total distance, collisions, and success rate
+    2011)
+  SC Network                      Guillén et al. (2005) (Guillén et al.,     Multi-objective              Uncertainty model/Limited consideration of disruptions
+    Design                        2005)                                        Optimization
+                                  Fattahi et al. (2020) (Fattahi et al.,       Stochastic Programming       Quantifiable resilience/Fixed probability distributions
+                                  2020)
+                                  Mohammed et al. (2023) (Mohammed             Multi-objective              Sustainability resilience metrics/Lack of objective evaluation
+                                  et al., 2023)                                Optimization
+                                  Han et al. (2024) (Han et al., 2024)         Continuous                   Uncertainty model/Complexity of network structure
+                                                                               Approximation
+                                  Zhang et al. (2025) (Zhang et al., 2025a)    Multi-objective              Robustness considerations/Simple allocation mechanism
+                                                                               Optimization
+
+  SC Network Redesign or          Guo et al. (2018) (Guo et al., 2018)         Graph Theory                 Integrated configuration costs/Lack of uncertainty
+    Reconfiguration               Tian and Guo (2019) (Tian and Guo,           Graph Theory                 Quantifiable configuration costs/Simple risk model
+                                  2019)
+                                  Rajagopal et al. (2022) (Rajagopal et al.,   Multi-objective              Quantifiable resilience/Incomplete disruption types
+                                  2022b)                                       Optimization
+                                  Fathollahi-Fard (2024) (                     Multi-objective              Multi-dimensional cost optimization/Low scalability
+                                  Fathollahi-Fard, 2024)                       Optimization
+                                  Shekarabi et al. (2025) (Shekarabi and       Multi-objective              Multiple resilience strategies/low scalability
+                                  Mozdgir, 2025)                               Optimization
+
+  Inventory Management            Jiang and Sheng (2009) (Jiang and            Reinforcement Learning       Dynamic requirement considerations/Single optimization goal
+    Optimization                  Sheng, 2009)
+                                  Drakaki and Tzionas (2022) (Drakaki          Petri Net Model              Strong scalability/Difficult to apply to large networks
+                                  and Tzionas, 2022)
+                                  Chen et al. (2024) (Chen et al., 2024)       Reinforcement Learning       Dynamic adaptability capability/Data dependency
+                                  Vicente (2025) (Vicente, 2025)               Mixed Integer Linear         Accurate solution/Computationally intensive
+                                                                               Programming
+                                  Aiello et al. (2025) (Aiello et al., 2025)   Closed Loop Theory           Focus on sustainability/Simple SC coordination mechanisms
+
+  Risk Management                 El Baz and Ruel (2021) (El Baz and Ruel,     Structural Equation          SC network collaboration considerations/One sidedness of experimental
+                                  2021)                                        Modeling                     data
+                                  Xu et al. (2024) (Xu et al., 2024)           Random Forest                Excellent predictive performance/Hyperparameter sensitivity
+                                  Yang et al. (2024) (Yang et al., 2024)       Knowledge Graph              Introduced survival ability/Data dependency and security
+                                  Zhang et al. (2025) (Zhang et al., 2025b)    Fuzzy Neural Network         Real-time risk management/Data dependency
+
+  This Paper                      /                                            Reinforcement Learning:      Uncertainty model; Quantifiable resilience; Integrated configuration
+                                                                               MAPPO                        costs; Dynamic response/Data dependency
+
+
+                                                                                          3
+W. Ding et al.                                                                                        International Journal of Production Economics 297 (2026) 109995
+
+
+However, these design-oriented approaches often assume static or                  complex SC remains a persistent challenge.
+pre-defined scenarios and lack mechanisms for dynamic adaptation                      To bolster adaptive capacity and resilience under uncertainties,
+following disruptions. In existing research on redesign issues, Shekarabi         numerous optimization-based approaches have been proposed. Margolis
+and Mozdgir (2025) conducted in-depth research on the redesign of food            et al. (2018) proposed a multi-objective SC network design model
+SC networks under pandemic disruptions. Rajagopal and colleagues                  trading off costs and connectivity. Chowdhury et al. (Chowdhury and
+(Rajagopal et al., 2022a, 2022b) introduced a p-robust SC network                 Quaddus, 2015) devised a quality function deployment-based multi-­
+reconfiguration model incorporating decision-makers’ risk preferences.            objective optimization framework to assess vulnerability and flexibility
+In (Durowoju et al., 2021), the impact of SC redesign on information              in SC configurations. In (Suryawanshi and Dutta, 2022), the latest
+disruption is explored. Graph-based methods have gained traction for              research and future research on SC optimization models under risks,
+modeling reconfiguration; for instance, Tian et al. (Tian and Guo, 2019)          uncertainties, and resilience were described. Collectively, these efforts
+and Guo et al. (2018) used graph theory to model reconfiguration costs            indicate that enhancing resilience entails structural optimization, con­
+and assess the similarity between SCR. While costs and efficiency are             tingency planning, and real-time monitoring to sustain stability and
+commonly optimized in these advances, the explicit integration of                 responsiveness.
+quantifiable resilience as a core objective within dynamic reconfigura­
+tion frameworks remains underexplored.                                            2.3. Reinforcement learning for SC
+    Effectively managing inventory (Zhang et al., 2025a; Vicente, 2025;
+Aiello et al., 2025) within the SC to strike a balance between inventory              In SC management and decision-making, several challenges arise,
+holding costs and the risk of stockouts remains a critical challenge.             including the integration of large-scale elements, the coordination
+Burtea and Tsay (2024) proposed a constrained continuous-action RL                across multiple stages, and the adaptability required for effective
+algorithm for SC inventory management. Drakaki and colleagues                     reconfiguration. RL is a cutting-edge method of data-driven decision-
+(Drakaki and Tzionas, 2022) introduced a SC inventory management                  making designed to optimize expected cumulative returns through
+modeling approach grounded in the concept of a color culture network.             exploratory learning. Given its impressive efficiency and scalability, and
+Moreover, when the SC encounters demand fluctuations, supply un­                  the ability to optimize rewards without the need for training samples, RL
+certainties, or cost pressures, it may be necessary to modify its current         presents a compelling case for application in SCSoSs optimization
+inventory strategy. Souze and colleagues (Souza et al., 2025) conducted           problems.
+an in-depth review of dynamic programming in inventory management,                    A growing body of pioneering work applies RL to address complex SC
+identifying research gaps and outlining future directions in this area.           problems. Recent surveys by Rolf et al. (2023) and Yan et al. (2022) have
+However, these studies typically focus on isolated inventory control              classified the applications of RL in SC management. Several scholars
+without fully integrating it into a holistic, resilience-driven reconfigu­        have implemented RL algorithms in specific case studies. For instance,
+ration process spanning the entire SC network.                                    Cuong et al. (2025) explored new strategies for analyzing and managing
+    Risk management and sustainability have garnered growing atten­               port productivity in a multi-stage SC network by integrating synchro­
+tion, particularly for enhancing SC resilience. Xu et al. (2024) proposed         nization and RL techniques. Aboutorab and colleagues (Aboutorab et al.,
+a risk management method based on an intelligent random forest model.             2022) developed an RL-based recommendation model to pinpoint dis­
+Hatami-Marbini et al. (2024) devised an extensive risk management                 ruptions in SC operations. Collectively, these studies underscore the
+framework aimed at optimizing risk mitigation strategies within                   adaptability and promise of RL in addressing various facets of the SCSoSs
+Nigeria's oil SC. The potential risks in the existing SC are reassessed and       challenge.
+redesigned to enhance its resilience and ability to respond to emergen­               To tackle high-dimensional and complex SC environments, recent
+cies. Yang and colleagues (Yang et al., 2024) created a knowledge                 studies have turned to DRL, which combines the representation ability of
+graph-based risk management framework to enhance the SC resilience.               deep learning and the decision-making efficiency of RL. Mohamadi and
+Additionally, Zhang and colleagues (Zhang et al., 2025b) integrated               colleagues (Mohamadi et al., 2024) applied DRL to optimize perishable
+blockchain with fuzzy neural networks for financing risk management.              inventory control. Chong et al. (2022) utilized the Soft Actor-Critic al­
+To build on these foundations, it is essential to further enhance the             gorithm to improve inventory availability in apparel SC, seeking a
+integration of these strategies into a cohesive dynamic reconfiguration           trade-off between service levels and sales rates. Chen et al. (2024)
+decision-making process.                                                          developed a DRL-based inventory management framework incorpo­
+                                                                                  rating several mechanisms to ensure training stability and efficiency.
+2.2. SoSs resilience in SC                                                        These studies demonstrate the potential of DRL in improving the pre­
+                                                                                  cision, efficiency, and robustness of SCSoSs design and reconfiguration.
+     Resilience in SCSoSs plays a vital role during the design or redesign            Multi-agent systems involve multiple autonomous entities, and
+phase, enabling rapid recovery and sustained functionality under dis­             MARL represents a crucial application of RL within this domain. This
+ruptions such as supply interruptions, demand shifts, or market vola­             approach has been utilized to address complex multi-link decision-
+tility. It encompasses the capacity to absorb shocks, adapt to changes,           making problems in SC field. Jiang et al. (Jiang and Sheng, 2009) in­
+and restore normal operations following internal or external                      tegrated DRL with case-based reasoning to address dynamic inventory
+disturbances.                                                                     control in multi-agent SC systems. Kotecha and Chanona (2025) inte­
+     The concept of SC resilience (Guo et al., 2025) has garnered sub­            grated graph neural networks with MARL for inventory management.
+stantial scholarly attention, particularly within optimization and                Zhao et al. (Zhao and Sun, 2010) proposed a multi-layer ranking control
+reconfiguration contexts. Tukamuhabwa and colleagues (Tukamuhabwa                 strategy using MARL to effectively and efficiently address the SC man­
+et al., 2015) presented a comprehensive review of SC resilience, iden­            agement challenges involving multiple members and commodities. Kim
+tifying gaps and suggesting promising research avenues. Zamani et al.             et al. (2024) introduced a MARL model designed to handle inventory
+(2023) performed a systematic review of artificial intelligence applica­          transshipment in the face of SC disruptions. Building on previous
+tions in the domain of SC resilience. For quantitative evaluation of              research, this paper employs MARL to address the challenge of recon­
+resilience during disruption propagation, Habibi et al. (2023) developed          structing SCSoSs.
+a set of metrics to assess absorption, adaptation, and recovery capacities
+in real-world SC networks. Alikhani et al. (2023) combined resource               2.4. Research gaps and our contributions
+dependence theory with two-stage stochastic programming to support
+resilient SC network design under resource scarcity. Despite these ad­                Drawing upon the literature review and analysis presented in Sec­
+vances, characterizing and quantifying resilience in large-scale and              tions 2.1–2.3, the following research gaps in the domain of SCSoSs
+
+                                                                              4
+W. Ding et al.                                                                                               International Journal of Production Economics 297 (2026) 109995
+
+
+reconfiguration under disruption risks are identified.                           production capabilities, transportation delays, and consumer behavior
+                                                                                 shifts. Thus, it is essential to incorporate uncertainty explicitly into the
+1) Lack of dynamic reconfiguration strategies integrated resilience:             system's structure and equations. Next, the key entities in SCSoSs are
+   While existing studies have explored SCR with objectives such as              defined in detail.
+   costs minimization and profits maximization, there remains a sig­                 Definition 1
+   nificant gap in the integration of resilience as a core optimization              【 Supplier】 Suppliers are mainly responsible for providing the
+   criterion within decision-making frameworks. Most prevailing ap­              required raw materials. The set of suppliers in the SCSoSs is denoted as
+   proaches rely on heuristic or static optimization methods, which are          SS = { ŝ1 , ŝ2 , ⋯, ̂s m }, where each supplier ̂s i within this set can be rep­
+   ill-suited for meeting the agile demands of SCR in the face of un­            resented as follows:
+   predictable disruptions. Furthermore, although resilience strategies
+                                                                                 ̂s i = {sli , sci , sai , sri , spi , swi }, i = 1, 2, ⋯, m                            (2)
+   such as filling, repairing, and recruiting have been conceptually
+   proposed, their quantitative integration into reconfiguration models,
+                                                                                 where m is the total number of suppliers; sli is the position coordinates of
+   balancing both resilience enhancement and cost trade-offs, remains
+                                                                                 the supplier ̂s i ; sci is the category of supplier ̂s i , which represents either a
+   insufficiently explored.
+                                                                                 supplier of metal materials or a supplier of electronic components; sai is
+2) Limited application of MARL in resilience-oriented dynamic SCR:
+                                                                                 the total amount of raw materials provided by supplier ŝi ; sri is the finite
+   While MARL has been successfully applied to various reconfiguration
+                                                                                 range radius within which the supplier ŝi can provide, and its center is
+   problems, its application to SCR with an explicit focus on SoSs
+                                                                                 sli . This radius defines the geographical or operational scope of the
+   resilience remains limited. Existing MARL studies in SC contexts
+                                                                                 supplier's capacity to deliver. spi is the unit price of raw materials pro­
+   predominantly address isolated optimization tasks (e.g., inventory
+                                                                                 vided by supplier ̂s i ; swi is the supply time window of supplier ̂s i .
+   management, network design) with objectives centered on cost or
+                                                                                       To simulate the random fluctuations in the supply of raw materials,
+   profit. They often fail to holistically model the interactive and
+   distributed nature of SCSoSs under disruptions, where suppliers,              the actual delivery volume from supplier ̂s i is modeled as a random
+   manufacturers, and distributors act as autonomous agents with                 variable. When the manufacturer receives an order with quantity Qorder
+   partial observability. Crucially, there is a notable absence of frame­        at time t, the actual delivery volume follows a truncated normal distri­
+   works that formulate the dynamic SCR process as a POMDP with a                bution:
+   reward mechanism explicitly integrating quantifiable SoSs                     Qactual = min(Qorder , max(0, Xt ))                                                    (3)
+   resilience.
+                                                                                                     (              )
+                                                                                 where Xt ∼ N μ = sai , σ 2 = σ 2sai . The mean μ is the total amount sai of
+   To address these gaps, this paper proposes a MARL-based resilience
+reconfiguration approach for SCSoSs under disruption risks. The key              raw materials, and the standard deviation σsai is a parameter that reflects
+contributions are summarized as follows.                                         the stability of the supplier's production provided by supplier ŝi . A larger
+                                                                                 σ sai indicates greater yield variability. The final delivery volume is
+● We propose a novel quantitative model for evaluating SC resilience             determined by selecting the smaller of Qactual and the random value.
+  and reconfiguration costs within a three-phase framework grounded                   Furthermore, the uncertainty in delivery time is modeled through
+  in a directed SC network representation. This model formally in­               random delays. A nominal delivery time Li (representing the central
+  tegrates resilience strategies, such as filling, repairing, and recruit­       value of the time window swi ) is set; however, the actual delivery time
+  ing, into the reconfiguration process, enabling a balanced                     Tdelivery is subject to a non-negative random delay Δt. In this study, it is
+  consideration of recovery capability and economic efficiency.                  assumed that Δt follows a Poisson distribution with a mean value of Λ,
+● We formulate the dynamic reconfiguration process as a POMDP,                   which simulates the random congestion and interruptions typically
+  where each entity in the SC (e.g., suppliers, manufacturers) is treated        encountered in the logistics chain. (Note: Similarly, manufacturers and
+  as an autonomous agent. The state space captures the attributes of             distributors face delivery tasks for subsequent stages, each containing
+  these elements under disruption risks, the action space encompasses            inherent uncertainties, which can be modeled using the same approach.
+  available reconfiguration strategies, and the reward function in­              Follow-up will not be reiterated.)
+  corporates both resilience and costs objectives. This formulation                   Definition 2
+  supports agile and distributed decision-making.                                     【Manufacturer】Manufacturers are mainly responsible for pro­
+                                                                                 cessing raw materials into semi-finished or finished products. The set of
+3. Dynamic reconfiguration approach of SCSoSs under                              manufacturers in the SCSoSs can be defined as MS = { m                m 2 , ⋯, m
+                                                                                                                                                  ̂ 1, ̂        ̂ n },
+disruption risks                                                                 where each manufacturer m        ̂ j within this set is formalized as follows:
+                                                                                         {                               }
+                                                                                  m j = mlj , mcj , mej , mrj , mhj , mwj , j = 1, 2, ⋯, n
+                                                                                  ̂                                                                              (4)
+3.1. Problem description
+                                                                                 where n is the total number of manufacturers; mlj is the position coor­
+3.1.1. Definition of the SCSoSs with uncertainty
+                                                                                 dinate of the manufacturer m      ̂ j ; mcj is the category of manufacturer m
+                                                                                                                                                             ̂ j,
+    The SCSoSs encompasses various interconnected links, such as pro­
+                                                                                 which represents either a manufacturer of metal materials or a manu­
+curement, production, sales, and distribution, and involves multiple
+                                                                                 facturer of electronic components; mej is the daily work efficiency of the
+enterprise entities. These entities operate in an integrated and dynamic
+                                                                                 manufacturer m  ̂ j ; mrj is the radius of the limited range within which the
+environment, where uncertainties are inevitable. The relationships
+among them can be represented by the set “supplier-manufacturer-                 manufacturer m   ̂ j can work, and its center is mlj ; mhj is the longest
+distributor-consumer”, which includes all possible interactions.                 working hours provided by the manufacturer m                   ̂ j ; mwj is the
+                                                                                 manufacturing time window of manufacturer m            ̂ j.
+SC={(supplier,manufacturer,distributor,consumer)|supplier                            In practice, a manufacturer's capacity may vary due to factors such as
+                                                                      (1)
+      ∈SS,manufacturer∈MS,distributor∈DS,consumer∈CS}                            efficiency fluctuations and labor shortages. To model these variations in
+                                                                                 the production process, a random efficiency coefficient Et and a labor-
+   This SoSs model inherently involves uncertainties related to raw
+                                                                                 level discount factor Lt are introduced. Thus, at time step t the actual
+material supply, manufacturing processes, distribution logistics, and
+                                                                                 effective production capacity ECt is given by:
+consumer demand. These uncertainties arise from multiple factors such
+as fluctuations in market demand, supply disruptions, varying                    ECt = Lt ⋅Et ⋅mej                                                                      (5)
+
+
+                                                                             5
+W. Ding et al.                                                                                             International Journal of Production Economics 297 (2026) 109995
+
+
+Here, Et follows a Beta distribution, Et ∼ Beta(α, β) where the expected                (1) Extreme weather events (e.g., floods, typhoons)
+value α/(α +β) represents the daily work efficiency mej of the production
+                                                                                        These events primarily disrupt transportation and regional produc­
+line. Meanwhile, Lt follows a uniform distribution, Lt ∼ Uniform(0.8,
+1.0), with Lt = 1 indicating that all staff are on duty.                             tion capacity. For a distributor ̂ d k affected by a weather event, the
+    Definition 3                                                                     nominal delivery time is extended by a random delay Δtweather , modeled
+    【Distributor】Distributors are mainly responsible for sending                     as a Poisson-distributed variable:
+manufactured goods to consumers. The set of distributors in the SCSoSs               Δtweather ∼ Poisson(λweather )                                                 (10)
+can be expressed as DS = { ̂  d1, ̂
+                                  d 2 , ⋯, ̂
+                                           d h }, where each distributor ̂
+                                                                         dk
+within this set is characterized as follows:                                         where λweather reflects the severity of the weather disruption. Similarly,
+                                                                                     the production efficiency mej of a manufacturer m  ̂ j in the impacted re­
+d k = {dlk , dck , dvk , drk , dwk }, k = 1, 2, ⋯, h
+̂                                                                         (6)
+                                                                                     gion may also be temporarily reduced.
+
+where h is the total number of distributors; dlk is the position coordinate
+                                                                                        (2) Geopolitical and trade barriers (e.g., tariff hikes, export controls)
+of the distributor ̂
+                   d k ; dck is the category of distributor ̂
+                                                            d k , which repre­
+sents either a distributor of metal materials or a distributor of electronic              Such events increase logistics costs and may restrict the availability
+components; dvk is the maximum transport volume of the distributor ̂     dk;         of certain material categories. For a supplier ŝi subject to trade barriers,
+drk is the range radius within which the distributor ̂d k can distribute, and        the unit price spi is inflated by a cost surge factor γ trade .
+                                                                                                (         )
+its center is dlk ; dwk is the distribution time window of distributor ̂ dk.
+                                                                                      γtrade ∼ N μγ , σ2γ                                                    (11)
+   Assuming a distributor transports goods between locations A and B,
+vibrations and collisions during transit may result in product damage.                  Moreover, the available material categories sci may be randomly
+Therefore, the actual maximum transportation volume, Vreceived , must be             reduced, reflecting export restrictions on specific raw materials.
+adjusted as follows:
+Vreceived = (1 − Vt )⋅dvk                                                 (7)           (3) Public health crises (e.g., pandemics)
+
+where Vt represents the damage rate, a small random variable defined by                 These events lead to workforce shortages and operational slow­
+Vt ∼ Beta(αloss , βloss ).                                                           downs. For a manufacturer m  ̂ j , the labor-level discount factor Lt intro­
+    Additionally, the uncertainty surrounding transportation costs is a              duced in Eq. (5) can be further depressed during a health crisis.
+critical factor that must be accounted for, primarily stemming from
+                                                                                     Lʹt ∼ Uniform(0.5, 1.0)                                                        (12)
+fluctuations in fuel prices and supplementary expenses. The model is
+expressed as:
+                                                                                     where Lʹt is used to simulate reduced staffing levels due to illness or
+Ctransit = (Cbased × Ft ) + Cextra                                        (8)        quarantine measures. Additionally, the supply time window swi of a
+                                                                                     supplier may be extended due to quarantine-induced logistics delays.
+where Cbased represents the benchmark cost, which is dependent on the
+distance; Ft represents the fuel price fluctuation coefficient, which can            3.1.3. Framework of the SCR under disruptions
+be modeled as a mean regression process; Cextra represents the additional                 From the perspective of the platform elements constituting the
+cost, arising from unpredictable events (such as breakdown mainte­                   SCSoSs, the withdrawal of existing suppliers, manufacturers, or dis­
+nance or detour tolls). When a specific event occurs, Cextra assumes a               tributors poses a significant disruption risk to a specific link. In Fig. 1(a),
+positive random value; otherwise, it remains zero.                                   it is assumed that there are 4 material suppliers, 3 parts manufacturers,
+    Definition 4                                                                     and 3 logistics distributors in the scenario. Due to unforeseen circum­
+    【 Consumer】As the ultimate beneficiaries in the SC, the set of                   stances, the withdrawal of raw material supplier B leaves manufacturer
+                                      {             }
+consumers can be defined as CS = ĉ1 , ĉ2 , ⋯, ĉg . Each consumer ĉt              A without a viable supply channel. Consequently, it is necessary to make
+within the set is expressed as follows:                                              strategic adjustments to the remaining suppliers. In the figure, supplier C
+                                                                                     is reconfigured to restore the integrity of the SC process. This adjustment
+ĉt = {clt , cct , crt , cwt }, t = 1, 2, ⋯, g                            (9)        is crucial to ensuring the continued smooth operation of the SC.
+                                                                                          A more detailed analysis reveals that the resources within SCSoSs
+where g is the total number of consumers; clt is the position coordinate of
+                                                                                     may face several disruption scenarios, such as: 1) Shortage of a specific
+consumer ĉt ; cct is the demand category of consumer ĉt ; crt is the range
+                                                                                     material from a raw material supplier. 2) Insufficient production ca­
+radius within which the consumer ̂c t can be served, and its center is clt ;
+                                                                                     pacity for a particular product from a component manufacturer. 3)
+cwt is the receiving time window of consumer ĉt .
+                                                                                     Disruption in a specific sales channel of a logistics distributor. For
+     The uncertainty in consumer demand is represented as a stationary               instance, in Fig. 1(b), metal material supplier A faces a shortage of
+stochastic process. The demand Dt at each time step follows a normal
+                                                                                     aluminum, while plastic product factory C lacks production capacity for
+distribution with a mean of μ and a standard deviation of σ , i.e., Dt ∼             plastic items. The SC can be supplemented by metal material supplier B
+   (     )
+N μ, σ 2 , to capture the daily variations in purchasing behavior.                   and plastic product factory D through optimization to reorganize the
+                                                                                     resource allocation, improve the production efficiency, reduce trans­
+3.1.2. Modeling external disruption risk factors                                     portation costs, and optimize time utilization in the entire SCSoSs.
+   Beyond the operational uncertainties inherent in each SC entity,                       Based on the above observations, the need for reconfiguring SCSoSs
+SCSoSs are increasingly subjected to external disruption risks arising               is categorized into two types of disruption risks: hard disruption and soft
+from geopolitical, environmental, and public health events. To capture               disruption.
+the impact of such disruptions, we model them as stochastic event                     ⎧
+                                                                                                                               {                  (p) }
+generators that perturb the key attributes of suppliers, manufacturers,               ⎪
+                                                                                      ⎪
+                                                                                      ⎪       sc = {sc1 , sc2 , ⋯, sci }, sci = sc(1)
+                                                                                                                                  i , sci , ⋯, sci
+                                                                                                                                          (2)
+                                                                                      ⎪
+                                                                                      ⎨                                         {                           }
+and distributors.                                                                               {                     }
+                                                                                         mc = mc1 , mc2 , ⋯, mcj , mcj = mcj , mcj , ⋯, mcj                    (13)
+                                                                                                                                      (1)     (2)       (q)
+   We categorize typical external events and their mathematical rep­                  ⎪
+                                                                                      ⎪
+                                                                                      ⎪
+                                                                                      ⎪                                         {                       }
+resentations as follows.                                                              ⎩ dc = {dc1 , dc2 , ⋯, dck }, dck = dc(1) , dc(2) , ⋯, dc(r)
+                                                                                                                                    k       k        k
+
+
+
+
+                                                                                 6
+W. Ding et al.                                                                                             International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                                                 Fig. 1. Disruption phenomenon within the SCSoSs in SCR problem.
+
+
+where sci        denotes the p-th category of the i-th supplier; mcj     denotes       ⎧
+           (p)                                                     (q)
+                                                                                       ⎨ max R(SS,
+                                                                                             ̂     MS, DS, CS)
+                                                                                          RS
+the q-th category of the j-th manufacturer; dck denotes the r-th category
+                                                  (r)                                                                                                               (14)
+                                                                                       ⎩ min C(SS,
+                                                                                             ̂     MS, DS, CS)
+of the k-th distributor.                                                                   RS
+
+
+● Hard disruption: This refers to a complete exit by a supplier,                       where the functions ̂ R and Ĉ represent SoSs resilience and reconfigu­
+  manufacturer, or distributor, resulting in the cessation of all future               ration costs, respectively. These functions are formally defined in the
+  business engagements. That is, certain elements within sc, mc, and dc                subsequent sections. For detailed definitions and explanations, please
+  are removed.                                                                         refer to Sections 3.2.3 and 3.2.4.
+● Soft disruption: This occurs when only a portion of a company's                          Definition 6
+  operations is halted, while other business activities continue. For                      【Satisfactory Constraint】In the process of reconfiguring a SC
+  instance, if supplier A experiences a disruption in the supply of                    under disruption risks, it is essential to incorporate constraints that
+  aluminum metal but still provides raw materials for plastic products.                reflect real-world operational limitations and enhance the resilience of
+  That is, certain elements of sci , mcj , and dck are removed.                        the reconfigured network. These constraints ensure that the reconfig­
+                                                                                       ured SC is not only feasible but also resilient to potential future dis­
+    Definition 5                                                                       ruptions. The following constraints are considered:
+    【Supply Chain Reconfiguration】Given a set of suppliers SS,                             Homogeneity Constraint: When the SC experiences disruption, the
+manufacturers MS, distributors DS, and consumer CS, when the above                     reconfigured network must maintain functional consistency, meaning
+disruption occurs, an optimal reconfiguration strategy (RS) is deter­                  that SC entities must remain within the same category. For instance, in
+mined to maximize the SoSs resilience ̂
+                                      R(SS, MS, DS, CS) and minimize                   an electronic SC, all stakeholders, including suppliers, manufacturers,
+the associated reconfiguration costs ̂
+                                     C(SS, MS, DS, CS).                                distributors, and consumers, should specialize in producing electronic
+                                                                                       components, which is essential to minimize risks during the reconfigu­
+                                                                                       ration process.
+
+                                                                                   7
+W. Ding et al.                                                                                                   International Journal of Production Economics 297 (2026) 109995
+
+                 (   )
+M (sci ) = M mcj = M (dck ) = M (dct )                                         (15)         upper bounds of the time windows of suppliers ̂s i , manufacturers m
+                                                                                                                                                               ̂ j,
+                                                                                            distributors ̂
+                                                                                                         d k and consumers ̂c t , respectively.
+where M represents the category of an entity within the SC.
+    Spatial Constraint: Geographical proximity is critical in deter­                        3.2. Resilience reconfiguration strategies of SCSoSs
+mining the reconfiguration strategy. When a supplier, manufacturer, or
+distributor is disrupted, the replacement entity's location must be within                      The SCSoSs can address various disruption risks, as outlined in Sec­
+the scope of the existing link. By enforcing these spatial constraints, the                 tion 3.1, through the implementation of different reconfiguration stra­
+reconfigured SC ensures that all entities remain within an optimal                          tegies. This section proposes three reconfiguration strategies, as shown
+operational range, minimizing distance-related risks and maximizing                         in Fig. 2.
+resource allocation and logistics efficiency.                                                   Definition 7
+             √̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅
+                                                                   )2                           【 Reconfiguration Strategy】Reconfiguration strategies are
+ ⎧              (                   )2 (                                  (  )
+ ⎪
+ ⎪   d  ij =      sxi − mxj + syi − myj ≤ min sri , mrj                                     essential approaches employed by SCSoSs to enhance their resilience
+ ⎪
+ ⎪
+ ⎪
+ ⎨          √̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅                   when faced with disruption risks. These strategies correspond to con­
+                                   )2 (                             )2
+              (                                                            (   ) (16)       crete operational practices in supply chain management, enabling the
+ ⎪
+ ⎪ d jk   =     mxj − dxk + myj − dyk ≤ min mrj , drk
+ ⎪
+ ⎪
+ ⎪                                                                                          system to restore functionality under different disruption scenarios.
+ ⎩           √̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅
+      dkt = (dxk − cxt )2 + (dyk − cyt )2 ≤ min(drk , crt )                                 Each strategy has its own advantages and cost implications.
+                                                                                                Filling strategy: This strategy involves utilizing existing redundant
+                                                                                            or shared capacity within the current SC network to compensate for the
+where dij , djk , and dkt represent the spatial distances between supplier ̂s i ,
+                                                                                            disrupted node's function. In practice, this is transformed into activating
+manufacturer m     ̂ j , distributor ̂
+                                     d k , and consumer ĉt , respectively; sxi and         pre-audited standby resources or shared resources through supplier al­
+syi represent the position coordinates of supplier ̂s i ; mxj and myj repre­                liances or multi-source procurement agreements. This approach incurs
+sent the position coordinates of the manufacturer m        ̂ j ; dxk and dyk                minimal reconfiguration costs and enables rapid restoration of core
+represent the position coordinates of the distributor ̂      d k ; cxt and cyt              operations. However, it may reduce the overall system efficiency due to
+represent the position coordinates of the consumer ̂c t .                                   increased load on the compensating nodes, and may not be feasible if no
+    Supplier Constraint: The reconfigured supplier must satisfy de­                         suitable redundant capacity exists.
+mand requirements without exceeding cost expectations, ensuring the                             Recruiting strategy: By recruiting new suppliers, manufacturers, or
+consistent availability and cost-effectiveness of raw materials, even in                    distributors to replace the disrupted nodes, this strategy can restore the
+the face of disruptions.                                                                    SCSoSs to its original operational state, but requires significant addi­
+ {                                                                                          tional resources and costs. The strategy replaces the disrupted nodes by
+         sai ≥ [eai ]                                                                       recruiting new suppliers, manufacturers or distributors. The specific
+                                                                    (17)
+   sci = sai × spi ≤ [eci ]                                                                 practice is to activate alternative suppliers through diversified sourcing
+                                                                                            or to establish new partnerships through agile procurement. While this
+where [eai ] represents the expected demand of raw materials for supplier                   strategy can restore the SCSoSs to its original or even enhanced opera­
+ŝi ; sci represents the total price of raw materials of supplier ŝi ; [eci ]              tional state, it requires significant upfront investment in partnership
+represents the expected costs of raw materials for supplier ̂s i .                          development, integration, and may entail higher logistical and
+      Manufacturer Constraint: The reconfigured manufacturer must                           contractual costs.
+have sufficient production capacity to meet anticipated output levels,                          Repairing strategy: The strategy is embodied in targeted resilience
+which is vital for maintaining flow continuity under uncertain                              investment and rapid recovery operation, through the repair operation
+conditions.                                                                                 of the disrupted node, that is, policy support for the disruption caused by
+                      [    ]                                                                the accident or negotiation for the disruption caused by the price
+ mpj = mej × mhj ≥ mpj                                                  (18)                mismatch. The primary advantage of this strategy is the preservation of
+                                                                                            the original SC structure and relationships, which supports long-term
+where mpj represents the production capacity of the manufacturer m̂ j;                      stability. However, it involves additional repair costs and potential de­
+[    ]                                                                                      lays compared to the filling strategy.
+  mpj represents the expected production capacity of the manufacturer
+                                                                                                It can be seen that the priority of the filling strategy is higher than
+m
+̂ j.
+    Distributor Constraint: The reconfigured distributor must possess
+sufficient transportation capacity to handle expected product volumes,
+mitigating the risk of logistical bottlenecks during distribution.
+dvk ≥ [evk ]                                                                   (19)
+
+where [evk ] represents the expected transportation volume of the product
+for distributor ̂
+                dk.
+    Time Window Constraint: Time coordination between entities in
+the SC is necessary to ensure timely operation and avoid delays that may
+exacerbate the impact of disruptions. If a disruption occurs, the recon­
+figured entity must operate within its specified time window.
+⎧
+⎪  swli ≤ swi ≤ swui
+⎪
+⎪
+⎨ mwl ≤ mwj ≤ mwu
+     j                j
+     l               u
+                                                                               (20)
+⎪
+⎪
+⎪ dw k  ≤ dwk ≤  dw  k
+⎩
+   cwlt ≤ cwt ≤ cwut
+
+where swli , mwlj , dwlk , cwlt , swui , mwuj , dwuk and cwut represent the lower and
+                                                                                                      Fig. 2. Three types of SCSoSs reconfiguration strategies.
+
+                                                                                        8
+W. Ding et al.                                                                                              International Journal of Production Economics 297 (2026) 109995
+
+
+that of the recruiting strategy and repairing strategy. Resilience and                external shocks.
+costs are the criteria for choosing which strategy, so the SC resilience                  Definition 10
+and reconfiguration costs are modeled below.                                              【Recovery Phase】The recovery phase denotes the process of
+                                                                                      restoring the resilience of the SCSoSs after internal and external shocks.
+3.2.1. Three-phase supply chain resilience                                            In Fig. 3, the time interval from tm to ts denotes the recovery phase that
+    Resilience refers to its capacity to sustain stability and achieve an             follows adaptation to these shocks. The SC resilience is chiefly accom­
+optimal design level in a SCSoSs. In this section, referring to the resil­            plished through the addition or repair at the disrupted link, thereby
+ience triangle model (Hosseini et al., 2016; Zobel and Khansa, 2014), the             reconfiguring the SC. Simultaneously, when a link fails, it can be
+performance threshold-based resilience model (Chen et al., 2022), and                 substituted by other components fulfilling the same function.
+the weapon SoSs resilience model (Chen et al., 2023), a three-phase
+resilience model of resistance, adaptability and recovery for SCSoSs is               3.2.2. Supply chain directed network
+given.                                                                                    Building on complex network theory, the entities within the SC, such
+    Fig. 3 illustrates the resilience phase of the SCSoSs. Here, r(t) is the          as suppliers, manufacturers, distributors, and consumers, are treated as
+SoSs resilience at moment t, r0 is the initial resilience, and rb is the              nodes, with their interrelationships depicted as directed edges con­
+resilience baseline. From t0 to ta , the SC operates in its original state with       necting these nodes, thus constructing a SCDN model.
+a resilience of r0 . In contrast to weapon SoSs, the SC encounters                        In the SCDN model, directed edges are categorized into three main
+disruption risks at moment ta , causing a more rapid decline in resilience            types.
+to a minimum value of rm at moment tm . This drops below the baseline rb
+results in operational failure. Between tm and te , the implementation of a           ● Supplier → Manufacturer (indicating that suppliers provide raw
+SCR strategy gradually restores resilience. By moment te , the resilience               materials to manufacturers)
+returns to the baseline, and at moment ts , a new steady-state value rs is            ● Manufacturer → Distributor (indicating that manufacturers deliver
+achieved.                                                                               finished products to distributors)
+    Definition 8                                                                      ● Distributor → Consumer (indicating that distributors sell products to
+    【Resistance Phase】The resistance phase denotes the process                          consumers)
+through which the SCSoSs prevents or resists internal and external
+shocks. During this phase, the SC resilience is sustained above the                      Furthermore, directed edges are weighted based on the specific
+baseline rb , meeting the essential requirements for normal operation. As             business needs within the SC, where the weights typically represent the
+depicted in Fig. 3, the time interval from ta to tb represents the resistance         transportation costs, time, and capacity, which can be formulated as:
+phase, during which emergencies causing deviations from standard SC                    ⎧           (                   )
+                                                                                         ωSS→MS = f ttransport , cunit
+processes typically arise from two principal sources:                                  ⎪
+                                                                                       ⎪
+                                                                                       ⎨
+                                                                                         ωMS→DS = g(ddistance , lcost )                                 (21)
+● Internal shock: SC process cannot be carried out normally due to                     ⎪
+                                                                                       ⎪
+                                                                                       ⎩
+                                                                                                   (                   )
+                                                                                         ωDS→CS = h tdelivert , pprice
+  disruptions in specific internal links, such as the failure of
+  manufacturing equipment, the shortage of supply channels, and the
+  delay of logistics transportation.                                                  where ωSS→MS is the edge weight from supplier to manufacturer; ωMS→DS
+● External shocks: SC disruptions due to external factors such as nat­                is the edge weight from manufacturer to distributor; ωDS→CS is the edge
+  ural disasters or human interference, such as adverse weather, traffic              weight from distributor to consumer; ttransport is the transportation time;
+  control measures, supply network attacks, policy tariff adjustments.                cunit is the cost per unit of goods transported; ddistance is the distance
+                                                                                      between the manufacturer and distributor; lcost is the logistics cost
+    Definition 9                                                                      associated with the distribution process; tdelivery is the delivery time; pprice
+    【Adaptability Phase】The adaptation phase denotes the subse­                       is the price charged to the consumer for the product.
+quent buffering process of the SCSoSs after failing to resist the shock.                   Thus, the mathematical model for the SCDN can be described as:
+The time interval from tb to tm represents the adaptability phase, during             G = (VS, EM)                                                                   (22)
+which SC resilience falls below the baseline following an emergency. As
+illustrated in Fig. 3, the SC can only perform certain tasks during this              VS = VSSS ∪ VSMS ∪ VSDS ∪ VSCS                                                 (23)
+phase, highlighting the limits of its resilience in response to internal and
+                                                                                      where G represents the SC network; VS represents the set of nodes within
+                                                                                      the network; EM represents the adjacency matrix of directed edges
+                                                                                      within the network; VSSS represents the set of supplier nodes; VSMS
+                                                                                      represents the set of manufacturer nodes; VSDS represents the set of
+                                                                                      distributor nodes; VSCS represents the set of consumer nodes.
+                                                                                          The relationships between nodes in the constructed SCDN G can be
+                                                                                      represented by the adjacency edge matrix EM as follows:
+                                                                                             ⎡                                   ⎤
+                                                                                               0 EMSS→MS        0          0
+                                                                                             ⎢                                   ⎥
+                                                                                             ⎢0       0      EMMS→DS       0     ⎥
+                                                                                             ⎢                                   ⎥
+                                                                                       EM = ⎢                                    ⎥                        (24)
+                                                                                             ⎢0       0         0      EM  DS→CS
+                                                                                                                                 ⎥
+                                                                                             ⎣                                   ⎦
+                                                                                               0      0         0          0      N×N
+
+
+                                                                                      where EMSS→MS , EMMS→DS , and EMDS→CS belong to the submatrix of the
+                                                                                      adjacency edge matrix EM, which represent the supplier to the manu­
+                                                                                      facturer, the manufacturer to the distributor, and the distributor to the
+                                                                                      consumer in the network, respectively; N represents the total number of
+                                                                                      nodes in the network.
+                 Fig. 3. The resilience phase of the SCSoSs.
+
+                                                                                  9
+W. Ding et al.                                                                                                       International Journal of Production Economics 297 (2026) 109995
+
+
+3.2.3. Quantitative resilience model
+                                                                                                 1      ∑
+    In this study, recognizing that resistance, adaptability, and recovery          AD =                     d(u, v)                                                          (30)
+                                                                                              N(N − 1) u∕
+are independent of each other (Ren et al., 2017), a quantitative resil­                                 =v∈V
+
+ience model based on the SCDN is proposed that incorporates the
+influencing factors of these three phases.                                          where d(u, v) is the shortest path length from node u to node v.
+                                                                                      In summary, the resilience R  ̂ expression for the SCSoSs based on the
+   (1) Resistance                                                                   SCDN, as shown in Eq. (31), is derived by analyzing the independent
+                                                                                    influencing factors across the three-phases of resistance, adaptability,
+    It measures the resistance of the SC in the face of disruption risks,           and recovery, which facilitates resilience reconfiguration of the SCSoSs.
+characterized by network density (ND) and degree centrality (DC).
+    The ND represents the ratio of actual edges to all possible edges               ̂ = ND × DC × CC × HC × MC
+                                                                                    R                                                                                         (31)
+                                                                                                  AD
+within the network. A high ND indicates that the connections between
+nodes in the SC are more closely knit, allowing risks to be more effec­             3.2.4. Reconfiguration costs calculation
+tively dispersed and enhancing the overall resilience against disruptions.              According to the characteristics of the reconfiguration strategy
+The DC refers to the number of nodes connected. Nodes with high DC in               mentioned at the beginning of Section 3.2, this section further catego­
+the SC are more likely to play critical roles during disruptions and are            rizes the costs of SCR into filling costs, repairing costs, and recruiting
+generally more resilient to the effects of network outages.                         costs. To better capture the actual economic and operational impact of
+          2E                                                                        disruptions, we incorporate not only the value and technical costs but
+ND =                                                                   (25)         also the transportation, logistics, and time-related costs into the
+        N(N − 1)
+                                                                                    calculation.
+        1∑             1 ∑ kv
+DC =          CD (v) =                                                 (26)
+        N v∈V          N v∈V N − 1                                                     (1) Recruiting costs
+
+where E represents the actual number of edges in the SC network; kv                     When there is a disruption risk at a certain node in the SC, it is the
+represents the degree of node v (i.e., the number of edges connected to             most direct and effective approach to recruit new suppliers, manufac­
+node v).                                                                            turers or distributors who are the same as the disrupted node. However,
+                                                                                    this often incurs higher costs, which mainly include the value costs of
+   (2) Adaptability                                                                 recruitment, technical replacement costs, and the transportation costs
+                                                                                    incurred to integrate the new nodes.
+    It measures the adaptability of the SC in the event of disruption risks,                     n∑
+                                                                                                  recruit   ( v                  )
+which can be characterized by clustering coefficient (CC) and homoge­               crecruit =               ci + cti + ωrecruit
+                                                                                                                         i                                                    (32)
+neity coefficient (HC).                                                                             i=1
+
+    The CC refers to the degree of interconnection among the neighbors
+                                                                                    where nrecruit represents the number of nodes that are recruited following
+of a node in the network. The higher CC indicates more local connec­
+                                                                                    a disruption; cvi represents the value costs associated with recruiting the
+tions between nodes in the network, which contributes to the network's
+                                                                                    i-th node; cti represents the technical costs of replacing the i-th node;
+overall stability and adaptability during partial disruptions. The HC
+measures whether the distribution of node connections in the network is             ωrecruit
+                                                                                      i      represents the edge weight representing transportation and
+uniform. A network with a high HC indicates that, in the event of node              integration costs from connected nodes.
+failures, other nodes can rapidly take over their functions, thereby
+enhancing the network's overall adaptability.                                          (2) Repairing costs
+
+        1∑         1 ∑ 2Ev                                                              The repairing costs of disrupted nodes in the SC are associated with
+CC =          Cv =                                                     (27)
+        N v∈V      N v∈V kv (kv − 1)                                                the damage caused by the disruption risks. This cost is often lower than
+                                                                                    full recruitment and can be estimated based on analogous recruitment
+             σ2                                                                     costs with a discount factor accounting for partial repair.
+HC = 1 −                                                               (28)
+             μ                                                                                   nrepair
+                                                                                                 ∑           (                )
+                                                                                    crepair =              αj cvj + ωrepair                                                   (33)
+where Ev represents the actual number of edges between neighbors of                               j=1
+                                                                                                                     j
+
+node v; μ represents the average value of the number of connections; σ 2
+represents the standard deviation of the number of connections.                     where nrepair represents the number of repair nodes following a disrup­
+                                                                                    tion; 0 < αj < 1 is the repair discount factor for the j-th node; ωrepair
+                                                                                                                                                       j
+   (3) Recovery
+                                                                                    represents the transport or logistics costs associated with repair
+                                                                                    operations.
+    It measures the recovery of the SC after the occurrence of disruption
+risks, which can be characterized by maximum connectivity (MC) and
+                                                                                       (3) Filling costs
+average distance (AD).
+    The MC denotes the size of the largest connected subgraph within the
+                                                                                        The filling strategy is to adjust the existing structure without intro­
+network. A high MC signifies that, even after a disruption, a substantial
+                                                                                    ducing new nodes, so as to minimize the costs. It mainly depends on the
+portion of the network remains connected, reflecting robust recovery
+                                                                                    distance between the disrupted node and the filling nodes. The longer
+capabilities. The AD represents the mean shortest path length between
+                                                                                    distance usually means that more transportation, material, or technical
+any two nodes in the network. A shorter AD indicates faster reconnec­
+                                                                                    support is needed, leading to increased filling costs.
+tion during recovery, leading to quicker restoration to normal opera­
+tions.                                                                                        nfill (√̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅̅
+                                                                                              ∑                                                         )
+                                                                                    cfill =           (xk − xd )2 + (yk − yd )2 + ωfull               k                       (34)
+MC = maxu,v∈V d(u, v)                                                  (29)                   k=1
+
+
+
+
+                                                                               10
+W. Ding et al.                                                                                                     International Journal of Production Economics 297 (2026) 109995
+
+
+where nfill represents the number of filled nodes following a disruption;                the individual attributes, connection relationships, and SoSs resilience
+xk and yk represent the positional coordinates of the filled nodes; xd and               of the supplier, manufacturer, and distributor reconfiguration agents.
+                                                                      full
+yd represent the positional coordinates of the disrupted node; ωk rep­                   Joint State = Ssupplier × Smanufacturer × Sdistributor                             (37)
+resents the transportation, delivery time, and operational costs associ­
+ated with the filling strategy.                                                          where Ssupplier , Smanufacturer and Sdistributor represent the state of the three
+    Thus, the total expression for the reconfiguration cost, denoted as ̂
+                                                                        C,               reconfiguration agents of supplier, manufacturer and distributor,
+is given by Eq. (35). In practice, optimizing reconfiguration costs in­                  respectively.
+volves balancing various factors to ensure both cost-effectiveness and
+the minimization of potential delays or inefficiencies in the SC recovery                ● Individual attributes: The number, type, location, and operational
+process.                                                                                   status under uncertainty of SC elements such as the set of suppliers
+                                                                                           SS, manufacturers MS, distributors DS and consumers CS at each
+C = crecruit + crepair + cfill
+̂                                                                            (35)          moment, as specified in Eqs. (2)–(9).
+                                                                                         ● Connection relationships: The adjacency matrix of directed edges
+3.3. Multi-agent reinforcement learning for SCR                                            EM, detailing the relationships between SC nodes at each moment in
+                                                                                           the constructed SCDN G, as described in Eq. (24).
+3.3.1. Partially observable MDP                                                          ● SoSs resilience: The resilience set R
+                                                                                                                               ̂ of the SCSoSs at each moment is
+     According to the definition of Markov property, the current recon­                     calculated by Eq. (31).
+figuration outcome of the SCSoSs is determined solely by the current
+state of each SC element and the reconfiguration action taken in the                         Definition 12
+previous moment, independent of past or future states and actions.                           【 Action】Actions are the specific behaviors that each element of
+Given the multifaceted nature of the SC, this paper treats suppliers,                    the SC can undertake, including filling, recruiting, repairing, and
+manufacturers, and distributors as three distinct reconfiguration agents                 maintaining. (Note: The decision to not implement any reconfiguration
+to mitigate the disruption risks.                                                        strategy after a disruption is also considered an action.)
+     In practical scenarios, directly and comprehensively observing the
+                                                                                         Action = 〈filling, recruiting, repairing, maintaining〉                             (38)
+entire state within the SCSoSs is infeasible; only partial information is
+accessible. Consequently, probabilistic methods must be employed to
+                                                                                         In soft disruption scenarios, as opposed to hard disruption, finer gran­
+judge and identify potential points of disruption. In this case, each agent
+                                                                                         ularity needs to be accounted for. A supplier, manufacturer, or distrib­
+makes decisions based on the limited information available. Thus, it can
+                                                                                         utor might engage with a SC comprising multiple resources
+be classified as a POMDP model for the interaction between multiple
+                                                                                         simultaneously, so the dimension of the action space is regarded as the
+agents and the environment, as illustrated in Fig. 4, which can be
+                                                                                         optional behavior of these three reconfiguration agents.
+defined as POMDP = (S, A, P, TP, O, OP, R, γ).
+                                                                                             (         )   ∑n
+     In Fig. 5, at each time period, the agent perceives a certain state s ∈ S            Dim Asupplier = p i=1 [1 + 1 + (n − 1) + 1]                        (39)
+in the environment, then takes an action a ∈ A according to the policy
+π (a|s), and transitions to a new state sʹ based on the transition probability              (             )   ∑m
+                                                                                         Dim Amanufacturer = q j=1 [1 + 1 + (m − 1) + 1]                                    (40)
+TP(sʹ|s, a). Simultaneously, the agent receives observation information
+o ∈ O with the observation probability OP(o|sʹ, a). The agent then re­                                            ∑t
+ceives a feedback reward R(s, a). Finally, the process repeats, aiming to                Dim(Adistributor ) = r           [1 + 1 + (k − 1) + 1]                             (41)
+                                                                                                                    k=1
+enable the agent to select actions that maximize its expected future
+discounted rewards at each time step.                                                    where n, m, t represent the total number of suppliers, manufacturers and
+    [             ]                                                                      distributors respectively; p, q and r represent the number of categories of
+         1
+      τ−
+      ∑                                                                                  suppliers, manufacturers and distributors, respectively; Asupplier ,
+ Eπ        γ rt+1
+            t
+                                                                         (36)
+      t=0
+                                                                                         Amanufacturer and Adistributor represent the action of the three reconfigura­
+                                                                                         tion agents of supplier, manufacturer and distributor, respectively;
+where τ represents a trajectory sequence, which encapsulates the en­                     When p = q = r = 1, it indicates the action space dimension under the
+tirety of an interaction process, commonly referred to as an episode.                    risk of a hard disruption. Conversely, if this condition is not met, it re­
+                                                                                         flects the action space dimension under the risk of a soft disruption.
+3.3.2. State, action and rewards                                                             Definition 13
+    State, action, and reward are key to solving the SCR problem using                       【 Reward】Rewards are categorized into positive and negative
+MARL algorithms. This section provides the input and output conditions                   types. An effective reward function can better direct the agent towards
+for the subsequent network update.                                                       achieving its goals and enhance training outcomes.
+    Definition 11                                                                            Positive reward R+ : It represents the benefits gained from executing
+    【Joint State】States are the basis for agents to make decisions. In                   a behavior. The specifics of the positive reward are as follows:
+the decision-making of multi-agent SCR, the joint state space includes
+
+
+
+
+                                                   Fig. 4. Interaction between multi-agents and environment.
+
+                                                                                    11
+W. Ding et al.                                                                                                  International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                                                            Fig. 5. The graphical model based on POMDP.
+
+
+● For the elements that do not need to be reconfigured, a larger posi­
+  tive reward R+  1 is achieved when the maintenance action is adopted.
+● For the elements that need to be reconfigured, when appropriate
+  filling, repairing or recruiting reconfiguration strategies are adopted,
+  resilience-related positive reward R+  2 is obtained.
+
+R+ = R+
+      1 + R2
+           +
+                                                                             (42)
+
+   Negative reward R : It involves penalties incurred from the action.
+                                −
+
+The specifics of the negative reward are as follows:
+
+● When a certain element of the SC does not need to be reconfigured, it
+  still adopts the strategy of filling, repairing and recruiting reconfi­
+  guration; or when a certain element of the SC needs to be reconfig­
+  ured, but no reconfiguration strategy is adopted. This will give a                           Fig. 6. Centralized training and distributed execution architecture.
+  corresponding punishment R−1 .
+● When a factor in the SC needs to be reconfigured, if the recruiting                     which is an extension of single-agent PPO algorithm in adapting to
+  and repairing strategy is adopted, a penalty R−2 related to the                         multi-agent environment. Unlike off-policy MARL algorithms such as
+  recruiting costs of Eq. (32) and the repairing costs of Eq. (33) is                     MADDPG, MAPPO is an on-policy algorithm and does not require
+  given.                                                                                  extensive empirical data collection prior to training. Additionally,
+● When a certain element in the SC needs to be reconfigured, if the                       MAPPO enhances stability and performance by constraining policy en­
+  filling strategy is adopted, a penalty R−3 related to the filling costs of              tropy and update magnitude.
+  Eq. (34) is given.
+● When a certain element in the SC needs to be reconfigured, if the                          (1) Training framework
+  filling strategy is adopted, but there is no fill object, or there is a fill
+  object, but the type of fill does not match, a larger penalty R−4 is                        The training framework utilizes a centralized training and distrib­
+  given.                                                                                  uted execution architecture, as depicted in Fig. 6. During the training
+R− = R−1 + R−2 + R−3 + R−4                                                                phase, the global state supports agent training, but which is not used
+                                                                             (43)
+                                                                                          thereafter. Post-training, each agent relies solely on local observations to
+   This paper treats suppliers, manufacturers, and distributors as three                  make decisions. This distributed execution method avoids the in­
+independent reconfigurable agents, each agent can calculate its reward                    efficiencies and delays caused with inter-agent communication, facili­
+by the above rules, as shown in Eqs. (44)–(46).                                           tating real-time decision-making and improving the algorithm's
+                                                                                          convergence.
+Rsupplier = R+
+             supplier + Rsupplier
+                         −
+                                                                             (44)
+                                                                                              It is noteworthy that in this architecture as depicted in Fig. 7, each
+                                                                                          agent possesses a distinct actor-critic network, and the actor network of
+Rmanufacturer = R+
+                 manufacturer + Rmanufacturer
+                                 −
+                                                                             (45)
+                                                                                          each agent should incorporate the evaluations from each critic during
+                                                                                          the training process.
+Rdistributor = R+
+                distributor + Rdistributor
+                               −
+                                                                             (46)
+                                                                                             (2) Value network
+where Rsupplier , Rmanufacturer and Rdistributor represent the reward of the three
+reconfiguration agents of supplier, manufacturer and distributor
+                                                                                              The joint observation of all agents is regarded as the global state st =
+respectively.                                                                              [                ]
+                                                                                            o1,t ,o2,t ,o3,t . The value network is an artificial neural network with the
+3.3.3. MAPPO-based network training                                                       parameter ωi , and it is represented as vi (st ; ωi ), where the input consists
+    In the SCSoSs reconfiguration problem, each type of SC link,                          of the current global state and the output reflects the value associated
+including suppliers, manufacturers, and distributors, is modeled as an                    with that state.
+agent, making reconfiguration decisions based on its own observations.                        The function of the training value network is to align its estimated
+Each agent generates relevant decision actions by processing the state                    state value with the actual discounted cumulative return for that state.
+information.                                                                              The goal of training the value network is to minimize the loss function
+                                                                                            (      )
+    In this paper, a MARL named multi-agent proximal policy optimi­                       J ωnew
+                                                                                               i     , with its functional expression detailed in Eq. (47). The loss
+zation (MAPPO) algorithm (Yu et al., 2022) is used for agent training,                    function uses the mean square error between the truncated predicted
+
+
+
+
+                                                                                     12
+    W. Ding et al.                                                                                                      International Journal of Production Economics 297 (2026) 109995
+
+                                                                                                                                                           ∑
+                                                                                               relationship to the data buffer capacity expressed as D = Bb=1 nb , where
+                                                                                               nb denotes the number of steps in the b-th batch of the data buffer.
+                                                                                                (          )      (          )
+                                                                                               v sk ; ωnew
+                                                                                                       i     and v sk ; ωold
+                                                                                                                         i     are the estimation of the real discount cu­
+                                                                                                                    k
+                                                                                               mulative return ̂ R i after and before the update, respectively. The func­
+                                                                                               tion clip represents the truncation operation, with ε being the truncation
+                                                                                               factor.
+
+                                                                                                  (3) Policy network
+
+                                                                                                    In the SCR problem, the number of agents is defined as m = 3, rep­
+                                                                                               resenting the reconfiguration agents under the disruptions of supply,
+                                                                                               manufacturing, and sales respectively. At moment t, the observation,
+                                                                                               state and action of each agent i are denoted as oi,t , si,t and ai,t , respec­
+                                                                                               tively. Each agent's policy network is an artificial neural network with
+                                                                                               the parameter θi , and the policy network for each agent is represented as
+                                                                                               πi (si ; θi ).
+                                                                                                    In the structural design of each policy network, considering that the
+                                                                                               output reconfiguration action after a disruption entails multiple discrete
+                                                                                               sequences, an action output module (Ding et al., 2024) is incorporated
+                                                                                               following the output layer, as depicted in Fig. 8. This module employs
+                                                                                               the Softmax function to aggregate the neurons, ultimately producing the
+                                                                                               desired action. Unlike traditional policy networks that can generate only
+                                                                                               a single action, the enhanced policy network is capable of outputting
+                                                                                               multiple integer action sequences.
+                                                                                                    The update training of the policy network is to maximize the loss
+                                                                                                              (   )
+    Fig. 7. MAPPO algorithm training framework based on actor-critic network.                  function J θnew  i  , whose function expression is shown in Eq. (48), to
+                                                                                               achieve a higher discounted cumulative reward for agent decision-
+    value and the true value. This truncation operation constrains the pre­                    making.
+    dicted value changes within a specified range, aiming to restrict the                                    D [
+                                                                                                (     ) 1∑            (                  (                     ) )]
+    update range of the value network and enhance training stability.                          J θnew  =         min γ kθnew ⋅ Aki , clip γkθnew , 1 − ε, 1 + ε Aki
+                                                                                                  i
+                                                                                                         D k=1              i                i
+
+     (      ) 1 D   ∑        [( (         )       )2 (  ( (         ) (            )                                                                                             (48)
+    J ωnew     =          max v sk ; ωnew     ̂ k , clip v sk ; ωnew , v sk ; ωold
+                                            − R                                                       1 ∑D   (      (     ))
+         i
+                 D k=1                 i        i                i             i                  +δ        S πθnew   oki
+                                                                                                      D k=1     i
+
+             (          )   )       ) ]
+       − ε, v sk ; ωold   +ε − R̂k 2
+                    i             i
+                                                                                               where Aki and oki represent the dominance function and observation
+                                                                                   (47)
+                                                                                               value of the k-th sample for the i-th agent in the data buffer, respectively;
+    where D represents the number of steps in the data buffer, with its                        S(π ) represents the entropy of the policy π, and δ is the policy entropy
+                                                                                               coefficient; γ kθnew represents the importance sampling weight. Addition
+                                                                                                              i
+
+
+
+
+                                                       Fig. 8. The structure of policy network and action output module.
+
+                                                                                          13
+
+
+
+­
+W. Ding et al.                                                                                                                  International Journal of Production Economics 297 (2026) 109995
+
+
+ally, the truncation function clip constrains γkθnew within the range [1 − ε,                           (continued )
+                                                              i
+
+1 + ε], aiming to restrict the update range of the policy network and                                    14:     Divide the queue τ into sub-queues of length L, and stored in the data buffer D;
+                                                                                                         15: end for
+enhance training stability.                                                                              16: for k = 1, 2...K do
+    The generalized advantage estimation (GAE) method is employed to                                     17:     for all agent i do
+enhance the discounted cumulative return by optimizing the advantage
+                                                                                                                               (     )
+                                                                                                         18:       Minimize L ωnewi   , and update the value network parameter ωnew i   with the
+function; see Eqs. (49)–(51) for detailed computation. During the                                          learning rate α;
+                                                                                                                                (   )
+training of the policy network, the aforementioned value network will                                    19:       Maximize L θnewi   , and update the policy network parameter θnewi   with the
+be utilized to estimate the discounted cumulative return.                                                  learning rate β;
+                                                                                                         20:     end for
+        ∑
+        ∞                                                                                                21: end for
+Aki =         (γλ)l δk+l
+                     i                                                                      (49)         22: end while
+        l=0
+
+       (          )
+δki = v st ; ωnow
+              i     − yki                                                                   (50)
+               (            )
+yki = rik + γ⋅v st+1 ; ωnow
+                        i                                                                   (51)        4. Case study: SCSoSs reconfiguration
+
+where λ is the GAE parameter, γ is the reward discount factor, and both                                 4.1. Experimental setup
+parameters are within the range [0, 1].
+      Furthermore, the importance sampling weight signifies the ratio of                                    Before conducting the experiment, it is essential to delineate the
+the probability of selecting an action under the new policy to that under                               subjects under experimental study, specify the hyper-parameters of the
+the old policy. The reason for using importance sampling is to mitigate                                 relevant algorithms, and determine the indicators for evaluating the
+sampling deviation between different policies, thereby stabilizing the                                  results.
+optimization process. Additionally, given that the policy network out­
+puts multiple discrete integer sequences, the enhanced policy network                                   4.1.1. Research subject and datasets
+π (ak |sk ) can be represented as the product of the policy functions for                                   To verify the feasibility and superiority of the proposed method
+each batch, as demonstrated in Eq. (53).                                                                through experimental setup and result analysis, this paper takes a spe­
+            ( ⃒            )                                                                            cific case of SCSoSs reconfiguration under disruption risks as the
+           π ak ⃒sk ; θnew
+                       i                                                                                research subject.
+ γkθnew = ( ⃒              )                                         (52)
+    i
+           π ak ⃒sk ; θold
+                         i                                                                                  Fig. 9 shows the distribution of some SC in North China, including
+                                                                                                        suppliers, manufacturers, distributors and consumers. The basic element
+                 n
+                 ∑       (    ⃒ )                                                                       attributes and extreme constraint values for these entities are provided
+                            k sk
+                       π θ a(i)                                                             (53)
+π(ak |sk ) =                    ⃒
+                 i=1
+                                                                                                        as detailed in Section 3.1. The problem studied is how to maximize the
+                                                                                                        SoSs resilience, minimize the costs associated with reconfiguring the
+where sk and ak represent the state and action values for the k-th sample,                              SCSoSs, and restore its operational functionality in the event of a
+                  ( ⃒         )
+respectively. π ak ⃒sk ; θnew
+                          i     represents the current policy function, while                           disruption risk to any component, all while complying with various
+ ( ⃒           )                                                                                        constraints.
+           old
+π ak sk ; θi
+    ⃒            represents the original policy function. ak represents the i-
+                                                           (i)
+                                                                                                            The experimental data are derived from two main sources (1) pub­
+th action for the k-th sample, and n represents the number of suppliers,                                licly available industry datasets (e.g., the China Industrial Statistical
+manufacturers, or distributors per agent.                                                               Yearbook and enterprise registration information platforms): and (2)
+    The core pseudo-code for training the MAPPO network is presented                                    synthesized data generated based on realistic parameters from relevant
+in Algorithm 1. Lines 1-2 outline the parameter preparation phase at the                                literature (Constante et al., 2019) in SC management. The data cover
+onset of training. The total number of training steps is indicated in line 3.                           multiple product categories, including household appliances and
+Lines 4 to 15 describe the agent's interaction with the environment and                                 essential goods, with raw materials spanning metals, plastics, and
+the subsequent experience storage. Lines 16 to 21 delineate the net­                                    electronic components. In processing this raw data, spatial coordinates
+work's update training process.                                                                         are normalized to a unified coordinate system, and parameters such as
+Algorithm 1. MAPPO algorithm in MARL                                                                    cost and time windows are standardized to a common unit scale. On this
+  Input: the number of agents m, value network learning rate α, policy network learning
+                                                                                                        basis, two distinct scales are examined: small-scale and large-scale. The
+     rate β, the capacity of data buffer B, the maximum iteration steps stepmax , the                   small-scale SCSoSs consists of 8 suppliers, 7 manufacturers, 5 distribu­
+     maximum number of steps per round Tmax , the number of continuous updates K
+                                                         [                      ]
+                                                                                                        tors, and 4 consumers, while the large-scale SCSoSs consists of 50 sup­
+     Output: updated policy network parameters θnew
+                      [ new new             ]              1  , θnew
+                                                                 2   , …, θnew
+                                                                            m     ,value network        pliers, 40 manufacturers, 35 distributors, and 30 consumers.
+     parameters ω1 , ω2 , ..., ωnew     m                                                               Furthermore, to realistically reflect the impact of external disruption
+  1: Initialize the policy network πi (oi ; θi ), value network vi (st ; ωi ) of each agent i;
+                                                                                                        risks, such as geopolitical tensions, trade barriers, extreme weather, and
+  2: Set the learning rate α and β;
+  3: while step ≤ stepmax do
+                                                                                                        public health crises, the dataset incorporates historical disruption re­
+  4: Initialize the data buffer D = { };                                                                cords triggered by these events.
+  5: for batch b = 1 to B do
+  6:       Initialize the empty queue τ = [ ];                                                          4.1.2. Algorithm parameters
+  7:       for time step t = 1 to Tmax do
+                                                                                                            The performance of MARL algorithms is highly sensitive to the
+  8:          for all agent i do
+  9:              Obtain the current observation oi,t , and sample the agent action                     choice of hyper-parameters. To ensure a fair and effective comparison
+              (
+     ai,t ∼ π oi,t ; θnow
+                       i
+                           )
+                            , then record the action sampling probability πi,t =                        among the baseline algorithms (QMIX, MADDPG) and our proposed
+                                                                                                        method (MAPPO), Table 2 presents the initial hyper-parameters. Our
+       ( ⃒               )
+     π ai,t ⃒oi,t ; θnow ;
+                  i
+  10:          end for                                                                                  configuration prioritizes stability and sample efficiency, drawing upon
+  11:          Perform all agent actions ai,t , obtain the reward ri,t and the new observation          established practices in the MARL literature (Yu et al., 2022) and in­
+    oi,t+1 , and store the data [ot , at , rt , ot+1 , πt ] into the queue τ;
+                                                                                                        sights from preliminary studies on our environment.
+  12:        end for
+  13:       Calculate the dominant function by GAE method;                                                  Shared Parameters: Parameters common to all evaluated algo­
+                                                                  (continued on next column)
+                                                                                                        rithms are set to consistent values to isolate the impact of algorithmic
+                                                                                                        differences.
+
+                                                                                                   14
+W. Ding et al.                                                                                              International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                                                           Fig. 9. Distribution of certain SC in North China.
+
+
+                                                                                          Algorithm-Specific Parameters: These parameters are tuned to
+Table 2                                                                                optimize the performance of each individual algorithm.
+Hyper-parameter values for the MARL algorithm.
+  Type              Parameters                                        Value            ● MADDPG-specific Parameters: The replay buffer size (10,000) stores
+  Shared            Learning rate of policy network                   5 × 10− 4          a diverse set of experiences, breaks the temporal correlation between
+    parameters      Learning rate of value network                    4.5 ×              samples, and facilitates stable off-policy learning. The target update
+                                                                      10− 4              coefficient (τ = 0.005) controls the soft update of target networks,
+                    Number of policy/value network layers             5
+                                                                                         ensuring they change gradually. The exploration noise (Gaussian
+                    Discount factor                                   0.99
+                    Batch size                                        128                noise = 0.25, std = 0.2) encourages the agent to explore the action
+                    Frequency of training                             2 × 105            space around its current policy, promoting the discovery of better
+                    Frequency of target network update                300                strategies.
+                    Adam optimizer epsilon parameter                  1 × 10− 5        ● MAPPO-specific Parameters: Gradient clipping (0.5) prevents ex­
+  Specific          MADDPG       Maximum replay steps                 64                 ploding gradients during backpropagation, a common technique that
+    parameters                   Experience playback pool size        10000              enhances training stability. The clipping parameter (ε = 0.2) is a core
+                                 Target network soft update           0.005              component of PPO. By restricting the size of policy updates through
+                                 coefficient
+                                 Gaussian noise                       0.25
+                                                                                         this clipping ratio, it prevents excessively large updates, ensuring
+                                 Noise drift standard deviation       0.2                monotonic policy improvement and stabilizing the learning process.
+                                                                                         The entropy coefficient (0.01) encourages sufficient exploration in
+                    MAPPO        Gradient clip parameter              0.5
+                                 Truncation coefficient               0.2                the early stages of training without destabilizing convergence later
+                                 Entropy coefficient                  0.01               on. The GAE parameter (λ = 0.95) provides a good trade-off between
+                                 GAE parameter                        0.95               bias and variance in the advantage estimates.
+
+                                                                                          The aforementioned algorithm experiments are conducted on the
+● The learning rates (policy: 5e-4, value: 4.5e-4) are selected as stan­
+                                                                                       Windows 10 operating system with i5-12400F @ 2.8 GHz CPU, RTX
+  dard starting points for Adam optimization. The policy network has a
+                                                                                       3060 GPU, and 16 GB of memory, using Python 3.8 as the programming
+  slightly higher learning rate to enable faster updates, while the value
+                                                                                       language.
+  network uses a lower rate to maintain stability and ensure accurate
+  value estimation. The network architecture (5 layers) is chosen to
+                                                                                       4.1.3. Evaluation indicators
+  enhance the model's ability to capture complex, non-linear re­
+                                                                                           The performance of various MARL algorithms is comprehensively
+  lationships within the SCSoSs. The discount factor (γ) is set to 0.99 to
+                                                                                       compared by tracking the change trend of the cumulative reward, SoSs
+  prioritize long-term cumulative rewards. A batch size of 128 pro­
+                                                                                       resilience, and reconfiguration costs during the SCSoSs reconfiguration
+  vides a balance between stable gradient estimation and computa­
+                                                                                       process.
+  tional efficiency. The training frequency (every 200,000 steps) is
+  selected to ensure the networks are updated after sufficient new data
+                                                                                         (1) Cumulative reward per episode
+  is collected. The target network update frequency (every 300 steps)
+  ensures that the target networks update slowly, preventing insta­
+                                                                                           The concept of “episode” in RL refers to the complete interaction
+  bility in the value function and promoting more stable learning
+                                                                                       process between the agent and the environment from the beginning to
+  during training. The Adam optimizer is chosen for its adaptive
+                                                                                       the end, which can be understood as a loop episode containing multi-
+  learning rate capabilities, with epsilon set to the common value of
+                                                                                       step interaction. In the process of SCR, determining the reconfigura­
+  1e-5 to ensure numerical stability during updates.
+                                                                                       tion behavior of each element can be considered a complete episode,
+                                                                                       with each episode consisting of a single-step interaction. Consequently,
+
+
+                                                                                  15
+W. Ding et al.                                                                                                   International Journal of Production Economics 297 (2026) 109995
+
+
+the cumulative reward per episode should solely aggregate the total                           (2) Soft damage: Random failure of 30% to 50% of node function­
+rewards earned by each element during the action taken in that single                             ality. Additionally, with a probability of 30%, a trade-barrier
+step. This includes the rewards of the respective agents of suppliers,                            event is activated, increasing unit costs for 20% of suppliers.
+manufacturers and distributors, as well as the total rewards of the three                     (3) Complex damage: A combination of the above two types of
+agents as shown in Eq. (54).                                                                      events. Furthermore, a public-health crisis event is triggered with
+                                                                                                  40% probability, reducing labor efficiency for 30% of
+R(n)
+ total = Rsupplier + Rmanufacturer + Rdistributor , n = 1, 2, ⋯, Nepisode
+          (n)         (n)             (n)
+                                                                                (54)              manufacturers.
+
+where Rsupplier , Rmanufacturer , Rdistributor represent the reward value obtained
+          (n)            (n)          (n)
+
+by supplier, manufacturer, and distributor reconfiguration agent in the                     4.2.1. Scenario 1: SCR under hard disruption
+n-th episode; Rtotal
+               (n)
+                     represents the total reward in the reconfiguration                         In this scenario, suppliers, manufacturers, or distributors may
+                                                                                            completely withdraw from the SC process for various reasons. Conse­
+process in the n-th episode; Nepisode denotes the total number of episode
+                                                                                            quently, hard disruption occurs in both small and large-scale SCSoSs.
+rounds.
+                                                                                            Fig. 10 presents the evaluation indicators for the QMIX, MADDPG, and
+                                                                                            MAPPO algorithms across each episode under the two aforementioned
+   (2) SoSs resilience performance
+                                                                                            hard disruption scenarios.
+                                                                                                Fig. 10(a)–(c) illustrate the convergence performance of different
+   By observing the real-time changes in the resilience of the newly
+                                                                                            algorithms across both small-scale and large-scale SCR Scenario 1. In
+reconfigured SC following each episode, we can gauge the ongoing
+                                                                                            each subgraph, the left vertical axis represents the cumulative reward of
+optimization of the strategy.
+                                                                                            the three reconfiguration agents, namely supplier, manufacturer, and
+      ND        (n)
+                      × DC(n) × CC(n) × HC(n) × MC(n)                                       distributor, in the small-scale context, and the right vertical axis repre­
+R =                                                   , n = 1, 2, ⋯, Nepisode   (55)
+  (n)
+̂
+                                AD(n)                                                       sents the cumulative reward in the large-scale, while the horizontal axis
+                                                                                            indicates the number of training iterations.
+                                                                                                It is evident that the convergence trends for the three reconfiguration
+           (n)
+where R̂ represents the SoSs resilience in the n-th episode; NDn , DCn ,
+CCn , HCn , MCn , and ADn represent the SC network indicators in the n-th                   agents are similar, with large-scale reconfiguration yielding higher re­
+episode, as defined in Section 3.2.3.                                                       wards compared to small-scale reconfiguration after algorithm conver­
+                                                                                            gence. Importantly, the graph demonstrates that the cumulative reward
+   (3) Reconfiguration strategy costs                                                       for the MAPPO algorithm surpasses that of the MADDPG and QMIX al­
+                                                                                            gorithms in both small -scale and large-scale, and MAPPO converges
+    Similarly, the effectiveness of the strategy can be assessed by                         more rapidly. More detailed analysis reveals that the convergence curve
+recording the costs associated with performing the reconfiguration ac­                      of the distributor reconfiguration agent is notably smoother than those
+tion in each episode.                                                                       of the other two agents, and the convergence curve of the manufacturer
+                                                                                            reconfiguration agent fluctuates the most violently. This discrepancy
+̂ (n) = c(n) + c(n) + c(n) , n = 1, 2, ⋯, Nepisode
+C        recruit repair fill
+                                                                                (56)        arises because the distributor agent's input elements are less complex,
+                                                                                            whereas the manufacturer link, situated between the supplier and the
+where ̂
+      C
+           (n)
+                      represents the reconfiguration costs in the n-th episode;             distributor, introduces variability from both ends that affects the
+                                                                                            training process.
+crecruit , crepair , cfill are defined in Section 3.2.4.
+ (n)        (n)       (n)
+                                                                                                Additionally, Fig. 10(d) illustrates the cumulative reward curves of
+                                                                                            the three reconfiguration agents, highlighting the superiority of MAPPO
+   (4) Average response time                                                                in Scenario 1. Specifically, on the small-scale, MAPPO and MADDPG
+                                                                                            converge to a reward value of approximately 50, while QMIX reaches
+   It refers to the duration from the beginning of the disruption risks to                  only 46. MAPPO achieves convergence after around 60,000 training
+the end of the reconfiguration strategy during the SCR process after                        iterations, whereas MADDPG and QMIX converge after 70,000 itera­
+agent training is completed.                                                                tions. These differences are even more pronounced on a larger scale.
+                                                                                            Here, MAPPO and MADDPG converge to about 160, while DQN reaches
+4.2. Experimental simulation analysis                                                       approximately 155. MAPPO converges after 120,000 iterations, with
+                                                                                            MADDPG and QMIX showing smooth convergence only after 130,000
+    To eliminate the variability in the experimental process and ensure                     and 140,000 iterations.
+the comprehensiveness of the experimental design, we establish three                            Fig. 10(e)–(f) shows the SoSs resilience and reconfiguration costs of
+distinct SCR scenarios: reconfiguration under hard disruption, reconfi­                     different algorithms under small-scale and large-scale SCR Scenario 1,
+guration under soft disruption, and reconfiguration under both soft and                     respectively. In each subgraph, the left ordinate represents the SoSs
+hard disruptions. In each scenario, we further introduce external risk                      resilience and reconfiguration costs in the small-scale context, while the
+events to simulate real-world disruptions. These scenarios are tested in                    right ordinate shows these metrics in the large-scale context, and the
+both small-scale and large-scale SCSoSs. Each scenario is repeated 10                       abscissa represents the number of training iterations. From Fig. 10(e),
+times for each scale, with the results meticulously recorded. On the basis                  the information we can get is that following the execution of the
+of the above, the comparison of the results of MAPPO, MADDPG, and                           reconfiguration action, the SoSs resilience improves continuously until
+QMIX on the evaluation indicators in Section 4.1.3 is effectively                           the completion of agent training, ultimately stabilizing. The conver­
+quantified.                                                                                 gence trends of agent training indicate that the MAPPO algorithm ach­
+    The generation rules for disruption events are as follows.                              ieves a relatively optimal stable state for SoSs resilience. In Fig. 10(f),
+                                                                                            the reconfiguration costs decline with each training iteration, which is
+   (1) Hard damage: Random removal of 15% to 30% nodes. Addi­                               contrary to the trend in SoSs resilience. Initially, before the agent
+       tionally, with a probability of 20%, port closures caused by                         completes its training, the reconfiguration behavior often exhibits er­
+       extreme weather are triggered, causing delivery delays for 25% of                    rors; specifically, the agent may incorrectly apply reconfiguration
+       distributors.                                                                        measures when they are unnecessary. However, once training is com­
+                                                                                            plete, the reconfiguration costs converge to its optimal value.
+
+
+                                                                                       16
+W. Ding et al.                                                                                          International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                       Fig. 10. The evaluation indicators of various algorithms across each episode under the hard disruption scenarios.
+
+
+4.2.2. Scenario 2: SCR under soft disruption                                        retain a degree of resilience. Similarly, when comparing Fig. 11(f) with
+    In this soft disruption scenario, suppliers, manufacturers, or dis­             Fig. 10(f), the total reconfiguration costs are nearly identical, despite
+tributors encounter partial business disruptions, such as shortages in the          Scenario 2 experiencing more disruptions than Scenario 1. Thus, for the
+supply of specific materials from suppliers, insufficient production ca­            same number of disruptions, the reconfiguration costs associated with
+pacity for particular products from manufacturers, or disruptions in                soft disruption should be lower than that for hard disruption.
+specific sales channels of distributors, while other operations remain
+unaffected. Due to its greater complexity compared to hard disruptions,             4.2.3. Scenario 3: SCR under complex disruption
+the soft disruptions in both small-scale and large-scale SCSoSs are                     In real-world situations, the SC frequently encounters both soft and
+detailed. Similar to Figs. 10 and 11 presents the evaluation indicators for         hard disruptions. This scenario simulates the reconfiguration of such a
+the QMIX, MADDPG, and MAPPO algorithms across each episode under                    complex situation. Fig. 12 presents the evaluation indicators for the
+the two aforementioned soft disruption scenarios.                                   QMIX, MADDPG, and MAPPO algorithms across each episode under the
+    Fig. 11(a)–(c) depict the convergence performance of various algo­              two aforementioned complex disruption scenarios.
+rithms across different scales in soft disruption. Due to the intricate                 In Scenario 3, the simultaneous presence of hard and soft disruptions
+reward constraints associated with soft disruption, each convergence                leads to a significantly higher number of disrupted objects in the SC
+curve exhibits greater fluctuations and slower convergence compared to              compared to Scenarios 1 and 2. Combining the findings from Fig. 12(a)–
+Scenario 1. Nonetheless, MAPPO consistently demonstrates a superior                 (d) with the insights from the previous sections, it is evident that the
+convergence rate compared to MADDPG and QMIX. Further, Fig. 11(d)                   MAPPO algorithm employed in this study exhibits superior convergence
+shows that MAPPO gradually converges after large-scale and small-scale              performance in the SCR scenario across all scales. The ranking from best
+training with 120,000 and 140,000 iterations, respectively, which re­               to worst is: MAPPO > MADDPG > QMIX. Furthermore, the diagram also
+quires a smaller number of iterations compared to MADDPG and QMIX.                  reveals that during the training process, each agent generally undergoes
+Notably, irrespective of the scale, the rewards for individual agents and           a prolonged “climbing” phase of cumulative rewards, stabilizing after
+the total rewards using MAPPO algorithm are higher than those of other              approximately 140,000 iterations. Fig. 12(e)–(f) further validate the
+baselines.                                                                          conclusions drawn in Sections 4.2.1 and 4.2.2. Additionally, the overall
+    Comparing the SoSs resilience curves under hard disruption in                   slope of the SoSs resilience and costs curves under complex disruption
+Fig. 10(e) with those under soft disruption in Fig. 11(e), we observe that          lies between those of hard and soft disruption, with a generally slower
+the initial resilience is higher for soft disruption. This can be attributed        rate of convergence.
+to the fact that soft disruption only partially disrupts, allowing it to                To further analyze the changes in SoSs resilience before and after
+
+
+                                                                               17
+W. Ding et al.                                                                                           International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                       Fig. 11. The evaluation indicators of various algorithms across each episode under the soft disruption scenarios.
+
+
+implementing resilience strategies, Fig. 13 is presented. This figure               4.3. Generalization effect analysis
+compares the SoSs resilience of three DRL algorithms in the pre-
+disruption, post-disruption, and post-reconfiguration stages. The re­                   To further investigate the influence of the attributes of suppliers,
+sults clearly indicate that both small-scale and large-scale SCSoSs can             manufacturers and distributors on the reconfiguration outcomes in the
+significantly restore the SoSs resilience of the SC after implementing the          SCSoSs, this section takes a large-scale scenario as an example to verify
+resilience strategies proposed in this paper. Specifically, compared to             the robustness of the proposed method by changing the attribute values
+MADDPG and QMIX algorithms, MAPPO restores a higher level of SoSs                   of different elements of suppliers, manufacturers, and distributors.
+resilience, which further confirms the effectiveness of our proposed SC                 To facilitate a more intuitive comparison and analysis of the results,
+resilience strategies.                                                              we standardize the evaluation indicators as outlined in Section 4.1.3.
+    In Table 3, we compare the average response time of various algo­               The subsequent experiments are measured by reconfiguration
+rithms across different scenarios and scales. The findings are as follows:          performance-cost ratio, which calculates the product of the total cu­
+1) In terms of scenarios, the response time in Scenario 3 is longer than            mulative reward of all agents and the SoSs resilience value, divided by
+that in Scenarios 1 and 2 at both small and large scales, primarily due to          the reconfiguration costs. These values correspond to the optimal
+the mixed soft and hard disruptions in Scenario 3, which complicate                 reconfiguration strategy for each agent following training, with the
+reconfiguration. 2) Regarding scale, it is evident that the response time           average derived from ten experiments.
+for small-scale scenarios is significantly shorter than that for large-scale
+ones. 3) Evaluating the ranking of the response times of the different              4.3.1. Effect of supplier's attributes
+algorithms from shortest to longest yields: MAPPO > MADDPG > QMIX.                      Among all the attributes of suppliers within the SCSoSs, we
+The MAPPO benefits from multiple updates using mini-batches and a                   concentrate on the most representative of each supplier's total amount of
+shared experience pool within a single update cycle. In contrast,                   raw materials, limited range radius, and unit price of raw materials for
+MADDPG requires individual training and updating of each agent's                    generalization purposes.
+stored experiences, leading to increased computation time. The QMIX,                    Fig. 14 illustrates the influence of various supplier attributes on the
+by merging each agent's local value functions into a global value func­             reconfiguration process. The ordinate of each subgraph represents the
+tion through a hybrid network, further complicates the training process             reconfiguration performance-cost ratio. The abscissa categorizes the
+and increases computation time.                                                     total amount of raw materials, the limited range radius, and the unit
+                                                                                    price of raw materials into five levels: 0.5, 0.75, 1, 1.25, and 1.5. For
+                                                                                    instance, in Fig. 14(a), an abscissa value of 1 indicates that the total
+
+
+                                                                               18
+W. Ding et al.                                                                                               International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                     Fig. 12. The evaluation indicators of various algorithms across each episode under the complex disruption scenarios.
+
+
+                                                                                    Table 3
+                                                                                    The comparison of average response time using different algorithms in different
+                                                                                    scenario.
+                                                                                     Scenario        Scale               Average calculating response of algorithm/s
+
+                                                                                                                         QMIX        MADDPG          MAPPO
+
+                                                                                     Scenario 1      Small-scale         1.369       1.106           0.934
+                                                                                                     Large-scale         3.905       2.961           2.746
+                                                                                     Scenario 2      Small-scale         2.460       1.566           1.135
+                                                                                                     Large-scale         4.953       4.258           3.992
+                                                                                     Scenario 3      Small-scale         3.534       2.064           1.899
+                                                                                                     Large-scale         6.350       5.617           5.316
+
+
+
+                                                                                    disruptions, rather than resorting to recruiting or repairing strategies,
+Fig. 13. The changes in SoSs resilience before and after implementing resil­        which tend to incur lower reconfiguration expenses. Consequently, as
+ience strategies.                                                                   the radius of each supplier's limited range radius expands, both overall
+                                                                                    reconfiguration performance-cost ratio shows an upward trend. In
+amount of raw materials is set to the fiducial value. Conversely, values of         Fig. 14(c), however, when a disruption occurs, the increase in the unit
+0.75 or 1.25 signify that the total amount is adjusted to 75% or 125% of            price of raw materials makes the reconfiguration process more difficult,
+the fiducial value, respectively, while all other attribute values of the           resulting in diminished reconfiguration performance-cost ratio.
+supplier remain at the fiducial level. The abscissa in Fig. 14(b) and (c)
+conveys the same interpretation.                                                    4.3.2. Effect of manufacturer's attributes
+    Furthermore, as shown in Fig. 14(a), an increase in the total amount               Similarly, among the attributes of manufacturers in the SCSoSs, we
+of raw materials generates more reconfiguration opportunities, leading              emphasize daily work efficiency, limited range radius, and longest
+to a rise in performance-cost ratio. Fig. 14(b) demonstrates that                   working hours for each manufacturer.
+although expanding the limited range radius incurs higher trans­                       In a similar way to Figs. 14 and 15 illustrates the influence of various
+portation costs, the SoSs can implement more filling strategies during              manufacturer attributes on the reconfiguration process. We categorize
+
+
+                                                                               19
+W. Ding et al.                                                                                            International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                                                    Fig. 14. Effect of supplier attributes on reconfiguration.
+
+
+
+
+                                                  Fig. 15. Effect of manufacturer attributes on reconfiguration.
+
+
+daily work efficiency, the limited range radius, and the longest working              4.3.3. Effect of distributor's attributes
+hours into five levels of 0.5, 0.75, 1, 1.25, and 1.5.                                    The maximum transport volume and the limited range radius of each
+    As shown in Fig. 15(a)–(c), as the manufacturer's daily work effi­                distributor are crucial attributes in the SC. We perform comparative
+ciency and longest working hours increase, this signifies that the re­                experiments by varying these values of these attributes and illustrate the
+wards generated by the reconfiguration strategy post-interruption are                 impact of different distributor attributes on the reconfiguration process
+higher, leading to a gradual enhancement of the performance-cost ratio                in Fig. 16.
+in SCR. Similarly, Figs. 15(b)–14(b) exhibit a similar trend, attributable                In Fig. 16(a), the reconfiguration performance-cost ratio increases
+to the same underlying reason: the expansion of the limited range radius              with the increase in maximum transportation volume because the dis­
+allows for greater utilization of cost-effective filling strategies to restore        tributors can get more rewards. The finite range radius shown in Fig. 16
+SoSs resilience, rather than relying on recruiting or repairing strategies.           (b) affects the choice of the optimal reconfiguration strategy, indicating
+
+                                                                                 20
+W. Ding et al.                                                                                            International Journal of Production Economics 297 (2026) 109995
+
+
+
+
+                                                  Fig. 16. Effect of distributor attributes on reconfiguration.
+
+
+that the proposed method yields improved reconfiguration benefits by                       supply chain network, train policies centrally on secured data,
+expanding its radius. In addition, we conclude from Figs. (14)-(16) that                   and execute decisions locally with clear authority boundaries and
+the reconfiguration performance of MAPPO is no less than that of                           audit trails. Contract mechanisms such as standby agreements,
+MADDPG and QMIX in any case, which proves the feasibility and ad­                          capacity reservations, and emergency clauses enable scalable
+vantages of this method.                                                                   implementation. Since disruption patterns and partner capabil­
+                                                                                           ities evolve, firms should conduct periodic stress tests, update
+                                                                                           models with recent data, and use post event learning loops to
+4.4. Managerial insights
+                                                                                           keep reconfiguration policies current. Together, these measures
+                                                                                           provide a practical pathway to translate model-based reconfigu­
+    Based on the empirical evidence reported in Sections 4.2 and 4.3, this
+                                                                                           ration into operational routines.
+section translates the main findings into actionable recommendations
+for SCR to improve resilience, while considering common implementa­
+tion constraints in practice.                                                       4.5. Further discussion
+
+   (1) A tiered disruption response playbook can be established around                  The experimental results and case verification indicate that the
+       the three reconfiguration strategies examined in this paper.                 proposed method significantly improves system performance. Besides,
+       Filling is suitable as an initial response for mild or short disrup­         this section further discusses some key aspects to deeply understand the
+       tions, since it reduces response time and coordination overhead.             advantages and disadvantages of the proposed method in real-life ap­
+       Recruiting should be prepared in advance for severe disruptions              plications, including potential applications and possible drawbacks.
+       or persistent capacity losses through pre-qualified alternative                  Potential applications. As tested in the experiments, this study
+       partners and framework contracts. Repairing should be priori­                provides a foundational framework for intelligent and resilient SC
+       tized for strategically important nodes whose restoration pre­               management. The distributed decision-making nature of the MARL
+       serves key network structures and reduces ripple effects. To avoid           approach makes it suitable for deployment at the edge of SC networks,
+       ad-hoc decisions, firms can define trigger rules based on disrup­            such as in local distribution centers or manufacturing plants, where low
+       tion severity, time-window tightness, and the expected resilience            computational latency and high responsiveness are critical. It is also
+       gain versus cost.                                                            well-suited for cloud-based SC management platforms, where the
+   (2) Decision makers can move beyond pure cost minimization to­                   “centralized-learning and decentralized-execution” paradigm can coor­
+       ward resilience-aware trade-off management. The results indi­                dinate large-scale, geographically dispersed networks. The method's
+       cate that higher resilience can be achieved with controlled                  ability to balance resilience and costs makes it valuable for these
+       reconfiguration costs when actions are selected sequentially                 domains.
+       under uncertainty. In practice, the resilience indicators used in                Possible drawbacks. Although the proposed method poses valuable
+       this study (e.g., connectivity and path-length related metrics) can          improvements, some critical challenges must be addressed for broader
+       be operationalized as monitoring KPIs and embedded into sales                real-world deployment. First, the current model assumes perfect and
+       and operations planning (S&OP) and recovery budgeting, so that               timely information sharing for centralized training, which may be
+       acceptable resilience baseline and maximum reconfiguration cost              difficult to achieve in practice due to data silos, privacy concerns, or
+       are jointly managed rather than treated as separate targets.                 communication delays between different enterprises in the SC. Sec­
+   (3) The sensitivity analysis suggests that specific capability attributes        ondly, the cost models, while illustrative, may oversimplify real-world
+       can materially influence reconfiguration outcomes. This supports             complexities such as dynamic pricing, negotiation overheads, and the
+       targeted investments to improve supplier flexibility, such as yield          full logistical costs of implementing recruiting or repairing strategies.
+       stability, lead-time reliability, and dual sourcing. It also supports
+       investments to enhance manufacturing adaptability, including                 5. Closing remarks
+       flexible overtime capacity, a cross trained workforce, and
+       modular process routing. In addition, firms can strengthen dis­                  In this paper, we address the following question:
+       tribution capacity and geographic coverage through scalable                      How can SC managers dynamically reconfigure a SCSoSs to enhance
+       third-party logistics (3 PL) capacity, regional hubs, and alterna­           resilience while balancing reconfiguration costs under disruption risks?
+       tive transportation lanes. These investments expand the feasible                 The proposed method makes use of two core constructs: a three-
+       action set during disruptions and improve the resilience-cost                phase quantitative resilience model and a MARL framework based on
+       performance of reconfiguration.                                              the POMDP. Our aim is to enable agile, stable, and cost-effective
+   (4) Practical adoption requires attention to data silos, privacy                 reconfiguration of SCSoSs in response to disruptions, by integrating
+       boundaries, and cross firm coordination costs. A feasible                    resilience strategies with adaptive decision-making. The novelties of this
+       deployment path is to build a digital twin sandbox of the directed           paper include.
+
+                                                                               21
+W. Ding et al.                                                                                                               International Journal of Production Economics 297 (2026) 109995
+
+
+● We introduce three resilience reconfiguration strategies, namely                                 Canese, L., Cardarilli, G.C., Di Nunzio, L., et al., 2021. Multi-agent reinforcement
+                                                                                                        learning: a review of challenges and applications. Applied Sciences 11 (11), 4948.
+  filling, recruiting, and repairing, and develop a three-phase model
+                                                                                                   Chen, Z., Zhao, T., Jiao, J., et al., 2022. Performance-threshold-based resilience analysis
+  for quantifying SoSs resilience and reconfiguration costs based on a                                  of system of systems by considering dynamic reconfiguration. Proc. IME B J. Eng.
+  SCDN. This model provides a structured basis for evaluating and                                       Manufact. 236 (14), 1828–1838.
+  guiding reconfiguration actions under disruptions.                                               Chen, Z., Hong, D., Cui, W., et al., 2023. Resilience evaluation and optimal design for
+                                                                                                        weapon system of systems with dynamic reconfiguration. Reliab. Eng. Syst. Saf. 237,
+● We formulate the dynamic reconfiguration process as a POMDP,                                          109409.
+  where the state space represents SC elements, the action space en­                               Chen, X., Zheng, C., Liu, M., 2024. Research on inventory management optimization
+  compasses available resilience strategies, and the reward function                                    strategy in supply chain based on deep reinforcement learning[C]. In: 2024 5th
+                                                                                                        International Conference on Computer Vision, Image and Deep Learning,
+  incorporates both SoSs resilience and costs considerations. This                                      pp. 786–791.
+  formulation allows agents to make decentralized yet coordinated                                  Choi, T.M., 2018. A system of systems approach for global supply chain management in
+  decisions under uncertainty.                                                                          the big data era. IEEE Eng. Manag. Rev. 46 (1), 91–97.
+                                                                                                   Chong, J.W., Kim, W., Hong, J., 2022. Optimization of apparel supply chain using deep
+● We employ the MAPPO algorithm to train agents in a collaborative                                      reinforcement learning. IEEE Access 10, 100367–100375.
+  environment, enabling efficient reconfiguration that responds in real                            Chowdhury, M.M.H., Quaddus, M.A., 2015. A multiple objective optimization based QFD
+  time to disruption scenarios. The experimental results show that our                                  approach for efficient resilient strategies to mitigate supply chain vulnerabilities: the
+                                                                                                        case of garment industry of Bangladesh. Omega 57, 5–21.
+  approach significantly outperforms other baseline MARL methods                                   Constante, F., Silva, F., Pereira, A., 2019. DataCo smart supply chain for big data analysis
+  such as QMIX and MADDPG in terms of reconfiguration                                                   [DB]. Mendeley Data V5. https://doi.org/10.17632/8gx2fvg2k6.5.
+  performance.                                                                                     Cuong, T.N., You, S., Long, L.N.B., et al., 2025. Maritime supply chain optimization using
+                                                                                                        robust adversarial reinforcement learning. Eng. Appl. Artif. Intell. 161, 112127.
+                                                                                                   Ding, W., Ming, Z., Wang, G., et al., 2024. System-of-systems approach to spatio-
+    We demonstrate the effectiveness of the proposed method through                                     temporal crowdsourcing design using improved PPO algorithm based on an invalid
+experimental simulations across various disruption scenarios. The re­                                   action masking. Knowl. Base Syst. 285, 111381.
+sults show that the MAPPO provides substantial improvements in                                     Dixit, V., Seshadrinath, N., Tiwari, M.K., 2016. Performance measures based
+                                                                                                        optimization of supply chain network resilience: a NSGA-II + Co-Kriging approach.
+reconfiguration performance, offering enhanced resilience with                                          Comput. Ind. Eng. 93, 205–214.
+controlled costs. Additionally, we explore how different attributes of                             Drakaki, M., Tzionas, P., 2022. A colored petri net-based modeling method for supply
+suppliers, manufacturers, and distributors affect reconfiguration out­                                  chain inventory management. Simulation 98 (3), 257–271.
+                                                                                                   Durowoju, O.A., Chan, H.K., Wang, X., et al., 2021. Supply chain redesign implications to
+comes, providing practical insights for real-world SC management.                                       information disruption impact. Int. J. Prod. Econ. 232, 107939.
+    We recognize that this study is conducted within a simulated envi­                             El Baz, J., Ruel, S., 2021. Can supply chain risk management practices mitigate the
+ronment with a specific set of disruption models and resilience strate­                                 disruption impacts on supply chains' resilience and robustness? Evidence from an
+                                                                                                        empirical survey in a COVID-19 outbreak era. Int. J. Prod. Econ. 233, 107972.
+gies. However, due to the generality of the MARL framework and                                     Fathollahi-Fard, A.M., 2024. An integrated decision-making framework for a closed-loop
+resilience quantification model, the approach can be extended to more                                   supply chain network redesign problem. AUIQ Technical Engineering Science 1 (2),
+complex SCSoSs with larger agent populations, additional disruption                                     6. https://doi.org/10.70645/3078-3437.1016.
+                                                                                                   Fattahi, M., Govindan, K., Maihami, R., 2020. Stochastic optimization of disruption-
+types, and more diverse resilience tactics. In our future work, we plan to                              driven supply chain network design with a new resilience metric. Int. J. Prod. Econ.
+incorporate real-world SC data, introduce heterogeneous and large-scale                                 230, 107755.
+agent systems (e.g., beyond 10 agents in total), and further investigate                           Garcia, D.J., You, F., 2015. Supply chain design and optimization: challenges and
+                                                                                                        opportunities. Comput. Chem. Eng. 81, 153–170.
+the interplay between multi-agent coordination mechanisms and real-
+                                                                                                   Gital, Y., Bilgen, B., 2024. Biomass supply chain network design under uncertainty, risk
+time disruption response under dynamic uncertainty.                                                     and resilience: a systematic literature review. Comput. Ind. Eng. 193, 110270.
+                                                                                                   Guillén, G., Mele, F.D., Bagajewicz, M.J., et al., 2005. Multiobjective supply chain design
+                                                                                                        under uncertainty. Chem. Eng. Sci. 60 (6), 1535–1553.
+CRediT authorship contribution statement                                                           Guo, W., Tian, Q., Jiang, Z., et al., 2018. A graph-based cost model for supply chain
+                                                                                                        reconfiguration. J. Manuf. Syst. 48, 55–63.
+   Wei Ding: Writing – original draft, Visualization, Validation, Soft­                            Guo, Y., Liu, F., Song, J., et al., 2025. Supply chain resilience: a review from the
+                                                                                                        inventory management perspective. Fundam. Res. 5 (2), 450–463.
+ware, Methodology, Conceptualization. Zhenjun Ming: Writing – re­                                  Habibi, F., Chakrabortty, R.K., Abbasi, A., 2023. Evaluating supply chain network
+view & editing, Supervision, Investigation, Funding acquisition,                                        resilience considering disruption propagation. Comput. Ind. Eng. 183, 109531.
+Conceptualization. Guoxin Wang: Supervision, Project administration.                               Han, B., Shi, S., Park, Y., et al., 2024. A responsive closed-loop supply chain network
+                                                                                                        design under demand uncertainty. Comput. Ind. Eng. 192, 110233.
+Yan Yan: Supervision, Resources. Deyi Zhang: Supervision,
+                                                                                                   Hatami-Marbini, A., Asu, J.O., Hafeez, K., et al., 2024. DEA-Driven risk management
+Investigation.                                                                                          framework for oil supply chains. Soc. Econ. Plann. Sci. 95, 101996.
+                                                                                                   Hewitt, F., 1994. Supply chain redesign. Int. J. Logist. Manag. 5 (2), 1–10.
+                                                                                                   Hosseini, S., Barker, K., Ramirez-Marquez, J.E., 2016. A review of definitions and
+Acknowledgements                                                                                        measures of system resilience. Reliab. Eng. Syst. Saf. 145, 47–61.
+                                                                                                   Jaradat, R., Adams, F., Abutabenjeh, S., et al., 2017. The complementary perspective of
+   Zhenjun Ming acknowledges support from the National Natural                                          system of systems in collaboration, integration, and logistics: a value-chain based
+                                                                                                        paradigm of supply chain management. Systems 5, 50.
+Science Foundation of China (62373047). Guoxin Wang acknowledges                                   Jiang, C., Sheng, Z., 2009. Case-based reinforcement learning for dynamic inventory
+support from the National Natural Science Foundation of China                                           control in a multi-agent supply-chain system. Expert Syst. Appl. 36 (3), 6520–6526.
+(51975056).                                                                                        Kim, B., Kim, J.G., Lee, S., 2024. A multi-agent reinforcement learning model for
+                                                                                                        inventory transshipments under supply chain disruption. IISE Transactions 56 (7),
+                                                                                                        715–728.
+Data availability                                                                                  Kotecha, N., Chanona, A., 2025. Leveraging graph neural networks and multi-agent
+                                                                                                        reinforcement learning for inventory control in supply chains. Comput. Chem. Eng.
+    Data will be made available on request.                                                             199, 109111.
+                                                                                                   Li, Y., Chen, K., Collignon, S., et al., 2021. Ripple effect in the supply chain network:
+                                                                                                        forward and backward disruption propagation, network health and firm
+References                                                                                              vulnerability. Eur. J. Oper. Res. 291 (3), 1117–1131.
+                                                                                                   Margolis, J.T., Sullivan, K.M., Mason, S.J., et al., 2018. A multi-objective optimization
+                                                                                                        model for designing resilient supply chain networks. Int. J. Prod. Econ. 204,
+Aboutorab, H., Hussain, O.K., Saberi, M., et al., 2022. A reinforcement learning-based
+                                                                                                        174–185.
+    framework for disruption risk identification in supply chains. Future Gener. Comput.
+                                                                                                   Meixell, M.J., Gargeya, V.B., 2005. Global supply chain design: a literature review and
+    Syst. 126, 110–122.
+                                                                                                        critique. Transport. Res. E Logist. Transport. Rev. 41 (6), 531–550.
+Aiello, G., Muriana, C., Quaranta, S., et al., 2025. A sustainable inventory management
+                                                                                                   Melnyk, S.A., Narasimhan, R., DeCampos, H.A., 2014. Supply chain design: issues,
+    model for closed loop supply chain involving waste reduction and treatment. Cleaner
+                                                                                                        challenges, frameworks and solutions. Int. J. Prod. Res. 52 (7), 1887–1896.
+    Logistics and Supply Chain 16, 100244.
+                                                                                                   Mohamadi, N., Niaki, S.T.A., Taher, M., et al., 2024. An application of deep
+Alikhani, R., Ranjbar, A., Jamali, A., et al., 2023. Towards increasing synergistic effects
+                                                                                                        reinforcement learning and vendor-managed inventory in perishable supply chain
+    of resilience strategies in supply chain network design. Omega 116, 102819.
+                                                                                                        management. Eng. Appl. Artif. Intell. 127, 107403.
+Burtea, R., Tsay, C., 2024. Constrained continuous-action reinforcement learning for
+    supply chain inventory management. Comput. Chem. Eng. 181, 108518.
+
+
+                                                                                              22
+W. Ding et al.                                                                                                               International Journal of Production Economics 297 (2026) 109995
+
+Mohammed, A., Govindan, K., Zubairu, N., et al., 2023. Multi-tier supply chain network             Tukamuhabwa, B.R., Stevenson, M., Busby, J., et al., 2015. Supply chain resilience:
+    design: a key towards sustainability and resilience. Comput. Ind. Eng. 182, 109396.                definition, review and theoretical foundations for further study. Int. J. Prod. Res. 53
+Panchal, G.B., Mirzahosseinian, H., Tiwari, S., et al., 2023. Supply chain network                     (18), 5592–5623.
+    redesign problem for major beverage organization in ASEAN region. Ann. Oper. Res.              Vicente, J.J., 2025. Optimizing supply chain inventory: a mixed integer linear
+    324, 1067–1098.                                                                                    programming approach. Systems 13 (1), 33. https://doi.org/10.3390/
+Rajagopal, V., Venkatesan, S.P., Mohan, U., et al., 2022a. Analysing the supply chain                  systems13010033.
+    network reconfiguration under disruption risk environment. Int. J. Ind. Syst. Eng. 41          Xu, Z., Ni, W., Liu, S., et al., 2024. Logistics supply chain network risk prediction model
+    (3), 295–335.                                                                                      based on intelligent random forest model. IEEE Trans. Eng. Manag. 71, 9813–9825.
+Rajagopal, V., Venkatesan, S.P., Varghese, S., et al., 2022b. A supply chain network                   https://doi.org/10.1109/TEM.2023.3317922.
+    reconfiguration under partial disruptions with capacity recovery. Int. J. Logist. Syst.        Yan, Y., Chow, A.H., Ho, C.P., et al., 2022. Reinforcement learning for logistics and
+    Manag. 42 (4), 535–575.                                                                            supply chain management: methodologies, state of the art, and future opportunities.
+Rashid, T., Samvelyan, M., Schroeder, C., et al., 2018. QMIX: monotonic value function                 Transport. Res. E Logist. Transport. Rev. 162, 102712.
+    factorisation for deep multi-agent reinforcement learning. Proceedings of Machine              Yang, Y., Peng, C., Cao, E., et al., 2024. Building resilience in supply chains: a knowledge
+    Learning Research 88, 4295–4304.                                                                   graph-based risk management framework. IEEE Transactions on Computational
+Ren, F., Zhao, T., Jiao, J., et al., 2017. Resilience optimization for complex engineered              Social Systems 11 (3), 3873–3881. https://doi.org/10.1109/TCSS.2023.3334768.
+    systems based on the multi-dimensional resilience concept. IEEE Access 5,                      Yu, C., Velu, A., Vinitsky, E., et al., 2022. The surprising effectiveness of PPO in
+    19352–19362.                                                                                       cooperative multi-agent games. Adv. Neural Inf. Process. Syst. 35, 24611–24624.
+Rolf, B., Jackson, I., Müller, M., et al., 2023. A review on reinforcement learning                Zamani, E.D., Smyth, C., Gupta, S., et al., 2023. Artificial intelligence and big data
+    algorithms and applications in supply chain management. Int. J. Prod. Res. 61 (20),                analytics for supply chain resilience: a systematic literature review. Ann. Oper. Res.
+    7151–7179.                                                                                         327 (2), 605–632.
+Shekarabi, H., Mozdgir, A., 2025. Robust, resilient, and responsive food supply chain              Zhang, Q., Wang, Z., Huang, M., et al., 2025a. Collaborative supply chain network design
+    redesign considering uncertainty and pandemic disruptions. Ann. Oper. Res. https://                under demand uncertainty: a robust optimization approach. Int. J. Prod. Econ. 279,
+    doi.org/10.1007/s10479-025-06465-3.                                                                109465.
+Shekarabi, H., Vali-Siar, M.M., Mozdgir, A., 2024. Food supply chain network design                Zhang, X., Zhang, Y., Liu, X., et al., 2025b. Blockchain-based intelligent risk management
+    under uncertainty and pandemic disruption. Oper. Res. 24, 26.                                      decision support system for supply chain financing. Int. J. Intell. Inf. Technol. 21 (1),
+Shukla, R.K., Garg, D., Agarwal, A., 2011. Understanding of supply chain: a literature                 24.
+    review. Int. J. Eng. Sci. Technol. 3 (3), 2059–2072.                                           Zhao, G., Sun, R., 2010. Application of multi-agent reinforcement learning to supply
+Souza, E., Mlinar, T., Broeke, M., et al., 2025. Dynamic programming in inventory                      chain ordering management[C]. In: 6th International Conference on Natural
+    management: a review. Comput. Oper. Res. 183, 107164.                                              Computation, Yantai, China, pp. 3830–3834. https://doi.org/10.1109/
+Suryawanshi, P., Dutta, P., 2022. Optimization models for supply chains under risk,                    ICNC.2010.5582551.
+    uncertainty, and resilience: a state-of-the-art review and future research directions.         Zobel, C.W., Khansa, L., 2014. Characterizing multi-event disaster resilience. Comput.
+    Transport. Res. E Logist. Transport. Rev. 157, 102553.                                             Oper. Res. 42, 83–94. https://doi.org/10.1016/j.cor.2011.09.024.
+Tian, Q., Guo, W., 2019. Reconfiguration of manufacturing supply chains considering
+    outsourcing decisions and supply chain risks. J. Manuf. Syst. 52, 217–226.
+
+
+
+
+                                                                                              23
+

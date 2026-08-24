@@ -35,6 +35,23 @@ CONFIRMED_RET_CELLS = (
 )
 OBSERVATION_DIM = 21
 _REPLAY_CONFIG = StateRichConfiguration("belief_mpc", 3)
+REWARD_MODES = ("ret_visible", "ret_full", "service_safe")
+
+
+def compute_service_safe_reward(metrics: Mapping[str, float], demanded_quantity: float) -> float:
+    """Score delivered quantity without allowing unresolved demand to disappear.
+
+    ``ration_ret_visible`` is quantity-weighted over completed orders.  Multiplying
+    it by the completed-demand fraction is therefore equivalent to assigning zero
+    to unresolved quantity while clipping visible per-order resilience to [0, 1].
+    """
+    demand = float(demanded_quantity)
+    if demand <= 0.0:
+        raise ValueError("demanded_quantity must be positive")
+    visible = float(np.clip(float(metrics["ration_ret_visible"]), 0.0, 1.0))
+    omitted = max(0.0, float(metrics.get("omitted_quantity", 0.0)))
+    completed_fraction = np.clip(1.0 - omitted / demand, 0.0, 1.0)
+    return float(visible * completed_fraction)
 
 
 def normalized_state_rich_observation(
@@ -82,6 +99,7 @@ class ProgramORetOnlyEnv(gym.Env[np.ndarray, int]):
         belief_model_persistence: float = 0.75,
         belief_model_dominant_share: float = 0.90,
         skeleton_factory: SkeletonFactory | None = None,
+        reward_mode: str = "ret_visible",
     ) -> None:
         super().__init__()
         if int(tape_seed_end) < int(tape_seed_start):
@@ -94,6 +112,9 @@ class ProgramORetOnlyEnv(gym.Env[np.ndarray, int]):
         self.cells = tuple(cells)
         self.belief_model_persistence = float(belief_model_persistence)
         self.belief_model_dominant_share = float(belief_model_dominant_share)
+        if reward_mode not in REWARD_MODES:
+            raise ValueError(f"reward_mode must be one of {REWARD_MODES}")
+        self.reward_mode = str(reward_mode)
         self._skeleton_factory = skeleton_factory or self._direct_skeleton
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(
@@ -187,11 +208,21 @@ class ProgramORetOnlyEnv(gym.Env[np.ndarray, int]):
             calendars=np.asarray([self._actions], dtype=np.uint8),
         )
         terminal_metrics = {key: float(value[0]) for key, value in metrics.items()}
-        reward = float(terminal_metrics["ret_visible"])
+        if self.reward_mode == "ret_visible":
+            reward = float(terminal_metrics["ret_visible"])
+        elif self.reward_mode == "ret_full":
+            reward = float(terminal_metrics["ret_full"])
+        else:
+            reward = compute_service_safe_reward(
+                terminal_metrics,
+                demanded_quantity=float(sum(self._skeleton.order_quantities)),
+            )
         observation = np.zeros(self.observation_space.shape, dtype=np.float32)
         info = {
             "calendar": list(self._actions),
             "metrics": terminal_metrics,
+            "reward_mode": self.reward_mode,
+            "reward": reward,
             "skeleton_sha256": self._skeleton.skeleton_sha256,
         }
         return observation, reward, True, False, info

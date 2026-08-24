@@ -68,10 +68,14 @@ def test_the_flag_is_inert_when_the_caps_cannot_bind(shipped, unlimited):
     assert unlimited["evidence"]["total_blocked"] == 0.0
 
 
-# Frozen 2026-08-03 from the verified bridge, on the burned unit-test tape (SEED 5_200_001,
-# WEEKS=26, split_v1, FIFO_PARTIAL, non-fungible, no capacity). The tape parameters belong beside
-# the hash because the hash means nothing without them.
-GOLDEN_SHIPPED_PAYLOAD_SHA256 = "f3fe61b1e2b1f4a63ff30beb296d4c6bf54be029fed0ab7877b69e24201af385"
+# Re-frozen 2026-08-24 with explicit PI authorization ("reconozcamos que el golden
+# nunca fue correcto y requémoslo"). Forensics in
+# docs/CUSTODIA_ANCHORS_RECONGELADO_2026-08-24.md: the original value was never
+# produced by any committed tree -- running this test inside 3b70dd9 itself, with the
+# pinned interpreter and dependency versions, yields the hash below. The old constant
+# is presumed to have come from an uncommitted working-tree state. The tape parameters
+# are unchanged; only the anchor now matches the physics it guards.
+GOLDEN_SHIPPED_PAYLOAD_SHA256 = "9cb65c7a4356c3c74b998f8c65eb428763f65fb2e4e9e8ba754227d1fff64518"
 
 
 def test_the_null_is_anchored_outside_the_code_path_it_guards(shipped):

@@ -1,0 +1,709 @@
+                                                   Potential-Based Reward Shaping For Intrinsic Motivation
+                                                                                  Grant C. Forbes, Nitish Gupta, Leonardo Villalobos-Arias,
+                                                                                       Colin M. Potts, Arnav Jhala, David L. Roberts
+                                                                                                      North Carolina State University
+                                                                                                           Raleigh, United States
+                                                                                        {gforbes,nagupta,lvillal,cmpotts,ahjhala,dlrober4}@ncsu.edu
+
+                                         ABSTRACT                                                                                   the agent becoming “addicted” to watching a screen with flashing
+                                         Recently there has been a proliferation of intrinsic motivation (IM)                       random images. Amodei et al. [1] further discuss related issues.
+                                         reward-shaping methods to learn in complex and sparse-reward                                   These issues can be mitigated through hyperparameter tuning—
+
+
+
+
+arXiv:2402.07411v1 [cs.LG] 12 Feb 2024
+                                         environments. These methods can often inadvertently change the                             i.e., by multiplying the intrinsic rewards by some 𝛼 and decreasing
+                                         set of optimal policies in an environment, leading to suboptimal                           𝛼 until the problematic behavior disappears. Chen et al. [6] imple-
+                                         behavior. Previous work on mitigating the risks of reward shap-                            mented an automated generalization of this method. However, this
+                                         ing, particularly through potential-based reward shaping (PBRS),                           approach may decrease the utility of intrinsic motivation and is not
+                                         has not been applicable to many IM methods, as they are often                              generally guaranteed to preserve the optimal policy set. As an al-
+                                         complex, trainable functions themselves, and therefore dependent                           ternative, we extend the potential-based, policy-preserving reward
+                                         on a wider set of variables than the traditional reward functions                          shaping term of Ng et al. [19] to arbitrary reward functions, and
+                                         that PBRS was developed for. We present an extension to PBRS                               show that this preserves the set of optimal policies. We contribute:
+                                         that we prove preserves the set of optimal policies under a more                               1. An extension of potential based reward shaping (PBRS)
+                                         general set of functions than has been previously proven. We also                          to potential functions of arbitrary variables in episodic envi-
+                                         present Potential-Based Intrinsic Motivation (PBIM), a method for                          ronments, and a proof that this extension does not alter the
+                                         converting IM rewards into a potential-based form that is useable                          set of optimal policies. We derive an accompanying boundary
+                                         without altering the set of optimal policies. Testing in the Mini-                         condition that serves as a sufficient condition for preserving opti-
+                                         Grid DoorKey and Cliff Walking environments, we demonstrate                                mality, and this allows for extending PBRS to reward functions, like
+                                         that PBIM successfully prevents the agent from converging to a                             intrinsic motivation (IM), which are dependent on a more general
+                                         suboptimal policy and can speed up training.                                               set of variables than has been addressed previously.
+                                                                                                                                        2. A novel method for converting any arbitrary reward
+                                         KEYWORDS                                                                                   function into this extended potential form, maintaining the
+                                                                                                                                    benefits of that function while mitigating its drawbacks, by guaran-
+                                         Reinforcement Learning, Reward Shaping, Potential-Based Reward
+                                                                                                                                    teeing that such a shaping reward will not alter the set of optimal
+                                         Shaping, Intrinsic Motivation, Game-Playing Agents
+                                                                                                                                    policies in the underlying environment, and thus cannot be “hacked”
+                                         ACM Reference Format:                                                                      by an agent that has converged to an optimal policy.
+                                         Grant C. Forbes, Nitish Gupta, Leonardo Villalobos-Arias,, Colin M. Potts,                     3. An empirical demonstration that our method is effective
+                                         Arnav Jhala, David L. Roberts. 2024. Potential-Based Reward Shaping For                    as both a safety measure to prevent hacking of intrinsic rewards
+                                         Intrinsic Motivation. In Proc. of the 23rd International Conference on Au-                 and, in certain cases, to speed up training.
+                                         tonomous Agents and Multiagent Systems (AAMAS 2024), Auckland, New                             This paper expands on work originally presented in [11].
+                                         Zealand, May 6 – 10, 2024, IFAAMAS, 11 pages.
+
+                                                                                                                                    2     RELATED WORK
+                                         1     INTRODUCTION
+                                                                                                                                    The two fields of study most directly relevant to our work are
+                                         An increasing amount of work in reinforcement learning (RL) uses                           reward shaping—potential-based reward shaping, in particular—
+                                         intrinsic reward functions, in addition to environmental rewards,                          and intrinsic motivation. We will review the former of these first,
+                                         to speed convergence to reasonable policies. This approach is par-                         focusing particularly on the theoretical extensions that have been
+                                         ticularly widespread in sparse-reward problems, or those that are                          made, and then the latter.
+                                         exploration-heavy, and has had much success in these domains
+                                         [3, 5, 21].
+                                            However, adding a secondary reward term may lead to changes                             2.1    Potential-Based Reward Shaping
+                                         in the set of optimal policies, with unintended, and potentially                           Reward shaping is the practice of adding some additional reward
+                                         adverse, consequences. For example, Burda et al. [4] show that an                          to an environment, usually with the goal of accelerating train-
+                                         intrinsic reward that incentivizes visiting areas of the state space                       ing. We define a Markov Decision Process (MDP) as a tuple 𝑀 =
+                                         where the agent is less able to predict what will happen can result in                     (𝑆, 𝐴,𝑇 , 𝛾, 𝑅). Here 𝑆 is the state space, and 𝐴 is the action space.
+                                                                                                                                    𝑇 : 𝑆 × 𝐴 × 𝑆 → [0, 1] is the state transition function so that
+                                         Proc. of the 23rd International Conference on Autonomous Agents and Multiagent Systems     𝑇 (𝑠, 𝑎, 𝑠 ′ ) = 𝑃 (𝑠𝑡 +1 = 𝑠 ′ |𝑠𝑡 = 𝑠, 𝑎𝑡 = 𝑎) is the probability of tran-
+                                         (AAMAS 2024), N. Alechina, V. Dignum, M. Dastani, J.S. Sichman (eds.), May 6 – 10, 2024,   sitioning to state 𝑠 ′ by taking action 𝑎 in state 𝑠 (throughout this
+                                         Auckland, New Zealand. © 2024 International Foundation for Autonomous Agents
+                                         and Multiagent Systems (www.ifaamas.org). This work is licenced under the Creative         paper, “′ ” will be used to notate a subsequent time step). 𝛾 ∈ [0, 1]
+                                         Commons Attribution 4.0 International (CC-BY 4.0) licence.                                 is the discount factor, and 𝑅 : 𝑆 × 𝐴 × 𝑆 → ℜ is the reward function.
+Reward shaping for 𝑀 is training the agent in some second MDP                                  alternative method to preserve optimality, by iteratively decreasing
+𝑀 ′ = (𝑆, 𝐴,𝑇 , 𝛾, 𝑅 ′ ), where 𝑅 ′ = 𝑅 + 𝐹 , and 𝐹 is the shaping reward                      the coefficient of the shaping rewards until it reaches zero. While
+(this problem and notation can be extended to partially observable                             this alternative method does indeed preserve optimality, it does
+MDPs (POMDPs) as well). It is easy to accidentally choose 𝐹 in a                               so effectively through removing 𝐹 entirely from a portion of the
+way that leads to unexpected behavior (see [23]), because the set of                           training, and thus requires a balance between utilizing the benefits
+optimal policies for 𝑀 ′ is not guaranteed to be the same as for 𝑀.                            of the shaping rewards and mitigating their drawbacks.3 All works
+Ng et al. [19] showed that the set of optimal policies for an MDP is                           cited thus far have focused on the initial domain of Ng et al. [19],
+unchanged by the addition of a shaping reward of the form                                      which is environments that are either infinite-horizon, or which
+                             𝐹 (𝑠, 𝑠 ′ ) = 𝛾Φ(𝑠 ′ ) − Φ(𝑠).                             (1)    have a set absorbing state that terminates the episode. This dis-
+                                                                                               tinction is formally emphasized by Eck et al. [9], who also make a
+If a shaping reward of this form was added, then the Q-function                                further extension of PBRS to Partially-Observable Markov Decision
+of the new MDP, 𝑀 ′ , would be equal to the old Q-function, plus a                             Processes (POMDPs). Noting this shortcoming, Grzes [13] extended
+potential with no action-dependence:                                                           PBRS to episodic environments, which terminate after some final
+                          ∗              ∗
+                            ′ (𝑠, 𝑎) = 𝑄 𝑀 (𝑠, 𝑎) − Φ(𝑠).
+                         𝑄𝑀                                                             (2)    time step 𝑁 . They note that, in such an environment, when adding
+                                                                                               the shaping reward in Equation 1, there is an additional term of
+Because there is no action-dependence, choosing an action to max-                              difference between the episodic returns of 𝑀 ′ and 𝑀:
+imize its sum will also maximize the original Q-function. This was
+only proven for MDPs that are infinite-horizon or contain a single                                                𝑈𝑀 ′ (𝜏𝑁 ) = 𝑈𝑀 (𝜏𝑁 ) + 𝛾 𝑁 Φ(𝑠 𝑁 ) − Φ(𝑠 0 ),                  (6)
+“absorbing state.”
+                                                                                               where 𝑈𝑀 (𝜏𝑁 ) is the cumulative return of an agent on MDP 𝑀 un-
+   Wiewiora et al. [29] extended this treatment to reward shaping
+                                                                                               der the state-action trajectory 𝜏𝑁 . The latter of these terms, present
+terms of the form
+                                                                                               even in the infinite-horizon case [19], has no action dependence,
+                      𝐹 (𝑠, 𝑎, 𝑠 ′, 𝑎 ′ ) = 𝛾Φ(𝑠 ′, 𝑎 ′ ) − Φ(𝑠, 𝑎),                    (3)    and thus cannot affect the set of optimal policies. The former, how-
+allowing for action-depended “advice” potentials: they note, how-                              ever, is implicitly action-dependent through the agent’s ability to
+ever, that in order for the theoretical guarantees of Ng et al. [19]                           affect its final state, and thus poses a problem for maintaining the
+to hold, the potential Φ(𝑠, 𝑎) must be added back to the Q-value                               optimality of the learned policy. Grzes [13] addresses this problem
+during policy training. Also note the dependence of Equation 3 on                              by adjusting the potential added at the end of the episode. The
+𝑎 ′ , which is necessary for this formulation to work, but requires                            potential function essentially then becomes time-dependent, as
+a reward of the form 𝑅(𝑠, 𝑎, 𝑠 ′, 𝑎 ′ ), rather than the more standard                         defined in Equation 1 at all time steps except the last of an episode,
+𝑅(𝑠, 𝑎, 𝑠 ′ ).1 Wiewiora [28] showed that this form of reward shaping                          where it is zero. Formally:
+                                                                                                                             (
+parameter is theoretically equivalent to a thoughtful initialization                                                           0     if 𝑛 = 𝑁
+of parameters for the policy parameterization.                                                                         Φ𝑛 =                                         (7)
+                                                                                                                               Φ(𝑠) otherwise.
+     Devlin and Kudenko [8] extend this formulation further, showing
+that any shaping reward of the form                                                            This treatment applies not only to fixed values of 𝑁 , but to environ-
+                                ′ ′              ′ ′                                           ments where a number of different states could be terminal states,
+                       𝐹 (𝑠, 𝑡, 𝑠 , 𝑡 ) = 𝛾Φ(𝑠 , 𝑡 ) − Φ(𝑠, 𝑡),                         (4)
+                                                                                               and termination could happen at differing times: here 𝑁 is treated
+where 𝑡 and 𝑡 ′ refer to the corresponding time steps of 𝑠 and 𝑠 ′ ,                           as “the time at which the episode ends,” and can freely vary from
+would not alter the set of optimal policies in a single-agent problem,                         episode to episode. This truncating of the potential in the last time
+or the Nash equilibrium in a multi-agent problem. They also prove                              step ensures that the problematic term from Equation 6 will always
+that, unlike Equation 3, shaping rewards of this form cannot be                                equal zero, and thus restores the desired optimality guarantees.
+reduced to parameter initialization in the same way shown by                                      Goyal et al. [12] extended PBRS to a potential based on an “action
+Wiewiora [28].                                                                                 frequency vector,” which contains information about the agent’s
+   Harutyunyan et al. [14] combine the expansions to Ng et al. [19]                            trajectory over some slice of time, while preserving optimality.
+of Wiewiora et al. [29] and Devlin and Kudenko [8] into a general                                 We are extending the potential-based formulation further to
+form                                                                                           accommodate potentials that are a function of an arbitrary set of
+            𝐹 (𝑠, 𝑎, 𝑡, 𝑠 ′, 𝑎 ′, 𝑡 ′ ) = 𝛾Φ(𝑠 ′, 𝑎 ′, 𝑡 ′ ) − Φ(𝑠, 𝑎, 𝑡) (5)                  variables. Most commonly, this will simply be Φ(𝜏0, 𝜏1, ...𝜏𝑀 ), where
+and demonstrate a method for converting shaping functions of                                   Φ is the shaping potential, 𝑀 is the total number of episodes during
+the form 𝑅(𝑠, 𝑎, 𝑠 ′ ) to this potential-based formulation2 . However,                         training, and 𝜏𝑚 = (𝑠 0, 𝑎 0, 𝑠 1, 𝑎 1, ...𝑎 𝑁𝑚 −1, 𝑠 𝑁𝑚 ) is the full trajectory
+Behboudian et al. [2] prove that this formulation does not actually                            of states and actions during episode 𝑚 of training. This is sufficiently
+maintain an optimal policy in a general sense. They present PIES, an                           general to accommodate most IM terms, such as ICM [21] or RND
+1 Wiewiora et al. [29] also include a “lookback” formulation, wherein knowledge of
+                                                                                               [5]. However, to emphasize a generality that could in principle
+𝑎 ′ is not required, but rather 𝑎𝑡 −1 . This formulation, while not dependent on 𝑎 ′ , still
+                                                                                               extend beyond this, rather than writing the dependence explicitly
+takes two action values as arguments, and is thus still nonstandard.                           (as in, i.e., the Φ(𝑠, 𝑎, 𝑠 ′, 𝑎 ′ ) of Wiewiora et al. [29]), we will write
+2 Harutyunyan et al. [14] describe these as “arbitrary reward functions” that are the
+                                                                                               either 𝐹𝑛 or Φ𝑛 for simplicity of notation and to emphasize that we
+most general form of reward function that exists in a traditionally-defined MDP. This
+is required by the way the proof assumes convergence to a TD fixed point. This
+                                                                                               are dealing with arbitrary variable-dependence.
+assumption is not guaranteed for rewards that are arbitrary in the wider sense we
+use, including most forms of IM—these are often not stable across time and thus a              3 Compare to Chen et al. [6], who tune shaping reward coefficients for IM specifically,
+time-independent value function cannot be expected to converge.                                but not to zero.
+2.2    Intrinsic Motivation                                                    3     MAIN RESULTS
+Intrinsic motivation has proven increasingly useful for complex or             Here we demonstrate an extension of PBRS to arbitrary poten-
+sparse-rewards environments in recent years. However, the actual               tial functions that satisfy a boundary condition. Motivated by this
+reward shaping terms used in the IM literature lie almost universally          condition, we then develop a method for converting almost (see
+outside of the traditional MDP and POMDP frameworks, as they                   Assumption 1) any arbitrary reward function to a potential that
+cannot be written as a function of a single state transition, 𝑅(𝑠, 𝑎, 𝑠 ′ ).   preserves optimality. We developed two versions of this conversion
+   A large portion of IM literature is focused on incentivizing explo-         method, one normalized and one non-normalized. We derive the
+ration, particularly in sparse-reward environments. Simple versions            initial boundary condition in Section 3.1, and discuss it in relation to
+exist, such as incentivizing taking actions that have not been taken           prior optimality-preserving PBRS results. We develop the resulting
+recently [26] or keeping a tabular list of how often each state has            reward-converting methods in Section 3.2.
+been explored, and rewarding less-visited ones [25]. Recently, more
+complex exploration rewards have been developed. Tabular meth-                 3.1     Extending Potential-Based Reward Shaping
+ods have been extended to larger, more complex environments                            to Functions of Arbitrary Variables
+through “pseudo-counts” [3, 20], which use a learned representa-               In an episodic environment, we normally want to choose a policy
+tion of the (potentially continuous) state space. Curiosity-based              𝜋 so as to optimize the value function
+methods like Intrinsic Curiosity Module (ICM) [21] reward agents
+                                                                                                        𝜋                              𝜋
+for “surprising” (maximizing the error rate of) an auxiliary network                                   𝑉𝑀 =                E          𝑈𝑀 .         (8)
+                                                                                                                  𝑎∼𝜋,𝑠∼𝑇 ,𝑅𝑛 ∼𝑅
+trained to predict the environment state dynamics. Random Net-
+                                                                                     𝜋 is the cumulative discounted return:
+                                                                               Here 𝑈𝑀
+work Distillation (RND) [5], similarly, rewards agents for fooling a
+predictor in a random feature space. Another common IM method                                                         𝑁
+                                                                                                                      ∑︁−1
+                                                                                                              𝜋
+relies on “empowerment” [17], which is a mutual information met-                                             𝑈𝑀 =               𝛾 𝑛 𝑅𝑛 ,           (9)
+ric between the agent’s actions and future states. Raileanu and                                                        𝑛=0
+Rocktäschel [22] aims to maximize the impact of an agent’s actions             where the rewards 𝑅𝑛 are sampled from acting under policy 𝜋
+on a learned state representation.                                             according to the transition dynamics and reward function of envi-
+   All examples thus far have used IM as a method for supplement-              ronment 𝑀. Note that we are considering the general case where
+ing (usually sparse) base extrinsic rewards. Recently, IM without              the reward function itself need not be deterministic. We also want
+the base reward, either to learn skills to be applied later [10] or to         to define the discounted future return at some arbitrary time step 𝑡:
+replace external rewards entirely [4], has gained attention.
+                                                                                                                      𝑁
+                                                                                                                      ∑︁−1
+   There has been some prior work on the potential risks of IM.                                             𝜋
+                                                                                                           𝑈𝑀,𝑡 𝛾 𝑛−𝑡 𝑅𝑛 ,
+                                                                                                                =                        (10)
+Examples include the “noisy TV” problem, where an agent with an                                             𝑛=𝑡
+exploration term advising it to seek novelty can get distracted from                                        𝜋 . Given this, an optimal policy
+                                                                               the expectation of which is 𝑉𝑀,𝑡
+a base task by some particularly stochastic object in its environment
+[4]. There is also a tendency of other exploration terms less suscep-          under 𝑅 for environment 𝑀 at time 𝑡 will satisfy
+                                                                                                            ∗            𝜋
+tible to the noisy TV problem, such as RND, still causing agents                                           𝜋𝑀 = argmax (𝑉𝑀,𝑡 ).                   (11)
+to become noticeably “risk seeking” once they’ve exhausted all                                                         𝜋
+                                                                                                    ∗ will also satisfy
+                                                                               This optimal policy 𝜋𝑀
+easy-to-obtain intrinsic rewards [5]. There is a large body of theo-
+retical work in this area [1], but empirical study remains sparse. We                                   ∗                 ∗
+                                                                                                       𝜋𝑀 (𝑠) = argmax (𝑄 𝑀,𝑡 )                   (12)
+hope that our method can serve as a tool to better assist empirical                                                        𝑎𝑡
+research in this area.                                                         where
+   There has been some other work in the area of mitigating po-                                        𝜋
+                                                                                                     𝑄 𝑀,𝑡         𝜋
+                                                                                                           = 𝑅𝑡 + 𝑉𝑀,𝑡                     (13)
+                                                                                                                       +1 ,
+tential adverse effects of IM terms, coming mostly in the form                       ∗                  𝜋                            ∗
+of hyperparameter tuning. Chen et al. [6], for example, utilize a              and 𝑄 𝑀 is taken to be 𝑄 𝑀 of the optimal policy 𝜋 = 𝜋𝑀 . If we
+clever method of automatically tuning up exploration coefficients in           now define a new environment 𝑀 ′ equivalent to 𝑀 but with the
+exploration-heavy environments and tuning them down in regions                 addition of a shaping reward
+where IM is less beneficial. Our solution differs from this in two key                                      𝐹𝑛 = 𝛾Φ𝑛+1 − Φ𝑛 ,                     (14)
+ways. Firstly, and most importantly, it delivers vital theoretical guar-
+                                                                               then we can calculate the return for a trajectory in 𝑀 ′
+antees that the set of optimal policies will remain unchanged, and
+thus that any convergence guarantees apply within the new MDP.                                             𝑁
+                                                                                                           ∑︁−1
+                                                                                                𝜋
+Secondly, while [6] requires additional hyperparameters, network                               𝑈𝑀 ′ ,𝑡 =          𝛾 𝑛−𝑡 (𝑅𝑛 + 𝐹𝑛 )                (15)
+architecture, and optimization steps beyond that for the combined                                          𝑛=𝑡
+                                                                                                           𝑁 −1
+loss function, our method requires virtually no additional computa-                                        ∑︁
+tional overhead, and addresses the problem solely by adjusting the                                    =           𝛾 𝑛−𝑡 (𝑅𝑛 + 𝛾Φ𝑛+1 − Φ𝑛 ).       (16)
+                                                                                                           𝑛=𝑡
+reward shaping term to one that guarantees an unchanged set of
+optimal policies.                                                              In order to prove that adding a shaping reward of the form in
+                                                                               Equation 14 does not alter the set of optimal policies of the under-
+                                                                               lying environment, it is sufficient to prove that, at every state and
+                                                                               timestep, choosing 𝑎 to optimize 𝑄 𝑀  ∗
+                                                                                                                       ′ ,𝑡 will necessarily optimize
+  ∗ as well, and vice versa. To investigate the conditions under
+𝑄 𝑀,𝑡                                                                               be viewed as subsets of the general class of shaping functions that
+which this relation will hold, we can reduce Equation 16 to                         satisfy Equation 22. Similarly, prior work in episodic PBRS has
+              𝑁 −1                𝑁 −1                                              restricted itself to −Φ𝑡 terms that are independent of 𝑎𝑡 , and thus
+                                                                                    has dealt with the 𝛾 𝑁 −𝑡 Φ𝑁 term by setting Φ𝑁 = 0 [13]. Again,
+              ∑︁                  ∑︁
+   𝜋
+  𝑈𝑀 ′ ,𝑡 =          𝛾 𝑛−𝑡 𝑅𝑛 +     𝛾 𝑛−𝑡 (𝛾Φ𝑛+1 − Φ𝑛 )                      (17)
+            𝑛=𝑡                𝑛=𝑡                                                  these solutions combined, while a valid subset of the larger solution
+               𝜋
+           =𝑈𝑀,𝑡    + 𝛾Φ𝑡 +1 − Φ𝑡 + 𝛾 2 Φ𝑡 +2 − 𝛾Φ𝑡 +1 +                     (18)   space for Equation 22, excludes an important set of solutions in
+                                                                                    which each of these terms, while individually 𝑎𝑡 -dependent, have
+            𝛾 3 Φ𝑡 +3 − 𝛾 2 Φ𝑡 +2 + · · · + 𝛾 𝑁 −𝑡 Φ𝑁 − 𝛾 𝑁 − (𝑡 +1) Φ𝑁 −1   (19)   this dependence cancel out when they are summed together. As we
+               𝜋
+           =𝑈𝑀,𝑡    + 𝛾 𝑁 −𝑡 Φ𝑁 − Φ𝑡 .                                       (20)   will see, these solutions have incredible potential applications for
+                                                                                    novel shaping functions, particularly as a method to incorporate
+This is essentially the derivation for Equation 6 by Grzes (2017)                   IM methods without changing the optimal policy of the underlying
+with a potentially non-Markovian Φ𝑡 , and generalized to apply to                   environment.
+all time steps, rather than just 𝑡 = 0. Through an application of
+Equation 8 and Equation 13, this becomes
+                                                      
+                                                                                    3.2     Converting Functions of Arbitrary Variables
+          𝑄𝑀𝜋          𝜋
+              ′ ,𝑡 = 𝑄 𝑀,𝑡 +    E        𝛾 𝑁 −𝑡 Φ𝑁 − Φ𝑡 .    (21)                           to Potential-Based Reward Functions
+                                    𝑎∼𝜋,𝑠∼𝑇 ,𝑅𝑛 ∼𝑅
+                                                                                    All of the IM examples we cited above can change the set of optimal
+Here we see that 𝑄 𝑀  𝜋                                       𝜋
+                        ′ ,𝑡 differs in expectation from 𝑄 𝑀,𝑡 by two               policies, with possibly adverse effects. Thus mitigating these effects,
+terms. If the sum of these terms is constant with respect to 𝑎𝑡 , then              and using IM while guaranteeing the set of optimal policies isn’t
+Equation 12 can be applied to show the equivalence of optimal                       altered, is highly desirable. We present a practical and straightfor-
+policies between these two environments. This leads us to the                       ward way to convert most IM rewards to a form that is guaranteed
+condition                                                                           not to alter the set of optimal policies. More formally, we present a
+                                  
+        E        𝛾 𝑁 −𝑡 Φ𝑁 − Φ𝑡 = Φ𝑡′         ∀𝑡 ∈ (0, 1, ...𝑁 − 1), (22)           method that guarantees not to alter the optimal policy for an IM
+  𝑎∼𝜋,𝑠∼𝑇 ,𝑅𝑛 ∼𝑅                                                                    whose terms do not depend on the future actions of the agent. We
+where Φ𝑡′ is some arbitrary function that is constant with respect                  call this approach Potential Based Intrinsic Motivation (PBIM).
+to action 𝑎𝑡 . From here, we can state Theorem 1:                                      The trick is to realize that, in all time steps but the last, any
+                                                                                    arbitrary reward function (including IM) is already a difference of a
+   Theorem 1 (Sufficient Condition For Optimality). The ad-                         potential function in the proper form due to the recursive relation
+dition of a shaping reward 𝐹𝑡 = 𝛾Φ𝑡 +1 − Φ𝑡 leaves the set of optimal               between rewards and their respective cumulative returns. If we
+policies unchanged if Equation 22 holds.                                            define 𝐹𝑡 to be an arbitrary intrinsic reward at time step 𝑡, and
+   Proof. Given Equation 22, then ∀𝑡 ∈ (0, 1, ..., 𝑁 − 1),                          𝑈𝑡𝜋 to be the cumulative discounted intrinsic reward sampled from
+                ∗                  ∗                                                following policy 𝜋 at time step 𝑡 5 , then we can rewrite the standard
+               𝜋𝑀 ′ (𝑠)= argmax (𝑄 𝑀 ′ ,𝑡 )                                  (23)
+                               𝑎𝑡                                                   recursive relation between them as
+                                                          
+                                     ∗
+                         = argmax (𝑄 𝑀,𝑡 + E 𝛾 𝑁 −𝑡 Φ𝑁 − Φ𝑡 )                (24)                                  𝐹𝑡 = 𝑈𝑡𝜋 − 𝛾𝑈𝑡𝜋+1 .                               (27)
+                               𝑎𝑡
+                                     ∗
+                                                                                       This is conveniently similar to the necessary potential formula-
+                         = argmax (𝑄 𝑀,𝑡 + Φ𝑡′ )                             (25)   tion in Equation 14. In fact, if we choose Φ𝑡 = −𝑈𝑡𝜋 , these equations
+                               𝑎𝑡
+                                     ∗        ∗                                     become identical.
+                         = argmax (𝑄 𝑀,𝑡 ) = 𝜋𝑀 (𝑠).                         (26)
+                               𝑎𝑡                                                      Choosing this form for Φ𝑡 may initially appear untenable in a
+                                                                                    wide variety of environments, as it seems to imply that we will
+Note the step between Equations 25 and 26: here we are relying on
+                                                                                    need to know 𝑈𝑡 before beginning training. This would presuppose
+the 𝑎𝑡 -independence of Φ𝑡′ to ensure it doesn’t affect the argmax𝑎𝑡
+                                                                                    a level of knowledge about the environment and future trajectory
+term.4 This is equivalent to stating the set of optimal policies is
+                                                                                    of the agent that is unrealistic. However, this is not the case: we
+unchanged by the shaping reward.                                   □
+                                                                                    don’t have to actually know 𝑈𝑡 in order to set it equal to Φ𝑡 . We
+   It is worthwhile to briefly examine what prior work has done                     only have to know 𝐹𝑡 , as it is already a difference of the requisite
+to preserve the condition in Equation 22, in order to emphasize                     potential in Equation 27, even if we don’t know that potential itself.
+that this is the most general treatment of this problem to date, and                   If we thus choose Φ𝑡 = −𝑈𝑡𝜋 and implement an IM term normally,
+to situate it within prior literature. In a non-episodic setting, the               we can investigate under what conditions the optimal policy set
+𝛾 𝑁 −𝑡 Φ𝑁 term either drops out (in the infinite-horizon setting) or is             is preserved by examining Equation 22 under this condition. It
+definitionally independent of 𝑎𝑡 (in the setting with a set absorbing               becomes
+                                                                                                                     
+state). Thus, much prior work in this area has focused on solely                            E        𝑈𝑡𝜋 − 𝛾 𝑁 −𝑡 𝑈 𝑁𝜋 = Φ𝑡′     ∀𝑡 ∈ (0, 1, ...𝑁 − 1). (28)
+the −Φ𝑡 term. This has been dealt with by either restricting the                     𝑎∼𝜋,𝑠∼𝑇 ,𝑅𝑛 ∼𝑅
+potential to be independent of 𝑎𝑡 [8, 19], restricting it to be indepen-            This condition is not satisfied by default for most IM terms, as 𝑈𝑡𝜋
+dent of 𝑎𝑡 in the limit as training continues [2], or subtracting this              will be action-dependent in most interesting environments. It is also
+potential where appropriate to accommodate its 𝑎𝑡 -dependence
+[29]. All of the restrictions to Φ introduced by these methods can                  5 Here, we drop the 𝑀 subscript for simplicity. Note however that in this section, 𝑈 𝜋
+                                                                                                                                                                        𝑡
+                                                                                    exclusively denotes the intrinsic discounted return, rather than the sum of intrinsic
+4 This step is similar to a step in the central proof of [19].                      and extrinsic returns.
+unnecessarily complicated in this formulation, as 𝑈 𝑁 = 0 for any                    in the literature for which this assumption does not hold is empow-
+environment in an episodic setting. These observations motivate                      erment [17], in which states are given intrinsic weight that is based
+the choice of potential                                                              in part on future actions. Addressing these sorts of IM terms is left
+                        (                                                            to future work; in this paper, we focus on the bulk of IM, for which
+                          −𝑈 0𝜋 /𝛾 𝑁 , if 𝑡 = 𝑁
+                   Φ𝑡 =                                       (29)                   our method is appropriate. We can now prove Theorem 2:
+                          −𝑈𝑡𝜋 ,       if 𝑡 ≠ 𝑁 ,
+                                                                                        Theorem 2 (PBIM Preserves Optimality). The addition of a
+which is similar to choosing Φ𝑡 = −𝑈𝑡𝜋 , but with the crucial ex-
+                    𝑈𝜋                                                               shaping reward 𝐹𝑡′ of the form in Equation 30 leaves the set of optimal
+ception that Φ𝑁 = − 𝛾 𝑁0 , by virtue of 𝑁 being the last time step                   policies unchanged if Assumption 1 holds.
+in the episode. Our choice of potential here for the 𝑡 = 𝑁 case is
+motivated by setting Φ𝑡′ in Equation 28 to 0 for the 𝑡 = 0 case, and                    Proof. The potential of Equation 30 takes the form of Equa-
+solving for Φ𝑁 .                                                                     tion 29. With this choice of potential, the left side of Equation 22
+   Thus, if we have a shaping reward 𝐹𝑡 , and we want to utilize some                becomes, in expectation,
+optimality-preserving permutation of it 𝐹𝑡′ utilizing the potential
+of Equation 29, we can use                                                                        𝑈 𝜋 𝑁∑︁−1          𝑁
+                                                                                                                     ∑︁−1
+                   (Í                                                                        𝑈𝑡𝜋 − 0𝑡 =     𝛾 𝑛 𝐹𝑛 −      𝛾 𝑛−𝑡 𝐹𝑛                      (31)
+                       𝑁 −2   𝑛+1−𝑁 𝐹 , if 𝑡 = 𝑁 − 1
+                       𝑛=0 −𝛾
+                                                                                                   𝛾
+               ′                     𝑛                                                                  𝑛=𝑡          𝑛=0
+             𝐹𝑡 =                                                 (30)
+                                           if 𝑡 ≠ 𝑁 − 1,                                                   −1           −1
+                                                                                                                                 ! 𝑡 −1
+                    𝐹𝑡 ,                                                                                 𝑁
+                                                                                                         ∑︁           𝑁∑︁          ∑︁
+                                                                                                      =        𝑛
+                                                                                                              𝛾 𝐹𝑛 −         𝑛
+                                                                                                                           𝛾 𝐹𝑛 −       𝛾 𝑛−𝑡 𝐹𝑛        (32)
+which is simply 𝐹𝑡′ = 𝛾Φ𝑡 +1 − Φ𝑡 with the potential function defined                                        𝑛=𝑡                 𝑛=𝑡   𝑛=0
+in Equation 29.                                                                                                −1
+                                                                                                             𝑡∑︁
+   Equation 30 has an incredibly intuitive and appealing interpreta-                                    =−          𝛾 𝑛−𝑡 𝐹𝑛 .                          (33)
+tion. It is equivalent to implementing the shaping reward “normally”                                         𝑛=0
+until the very last time step, at which point the total discounted
+rewards are subtracted in order to ensure Equation 22 still holds.                   This term depends simply on the discounted sum of all the IM
+Described this way, it is both simple to understand and straightfor-                 rewards up to, but not including, 𝐹𝑡 . From Assumption 1, this has
+ward to implement.                                                                   no 𝑎𝑡 -dependence, and thus Equation 22 holds. From this, Theorem
+   Equation 30 also has the advantage that it makes it particularly                  1 can be applied to show the optimal policy set is unchanged. □
+difficult for most agents to “figure out” that optimizing intrinsic
+motivation does nothing to increase their value function in the                         While we have just shown it does conserve the optimal policy,
+long run, because the adjustment term is at the very end of a given                  this form of PBIM has some potentially undesirable effects in prac-
+episode. This extends the reward horizon, to use the terminology                     tice. In particular, it may still bias the agent in the short term not
+of Laud [16], or the time delay between an action and the (intrinsic)                only to prefer intrinsic rewards, but also to (temporarily) learn
+returns dependent on that action. This makes it intentionally diffi-                 some false relationships between the reward distribution of the
+cult for the agent to discover that IM doesn’t ever actually affect                  state space that then need to be unlearned. Particularly, if 𝐹𝑡 is
+the final return of an episode (because an appropriately discounted                  consistently positive (as is the case with most exploration-based
+quantity will always be deducted later). Much work has gone into                     IM), then 𝐹𝑡′ will also tend to be consistently positive, except for in
+the goal of shortening the reward horizon on various problems,                       the last time step of an episode, where it will be extremely negative,
+oftentimes through reward shaping terms (see, for example, The-                      in order to offset the cumulative positive reward. This may cause
+orem 3 of Ng [18]), but this work shows that actually increasing                     an agent to initially learn that areas of the state space it is in to-
+the reward horizon for the futility of pursuing IM can be useful—it                  wards the end of an episode are “bad”, and areas of the state space
+allows these rewards to still give hints to the agent, without being                 towards the beginning of an episode are “good.” While Theorem 2
+immediately discovered as “worthless” in the long run. The agent                     ensures these associations will eventually be unlearned, we would
+will then seek these rewards in the short term, but discard them in                  prefer to not learn them to begin with, as they may needlessly slow
+the long term insofar as optimizing for them would deviate from                      down training: particularly in exploration-focused environments,
+an optimal policy.                                                                   where they are often precisely the opposite of true. To mitigate this
+   For the formal proof that Equation 30 leaves an optimal policy                    potential issue, we introduce a normalized variation of PBIM, in
+unaltered, we must make a single assumption about 𝐹𝑡 that limits                     which 𝐹𝑡 is replaced with
+the scope of rewards our method applies to:                                                              (Í
+                                                                                                             𝑁 −2    𝑛+1−𝑁 𝐹 ′ , if 𝑡 = 𝑁 − 1
+      Assumption 1. 𝐹𝑡 is constant with respect to 𝑎𝑡 ′ >𝑡 ∀𝑡, 𝑡 ′ ∈ (0, 1, ...𝑁 −                   ′
+                                                                                                   𝐹𝑡 =      𝑛=0 −𝛾           𝑛
+                                                                                                                                                        (34)
+1).                                                                                                        𝐹𝑡 − 𝐹,
+                                                                                                                ¯                 if 𝑡 ≠ 𝑁 − 1,
+
+   This assumption is quite general, and holds for the majority of                   where 𝐹¯ is the expectation value of 𝐹 across prior training. This
+IM in the literature, including state-of-the-art exploration methods                 modified form ensures that the expected IM for both final and non-
+such as ICM and RND. Note that this assumption generally holds                       final time steps is 0, and thus these undesirable associations will
+for action-dependent IM, so long as that action-dependence does                      not occur. In practice, 𝐹¯ is calculated by taking a running mean of
+not extend to future actions, but is restricted to actions taken by the              the previous intrinsic rewards collected across all workers during a
+agent at the current time step and/or prior ones. The key example                    single training epoch.
+   The corresponding potential for Equation 34 is                        where 𝑛(𝑠) is the number of times a state has been previously visited
+                          −𝑈 ′                                          within an episode, and 𝛼 is a coefficient controlling the magnitude
+                         𝑁0 ,
+                                       if 𝑛 = 𝑁
+                   Φ𝑛 = 𝛾
+                                                                        of exploration reward relative to the environment reward. This par-
+                                                                (35)
+                         −𝑈    −  𝐹¯ , if 𝑛 ≠ 𝑁 ,                       ticular tabular reward form appears in previous literature [5, 25].
+                         𝑛 𝛾 −1
+                                                                        As the environment itself is partially observable, and we wish to
+where 𝑈 0′ is the cumulative discounted mean-adjusted intrinsic          demonstrate the versatility of our method when applied to reward
+return. The first case of this correspondence follows straightfor-       functions with dependence on arbitrary variables, we defined the
+wardly from the definition of the intrinsic return. The second case      “state” counter 𝑛𝑡 not based on the agent’s observation space, but
+gives us back:                                                           on information internal to the environment itself regarding the
+              ′
+             𝐹𝑛≠𝑁 = 𝛾Φ𝑛+1 − Φ𝑛                                   (36)    agent’s position and whether it was holding the key. So, for ex-
+                                                                         ample, the first time the agent visited state {3, 4, 0} ({“3rd vertical
+                                     𝐹¯               𝐹¯
+                    = 𝛾 (−𝑈𝑛+1 −           ) + 𝑈𝑛 +              (37)    position,” “4th horizontal position,” and “not carrying the key”}),
+                                   𝛾 −1             𝛾 −1
+                                                                         it would receive a reward of 1, followed by 12 , 13 , etc. To avoid a
+                             𝛾 𝐹¯       𝐹¯                               combinatorial explosion, the agent’s direction and the door’s status
+                    = 𝐹𝑛 −        +                              (38)
+                           𝛾 −1 𝛾 −1                                     (locked/unlocked/open) were not incorporated into this reward.
+                           𝛾 −1 ¯                                            Our experiment was in the Minigrid Doorkey 8x8 environment
+                    = 𝐹𝑛 −        𝐹                              (39)
+                           𝛾 −1                                          with a tabular exploration reward. We used the PPO algorithm as
+                    = 𝐹𝑛 − 𝐹¯.                                   (40)    introduced by Schulman et al. (2017). We included an LSTM layer
+                                                                         [15] in the network architecture to deal with the non-Markovian
+Because this 𝐹𝑛≠𝑁 term has an expected value of zero, 𝐹 𝑁 will then      nature of the environment. We tested four reward schemes: our
+similarly have an expected value of zero, as it will simply be the       method as implemented in Equation 34, base intrinsic rewards
+discounted sum of quantities with expectation zero. Additionally,        without PBRS, our method as implemented in Equation 30, and
+because in either case, Equation 34 differs from Equation 30 only        control, which received no IM. We consider a policy to converge
+by the addition of a constant factor of 𝐹¯, and 𝐹¯ is never dependent    when it does not truncate an episode without reaching the goal
+on the action 𝑎𝑡 , this formulation satisfies Equation 22 as well. So    state during the last 1,000 training steps.
+we now have two formulations – Equation 30 and Equation 34 –                 We tested for three different sets of parameters 𝛼, 𝛾, meant to
+that can be used to implement IM without changing the optimal            represent settings where the IM reward changes the optimal policy
+policy set of the underlying environment.                                infrequently, sometimes, and often.6 Episode lengths for each of
+                                                                         these are depicted in Figures 1d, 1c, & 1a, respectively. Shaded re-
+4     EMPIRICAL DEMONSTRATION                                            gions represent standard deviation among the 16 processes, rather
+We empirically demonstrate the efficacy of our method for both           than error: this is expected to be high, because MiniGrid environ-
+an exploration-based tabular IM reward and for Random Network            ments are procedurally generated and variance in the optimal path
+Distillation (RND) [5]. We focused on environments with a know-          length from one episode to another is expected. Tables 1, 1, & 1
+able set of optimal policies where the base IM demonstrably alters       contain the time to convergence 𝑇 (if converged, N/A if they did
+performance and other IM approaches not guaranteeing optimality          not converge), and mean episode length 𝑁¯ and standard deviation
+fail to converge towards an optimal solution. The former of these        𝜎 after convergence for each reward scheme. 𝑁¯ and 𝜎 were calcu-
+demonstrations shows our method’s potential to speed up conver-          lated from the last 1,000 data points. 𝑇 was determined by the first
+gence when compared to either a baseline IM or no IM, while the          time step in which the average episode length falls below 𝑁¯ for
+latter demonstrates our method’s ability to preserve an agent’s          that run. For each pair of results that converged we performed a
+convergence to an optimal policy, even with an IM that would             1-sided T-test, and with one exception noted in Figure 1’s caption,
+otherwise explicitly alter the optimality of that policy.                all differences were highly statistically significant.
+
+4.1    MiniGrid DoorKey                                                  4.1.1 Discussion. As can be seen in Figure 1 and Table 1, our
+                                                                         method consistently outperformed the baseline IM method. Ad-
+We demonstrate an improvement in both speed of convergence and
+                                                                         ditionally, when the IM most often changes the optimal policy
+performance of the converged-to policy when using our method
+                                                                         (Figure 1a), our method converges faster than the baseline, and as
+to confer optimality guarantees to a tabular exploration reward
+                                                                         predicted, the degree to which it outperforms the baseline is corre-
+term in the MiniGrid DoorKey 8x8 environment [7]. This environ-
+                                                                         lated with the frequency with which the optimal policy is altered.
+mentchallenges the agent to reach a goal state in the bottom-right
+                                                                         Note also that our modification of Equation 30 into Equation 34 was
+corner by picking up a key, carrying it to a door, then unlocking
+                                                                         key in allowing for convergence in the more difficult environments
+that door. The environment itself has sparse rewards, returning a
+                                                                         of Figures 1c & 1a, and in outperforming the IM baseline to a statis-
+reward of 1 for successfully reaching the goal and 0 for every other
+                                                                         tically significant degree in Figure 1d. We also obtain consistently
+transition. It is also partially observable, as the agent can only see
+                                                                         lower variance than the IM baseline in all experiments: as the level
+at most in a 7x7 grid in front of it. The maximum episode length in
+                                                                         of variance in episode length due to differences in initial conditions
+this environment is 640 steps.
+                                                                         is unchanged between runs, this suggests that there is quite a bit of
+   We used a tabular exploration reward of the form
+                                      𝛼                                  6We include details of the effects of these parameters on the optimal policy in the
+                                𝐹𝑡 =      ,                       (41)   Appendix.
+                                     𝑛(𝑠)
+           (a) 𝛼 = .025, 𝛾 = .995                (b) 𝛼 = .025, 𝛾 = .995, zoomed                     (c) 𝛼 = .02, 𝛾 = .995                        (d) 𝛼 = .005, 𝛾 = .99
+
+Figure 1: (a), (c), & (d) Frames per episode for each method (lower is better). The shaded region represents standard deviation,
+and plots are of a 100-point moving average. b) Same results as (a), but zoomed in. All differences in means are significant. For
+IM + PBRS, IM no PBRS (a) 𝑇 = 36.5, 𝑝 < 0.01. For IM + PBRS, IM no PBRS (c) 𝑇 = 27.4, 𝑝 < 0.01. In (d), No IM converges lower than
+IM + PBRS, which converges lower than IM + PBRS no norm, which converges lower than IM no PBRS. Respectively, for each
+of these pairings, 𝑇 = 4.3, 𝑝 < 0.01, 𝑇 = 6.1, 𝑝 < 0.01, and 𝑇 = 1.8, 𝑝 = 0.32. While the last of these isn’t significant, the difference
+between IM + PBRS and IM no PBRS is, with 𝑇 = 7.9, 𝑝 < 0.01.
+
+
+                                                            𝛼 = 0.005, 𝛾 = 0.99          𝛼 = 0.02, 𝛾 = 0.995          𝛼 = 0.025, 𝛾 = 0.995
+                                                              𝑇        𝑁¯       𝜎¯        𝑇        𝑁¯        𝜎¯        𝑇          𝑁¯       𝜎¯
+                                    PBIM                   1.67e6     36.4    12.5      1.67e6     51.8     22.4     1.26e6      51.2     22.7
+                                    IM, NO PBIM            1.46e6     37.3    13.1      2.88e6     60.5     27.5     6.07e6      62.0     27.9
+                                    PBIM NO NORM           2.29e6     37.1    13.4       N/A      635.9    14.9       N/A       634.7     18.8
+                                    NO IM                  2.95e6     35.9    12.0       N/A      634.8    18.55      N/A       634.8     18.6
+Table 1: Time to convergence (𝑇 ), mean steps per episode after convergence (𝑁¯ ), and average standard deviation of steps per
+episode after convergence ( ¯
+                           𝜎) for three parameter settings. Lower 𝑁¯ is better.
+
+
+
+additional variance from inconsistent performance in the baseline                             we trained a simple, tabular Q-learning agent with four types of in-
+IM method that is not present in our method.                                                  trinsic motivation: none, RND[5], non-normalized PBIM, following
+   The only experiment in which our (normalized) method did                                   Equation 30, and normalized PBIM, following Equation 34. We used
+not perform best in both speed of convergence and final policy                                an RND predictor network in this environment, to test our method’s
+was with 𝛼 = 0.005, 𝛾 = 0.99. Here, as can be seen in Table 1, the                            ability to accommodate complex, non-tabular, state-of-the-art IM
+best-performing policy after convergence was that trained with                                terms with dependence on full training trajectories. More details of
+no IM at all, and the fastest-converging was that trained with the                            this environment can be found in the Appendix.
+baseline IM. The latter of these observations can be explained by
+noting, as discussed in Section 3.2, that there is a reward horizon                           4.2.1 Discussion. Our results in this environment are plotted in
+for the lack of intrinsic rewards’ utility in the PBRS agent, and in                          Figure 2. Episode length is a rough indicator of exploration in the
+simpler environments, there is a risk of this reward horizon being                            environment. We expect agents to start with very short episodes
+successfully learned before the environment itself is fully solved. If                        as they discover falling off the cliff is not ideal, then increase the
+this happens, PBRS can slow the speed of convergence, rather than                             episode length as they explore the environment, while finally going
+increase it, by teaching the agent to ignore the IM term prematurely.                         down as they find the optimal route.
+Note, though, that our method converged to a policy more efficient                               RND, in this environment, doesn’t reach the goal, as it becomes
+than that of IM to a significant degree,7 and converged more quickly                          “distracted” by the intrinsic rewards that can be obtained by explor-
+than the run with no IM. In this worst-case scenario our method                               ing the environment unnecessarily—similar to the optimal-policy-
+still provides value by facilitating a trade-off between preventing                           changing effect of the tabular exploration term in Section 4.1.8
+reward hacking and increasing training efficiency.                                            Similarly, unnormalized PBIM doesn’t reach the goal, likely due to
+                                                                                              biasing issues discussed in Section 3.2. Normalized PBIM, however,
+4.2     Cliff Walking                                                                         successfully reaches the same average external return as the base-
+                                                                                              line no-IM runs, suggesting it successfully staves off this change to
+We also tested our method in a cliff walking [27], a classic rein-
+                                                                                              the optimal policy.
+forcement learning task in which an agent is directed to find a goal
+                                                                                                 Furthermore, in Figure 3, it is apparent that normalized PBIM
+state at the end of a long “cliff” that must be avoided. Details of this
+                                                                                              shares a “critical path,” one that follows the shortest possible route
+environment are described in the Appendix. For this experiment,
+7 Another point of note is that the converged values in Figure 1d are lower than that         8 This is not an indictment of RND itself; we shouldn’t expect it to be helpful in this
+of Figures 1c and 1a. We attribute this to the higher 𝛾 value making the environment          small of an environment. We implemented it here partially to see if PBIM could mitigate
+more difficult to learn, meaning that the policies are likely less closely optimal.           an intentionally “bad” (for this environment) IM term.
+         (a) Average Return                           (b) Episode Length
+
+Figure 2: Average cumulative extrinsic return and episode
+length for the cliff walking environment. Error bars are stan-
+dard deviations over 10 runs. Differences in means between
+returns of No IM and RND (𝑝 < 0.05) and between returns of
+No IM and PBIM No Norm (𝑝 < 0.05) are statistically signifi-                                 Figure 4: Average cumulative return for the large cliff walk-
+cant. Mean episode lengths of both PBIM norm and no IM                                       ing environment.
+are statistically different from both PBIM no norm and RND
+(𝑝 < .05 for all).
+                                                                                             no IM, RND, and normalized PBIM10 . Results are aggregated over
+                                                                                             10 runs. The agent policies, along with further details, are included
+                                                                                             in the Appendix.
+                                                                                                The Q-learning agents with IM rewards (RND and PBIM) ob-
+                                                                                             tained more average returns per episode after 3,000 iterations.
+                                                                                             This difference above no-IM is statistically significant for PBIM
+                (a) No IM                            (b) PBIM, normalized                    (𝑝 < 0.05), but not for RND, suggesting this is another environment
+                                                                                             in which PBIM can speed training more efficiently than RND alone.
+                                                                                                Note however that, while PBIM is statistically superior to the
+                                                                                             no IM run, none of the agents, within the time allotted, are able
+                                                                                             to converge to a consistently stable policy. This can be observed
+                                                                                             in Figure 4, as the reward values constantly hover below -100,
+      (c) PBIM, not normalized                                (d) RND                        indicating agents on average explore the environment and then
+                                                                                             fall into the cliff. The PBIM agent, however, began to break out
+Figure 3: Final policies of trained agents and their estimated                               of this cycle near the end of training, while the other two agents
+Q-values. Arrows indicate the action with the highest esti-                                  remained stuck. This preliminary experiment shows promise for the
+mated Q-value in each position. A brighter hue indicates a                                   application of PBIM to more complex sparse-reward environments,
+higher Q-value.                                                                              as a method of speeding up training over traditional IM. However, it
+                                                                                             also suggests the need for future work (both in this environment and
+                                                                                             other sparse reward environments), to better refine and characterize
+along the cliffside from the start state to the goal state. This trans-                      the bounds of and conditions for this claim.
+lates, effectively, to equivalent policies, particularly in the deter-
+ministic version of this environment that we are using.9 In stark                            5    CONCLUSION
+contrast, the other policies fail to converge to any meaningful goal-                        We’ve extended PBRS to a more general class of reward functions
+seeking and have policies that differ starkly from the no-IM version.                        than has been covered previously in the literature, and proven
+                                                                                             that important theoretical guarantees—namely, the preservation
+4.3      Longer Cliff Walking                                                                of the set of optimal policies for the underlying environment—
+The environment in Section 4.2 was simple enough that IM was not                             still hold. We have also provided a computationally efficient and
+necessary to find a solution. In order to test our method’s efficacy in                      effective method of converting many state-of-the-art IM methods
+more dauntingly sparse-reward environments that require reward                               into this optimality-preserving form and demonstrated its efficacy
+shaping to solve effectively, we evaluate PBIM in a modified version                         at both preventing IM reward hacking and, in some circumstances,
+of Cliff Walking with a much longer grid. This version features a                            accelerating training.
+4×50 grid, where the start and goal are on the leftmost and rightmost                           In future work, we are interested in investigating how other
+tiles in the bottom row, and all other bottom tiles are cliffs.                              forms of IM can be combined with PBIM to positively influence an
+    Details of the changed parameters from those in Section 4.2 are in                       agent, particularly in more complex environments.
+the Appendix: most notably, we increased the number of episodes to
+train for, as well as the maximum episode length. Figure 4 shows the                         REFERENCES
+return for the three Q-learning agents trained in this experiment:                            [1] Dario Amodei, Chris Olah, Jacob Steinhardt, Paul Christiano, John Schulman, and
+                                                                                                  Dan Mané. 2016. Concrete problems in AI safety. arXiv preprint arXiv:1606.06565.
+9 Note that, with the exception of two outliers in infrequently-visited parts of the state
+space, all differences between 3a and 3b involve the PBIM implementation taking an           10We did not train unnormalized PBIM in this environment due to its poor performance
+“equally correct” path: in particular, traveling rightwards instead of downwards.            in the similar, simpler environment in Section 4.2.
+ [2] Paniz Behboudian, Yash Satsangi, Matthew E Taylor, Anna Harutyunyan, and                    792–799.
+     Michael Bowling. 2022. Policy invariant explicit shaping: an efficient alternative     [30] Lucas Willems. 2023. rl-starter-files. https://github.com/lcswillems/rl-starter-
+     to reward shaping. Neural Computing and Applications 34 (2022), 1–14.                       files
+ [3] Marc Bellemare, Sriram Srinivasan, Georg Ostrovski, Tom Schaul, David Saxton,
+     and Remi Munos. 2016. Unifying count-based exploration and intrinsic motiva-
+     tion. Advances in neural information processing systems 29 (2016), 1471–1479.          A     MINIGRID DOORKEY ENVIRONMENT
+ [4] Yuri Burda, Harri Edwards, Deepak Pathak, Amos Storkey, Trevor Darrell, and
+     Alexei A Efros. 2018. Large-scale study of curiosity-driven learning. arXiv            An example of a state from the environment we used is given in
+     preprint arXiv:1808.04355.                                                             Figure 5.
+ [5] Yuri Burda, Harrison Edwards, Amos Storkey, and Oleg Klimov. 2018. Exploration
+     by random network distillation. arXiv preprint arXiv:1810.12894.
+                                                                                               For the potential-based method, we implemented Equations 30
+ [6] Eric Chen, Zhang-Wei Hong, Joni Pajarinen, and Pulkit Agrawal. 2022. Redeeming         and 34, taking 𝐹𝑛 from Equation 41. We used a moving average of
+     Intrinsic Rewards via Constrained Optimization. arXiv preprint arXiv:2211.07627.       the rewards for each run to compute 𝐹¯.
+ [7] Maxime Chevalier-Boisvert, Lucas Willems, and Suman Pal. 2018. Minimalistic
+     Gridworld Environment for Gymnasium. https://github.com/Farama-Foundation/                We ran 16 processes concurrently for 10 million cumulative steps,
+     Minigrid.                                                                              and recorded performance every 128 steps.
+ [8] Sam Michael Devlin and Daniel Kudenko. 2012. Dynamic potential-based reward               It is worth expanding on the some of particular ways that the IM
+     shaping. In Proceedings of the 11th International Conference on Autonomous Agents
+     and Multiagent Systems. IFAAMAS, Valencia, Spain, 433–440.                             in this experiment changed the set of optimal policies in this envi-
+ [9] Adam Eck, Leen-Kiat Soh, Sam Devlin, and Daniel Kudenko. 2016. Potential-              ronment. With Equation 41, the particular intrinsic reward we used
+     based reward shaping for finite horizon online pomdp planning. Autonomous
+     Agents and Multi-Agent Systems 30, 3 (2016), 403–445.
+                                                                                            in this environment—though certainly not unique to it; see [4] as
+[10] Benjamin Eysenbach, Abhishek Gupta, Julian Ibarz, and Sergey Levine. 2018.             well as Section 4.2—there is a danger of the agent “procrastinating,”
+     Diversity is all you need: Learning skills without a reward function. arXiv            and collecting more exploration rewards than are strictly necessary
+     preprint arXiv:1802.06070.
+[11] Grant C. Forbes and David L. Roberts. 2024. Potential-Based Reward Shaping For         to reach the goal state, rather than taking the most efficient action
+     Intrinsic Motivation (Student Abstract). In Proceedings of the AAAI Conference on      at each time step. Let’s examine a simple version of this: if an agent
+     Artificial Intelligence. AAAI.                                                         can either take the most efficient action to proceed toward the goal
+[12] Prasoon Goyal, Scott Niekum, and Raymond J Mooney. 2019. Using natu-
+     ral language for reward shaping in reinforcement learning. arXiv preprint              state, or wait for 𝑡 time steps before doing so (say, by either alter-
+     arXiv:1903.02020.                                                                      nating “turn left” and “turn right” actions, or by taking the “toggle”
+[13] Marek Grzes. 2017. Reward shaping in episodic reinforcement learning. In
+     Sixteenth International Conference on Autonomous Agents and Multiagent Systems.
+                                                                                            action repeatedly when there is no door to toggle), then which
+     ACM, São Paulo, Brazil, 565–573.                                                       course of action is preferred to the other depends on its intrinsic
+[14] Anna Harutyunyan, Sam Devlin, Peter Vrancx, and Ann Nowé. 2015. Expressing             reward for the current grid tile. If it has visited its current tile a
+     arbitrary reward functions as potential-based advice. In Proceedings of the AAAI
+     Conference on Artificial Intelligence, Vol. 29(1). AAAI, Austin, Texas, USA, 2652–     total of 𝑛 times (including the current time step), then stalling for 𝑡
+     2658.                                                                                  time steps before proceeding to the goal becomes strictly preferred
+[15] Sepp Hochreiter and Jürgen Schmidhuber. 1997. Long short-term memory. Neural           to the optimal action if the condition
+     computation 9, 8 (1997), 1735–1780.
+[16] Adam Daniel Laud. 2004. Theory and application of reward shaping in reinforce-                                               −1
+                                                                                                                                𝑡∑︁
+     ment learning. University of Illinois at Urbana-Champaign, Illinois, USA.                                                                  ′       1
+                                                                                                                    1 − 𝛾𝑡 <             𝛼𝛾 𝑡                               (42)
+[17] Shakir Mohamed and Danilo Jimenez Rezende. 2015. Variational information                                                                       𝑛 + 𝑡′ + 1
+     maximisation for intrinsically motivated reinforcement learning. Advances in                                               𝑡 ′ =0
+     neural information processing systems 28 (2015), 9.
+[18] Andrew Y. Ng. 2003. Shaping and policy search in reinforcement learning. Ph.D.         is met. Here, the left side of Equation 42 refers to the cost of delaying
+     Dissertation. University of California, Berkeley.                                      the step at which it will reach the goal state by 𝑡 time steps, and the
+[19] Andrew Y Ng, Daishi Harada, and Stuart Russell. 1999. Policy invariance under          right side refers to the intrinsic reward gained by doing the same.
+     reward transformations: Theory and application to reward shaping. In Icml,
+     Vol. 99. Morgan Kaufmann, San Francisco, CA, USA, 278–287.                                Thus the set of optimal policies in this environment can be
+[20] Georg Ostrovski, Marc G Bellemare, Aäron Oord, and Rémi Munos. 2017. Count-            altered by the shaping reward in Equation 41 for sufficiently high
+     based exploration with neural density models. In International conference on
+     machine learning. PMLR, MLResearchPress, Sydney, Australia, 2721–2730.
+                                                                                            values of 𝛼 and 𝛾. To test how violations of this inequality affect
+[21] Deepak Pathak, Pulkit Agrawal, Alexei A Efros, and Trevor Darrell. 2017.               performance, we tested at values of 𝛼 and 𝛾 which vary in the
+     Curiosity-driven exploration by self-supervised prediction. In International con-      frequency with which we can expect Equation 42 to be satisfied. In
+     ference on machine learning. PMLR, MLResearchPress, Sydney, Australia, 2778–
+     2787.                                                                                  particular, higher values of both 𝛼 (a positive coefficient in the right
+[22] Roberta Raileanu and Tim Rocktäschel. 2020. Ride: Rewarding impact-                    side of Equation 42) and 𝛾 (positive on the right side of Equation 42
+     driven exploration for procedurally-generated environments. arXiv preprint             and negative on the right side) will increase the frequency of states
+     arXiv:2002.12292.
+[23] Jette Randløv and Preben Alstrøm. 1998. Learning to Drive a Bicycle Using Rein-        in which the optimal policy will be altered by this intrinsic reward.
+     forcement Learning and Shaping.. In ICML, Vol. 98. Citeseer, Morgan Kaufmann              We iterated on the initial codebase of [30] for our implementa-
+     Publishers Inc., San Francisco, CA, USA, 463–471.
+[24] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+                                                                                            tion.
+     2017. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347.
+[25] Alexander L Strehl and Michael L Littman. 2008. An analysis of model-based             B     CLIFF WALKING ENVIRONMENT
+     interval estimation for Markov decision processes. J. Comput. System Sci. 74, 8
+     (2008), 1309–1331.                                                                     Here, we detail the specifics of the cliffwalking experiment.
+[26] Richard S Sutton. 1990. Integrated architectures for learning, planning, and
+     reacting based on approximating dynamic programming. In Machine learning
+     proceedings 1990. Elsevier, Texas, USA, 216–224.                                       B.1      Environmental Setup
+[27] Richard S Sutton and Andrew G Barto. 2018. Reinforcement learning: An intro-
+     duction. MIT press, CA, USA.
+                                                                                            Figure 6 shows the grid and mechanics of the cliff walking task. In
+[28] Eric Wiewiora. 2003. Potential-based shaping and Q-value initialization are            this environment, the agent starts in the bottom left tile, marked
+     equivalent. Journal of Artificial Intelligence Research 19 (2003), 205–208.            with an S, and must reach the bottom right tile, marked with a G.
+[29] Eric Wiewiora, Garrison W Cottrell, and Charles Elkan. 2003. Principled methods
+     for advising reinforcement learning agents. In Proceedings of the 20th International   All other tiles in the bottom row are “cliffs.” At every time step, the
+     Conference on Machine Learning (ICML-03). AAAI Press, Washington DC, USA,              agent can move either up, down, left, or right. Entering cliff tiles
+                                                                                            C    LONG CLIFF WALKING
+                                                                                            We used the same experimental setup as the Cliff Walking Environ-
+                                                                                            ment, but instead increased the number of episodes to 10,000 and
+                                                                                            the maximum steps per episode to 100. The agents were trained
+                                                                                            with 𝛾 = 0.99, 𝜖 = 1.0 decreasing by 5 · 10 −4 after every episode
+                                                                                            down to a minimum of 0.1. We used the same RND configuration:
+                                                                                            a learning rate of 10 −6 and reward scaling of 1000.
+                                                                                               Figure 7 shows the policies for the three trained agents, averaged
+                                                                                            over 10 runs. None of the three policies converge to a stable path,
+                                                                                            which was the case for the shorter cliff walking environment. PBIM
+                                                                                            and no IM’s policy partially exhibit the behavior we want the agent
+                                                                                            to follow: move towards the right side of the grid and not fall over
+                                                                                            the cliff. In the case of RND, exploration was insufficient, as it was
+                                                                                            unable to reach the states beyond the 42nd column. The Q-values
+                                                                                            are relatively low on the right side, as the agents have yet to find
+                                                                                            the goal reward. In the case of PBIM, it has found the reward but
+                                                                                            has yet to propagate it back.
+
+Figure 5: An example MiniGrid DoorKey 8x8 environment.
+
+
+
+
+     Figure 6: Cliff walking scenario (adapted from [27]).
+
+
+returns a reward of -100, and reaching the goal tile instead returns
+100. Every other action has a reward of -1. The episode ends when
+either the agent reaches a cliff or goal tile, or when the maximum
+episode length is reached. In Figure 6, the red arrow indicates the
+optimal path11 , and the blue arrow shows the longer path that an
+agent might take to ensure it avoids the cliffs.
+
+B.2      Hyperparameters
+The q-learning agents were trained for 4000 episodes with 𝛾 =
+0.99, 𝜖 = 1.0 decreasing by 4 · 10 −4 after every episode down to
+a minimum of 0.1. Due to the small observation space, we used
+an RND predictor network learning rate of 10 −6 and an intrinsic
+reward factor12 of 1000.
+11We use a deterministic implementation of the environment, in which the “slip chance”
+is set to 0. In nondeterministic versions of the environment, depending on the value of
+this parameter and the penalty for moving into a cliff tile, the blue path may actually
+be optimal. We use the deterministic implementation partially because it’s easier to
+demonstrate and think about optimality here.
+12 RND returns an intrinsic reward based on the agent’s ability to navigate to new states
+that return a high prediction error for a separately trained network. Because this was a
+simple deterministic environment, there was a danger of the predictor network quickly
+converging to zero prediction error, effectively eliminating the difference between
+the models we were testing. We set these parameters to counteract this effect, and
+maintain a consistently nonzero IM, in order to adequately test our method.
+                                                            (a) No IM
+
+
+
+
+                                                       (b) PBIM, normalized
+
+
+
+
+                                                             (c) RND
+
+Figure 7: Final policies of trained agents. Arrows point to the agent’s movement in every given position. A brighter hue indicates
+a higher q-value. The darkened tiles marked with a ‘?’ indicate that the agent did not reach the position.
+

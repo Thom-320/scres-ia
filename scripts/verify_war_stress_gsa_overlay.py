@@ -66,9 +66,41 @@ def verify(repo_root: Path) -> dict[str, Any]:
     require(len(ids) == len(set(ids)), "duplicate GSA configuration IDs")
 
     rebuilt = build_manifest()
-    require(
-        rebuilt["configuration_payload_sha256"] == manifest["configuration_payload_sha256"],
-        "reconstructed GSA configuration payload mismatch",
+    # 2026-08-24, PI-authorized: the rebuild comparison now tolerates last-ulp float
+    # drift in the QMC physical multipliers. The frozen artifact is internally
+    # consistent (its own payload hash matches its rows) and its sampling code and
+    # dependency pins are bit-identical since freeze day, yet a fresh rebuild differs
+    # on exactly 12 of 2106*2 values by 1-2 ulp (worst relative difference 2.1e-16),
+    # which is cross-build float behaviour in scipy's qmc.scale/transform path, not a
+    # change of the design. The comparison therefore runs row-by-row with an
+    # ulp-scale tolerance and still fails loudly on any structural difference:
+    # different config ids, counts, factor names, or a relative error above 1e-12.
+    def _rows_close(built: dict, stored: dict) -> list[str]:
+        drifts: list[str] = []
+        if set(built.keys()) != set(stored.keys()):
+            return ["reconstructed GSA configuration id set mismatch"]
+        for key, b_row in built.items():
+            s_row = stored[key]
+            if set(b_row.keys()) != set(s_row.keys()):
+                drifts.append(f"{key}: field set mismatch")
+                continue
+            if b_row["log2_factors"] != s_row["log2_factors"]:
+                drifts.append(f"{key}: log2 factors differ")
+            for name, value in b_row["physical_multipliers"].items():
+                other = s_row["physical_multipliers"].get(name)
+                if other is None or abs(value - other) > 1e-12 * max(1.0, abs(other)):
+                    drifts.append(f"{key}: {name} {value!r} vs {other!r}")
+        return drifts
+
+    rebuilt_morris = {row["config_id"]: row for row in rebuilt["morris"]["rows"]}
+    stored_morris = {row["config_id"]: row for row in manifest["morris"]["rows"]}
+    failures.extend(
+        f"Morris {message}" for message in _rows_close(rebuilt_morris, stored_morris)
+    )
+    rebuilt_qmc = {row["config_id"]: row for row in rebuilt["qmc_pool"]["rows"]}
+    stored_qmc = {row["config_id"]: row for row in manifest["qmc_pool"]["rows"]}
+    failures.extend(
+        f"QMC {message}" for message in _rows_close(rebuilt_qmc, stored_qmc)
     )
     require(
         manifest["configuration_payload_sha256"]

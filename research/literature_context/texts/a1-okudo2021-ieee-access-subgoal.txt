@@ -1,0 +1,771 @@
+Received May 19, 2021, accepted June 5, 2021, date of publication June 18, 2021, date of current version July 15, 2021.
+Digital Object Identifier 10.1109/ACCESS.2021.3090364
+
+
+
+
+Subgoal-Based Reward Shaping to Improve
+Efficiency in Reinforcement Learning
+TAKATO OKUDO                    AND SEIJI YAMADA , (Member, IEEE)
+Department of Informatics, The Graduate University for Advanced Studies, SOKENDAI, Tokyo 101-8430, Japan
+National Institute of Informatics, Tokyo 101-8430, Japan
+Corresponding author: Takato Okudo (okudo@nii.ac.jp)
+
+
+
+
+  ABSTRACT Reinforcement learning, which acquires a policy maximizing long-term rewards, has been
+  actively studied. Unfortunately, this learning type is too slow and difficult to use in practical situations
+  because the state-action space becomes huge in real environments. Many studies have incorporated human
+  knowledge into reinforcement Learning. Though human knowledge on trajectories is often used, a human
+  could be asked to control an AI agent, which can be difficult. Knowledge on subgoals may lessen this
+  requirement because humans need only to consider a few representative states on an optimal trajectory in
+  their minds. The essential factor for learning efficiency is rewards. Potential-based reward shaping is a basic
+  method for enriching rewards. However, it is often difficult to incorporate subgoals for accelerating learning
+  over potential-based reward shaping. This is because the appropriate potentials are not intuitive for humans.
+  We extend potential-based reward shaping and propose a subgoal-based reward shaping. The method makes it
+  easier for human trainers to share their knowledge of subgoals. To evaluate our method, we obtained a subgoal
+  series from participants and conducted experiments in three domains, four-rooms(discrete states and discrete
+  actions), pinball(continuous and discrete), and picking(both continuous). We compared our method with a
+  baseline reinforcement learning algorithm and other subgoal-based methods, including random subgoal and
+  naive subgoal-based reward shaping. As a result, we found out that our reward shaping outperformed all
+  other methods in learning efficiency.
+
+
+  INDEX TERMS Reinforcement learning, subgoals as human knowledge, potential-based reward shaping,
+  reward shaping.
+
+
+
+I. INTRODUCTION                                                                                a policy by requesting that a human selects an action for a
+Reinforcement learning(RL) can acquire a policy maximizing                                     state during the learning phase [2]. Griffith et al. [3] used
+long-term rewards in an environment. Designers do not need                                     interactive human feedback as direct policy labels.
+to specify how to achieve a goal; they only need to specify                                       The reward function is the most related to learning effi-
+what a learning agent should achieve with a reward function.                                   ciency. Most difficult tasks in RL have a sparse reward func-
+A reinforcement learning agent performs both exploration                                       tion [4]. The agent is not able to evaluate its policy due
+and exploitation to find how to achieve a goal by itself.                                      to it and to learn the optimal policy. In contrast, learning
+It is common for the state-action space to be quite large                                      speeds up when the reward function is dense. Inverse rein-
+in a real environment like robotics. As the space becomes                                      forcement learning (IRL) [5] is the most popular method for
+larger, the number of iterations to learn the optimal policies                                 enriching the reward function. IRL uses an optimal policy
+exponentially increases, and the learning becomes too slow                                     to generate a dense reward function. Recent studies have
+to obtain the optimal policies in a realistic amount of time.                                  utilized optimal trajectories [6]. There is the question of the
+Since a human could have knowledge that would be helpful to                                    cost for the teacher in providing the optimal trajectories or
+such an agent in some cases, a promising approach is utilizing                                 policies. Humans sometimes have difficulty providing these
+human knowledge [1]. Wang and Taylor’s approach transfers                                      because of the skills they may or may not have. In particular,
+                                                                                               in robotics tasks, humans are required to have robot-handling
+   The associate editor coordinating the review of this manuscript and                         skills and knowledge on the optimal trajectory. We focus on
+approving it for publication was Xiaochun Cheng.                                               the knowledge of subgoals because there are no requirements
+
+                     This work is licensed under a Creative Commons Attribution 4.0 License. For more information, see https://creativecommons.org/licenses/by/4.0/
+VOLUME 9, 2021                                                                                                                                                        97557
+                                                                   T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+for robot-handling skills. Humans need only to think of a few         reward is leaving out important aspects in reward design. The
+subgoal states on the optimal trajectory in their minds. More-        reward hacking is short of reward design for penalizing all
+over, trajectories that fail can be utilized. Potential-based         possible misbehavior. Since the designer only provide the
+reward shaping is able to add external rewards while keeping          policy or trajectories without defining the reward function
+the optimal policy of the environment [7]. It is calculated as        directly, the IRL overcomes these difficulties. The reward
+the difference between the real-number functions (potential           function is modeled as a linear sum of weighted features,
+function) of the previous and current state. Generally, a naive       and is acquired by a margin-based optimization [5] or an
+idea of the potential function for utilizing the knowledge of         entropy-based optimization [6]. Since the IRL generates a
+subgoals is high potential only for subgoal states. However,          rich reward function, it is also a powerful solution when an
+the method cannot work well as shown in Section VI, so it             environment has a sparse reward. The approach is same to
+is not easy to incorporate the knowledge of subgoals over             ours. The difference is that we use only some specific states as
+potential-based reward shaping.                                       subgoal.
+   In this paper, we propose subgoal-based reward shaping                In RL with human preferences [11], a human teacher
+that accelerates learning by using the knowledge of sub-              compares a pair of trajectory segments and select the better
+goals with the original optimal policy remaining. Our method          one than the other one. The method learned a policy without
+focuses on a single agent setting for episodic tasks with MDP         access to the environmental rewards and the human prefer-
+with a single constant goal. The strength is that the reward          ence predictor.
+shaping needs only the knowledge of subgoals to accelerate               In dataset aggregation(DAGGER) [12], a human expert
+learning. Getting the subgoals does not require handling the          selects an action in a state which an agent selects.
+agent such as in the case of getting trajectories. Furthermore,          In the field of interactive reinforcement learning, a learning
+trajectories with failure can be utilized by extracting subgoals      agent interacts with a human trainer as well as the envi-
+from them. The main contributions of this work are:                   ronment [13]. The TAMER framework is a typical interac-
+  • learning that is accelerating by reward shaping with a            tive framework for reinforcement learning [14]. The human
+    sequence of subgoals,                                             trainer observes the agent’s actions and provides binary feed-
+  • a user study for acquiring a sequence of subgoals and
+                                                                      back during learning. Since humans often do not have pro-
+    a comparison between participants’ subgoals and ones              gramming skills and knowledge on algorithms, the method
+    generated randomly,                                               relaxes the requirements to be a trainer. We aim for fewer
+  • experimental results on three tasks that demonstrate
+                                                                      trainer requirements, and we use a GUI on a web system in
+    a significant improvement in learning efficiency com-             experiments with navigation tasks.
+    pared with a baseline algorithm and a traditional method.
+                                                                      B. SUBGOALS FOR REINFORCEMENT LEARNING
+   The remainder of this paper is organized as the followings.        We consider the hindsight experience replay (HER) algo-
+Section II reviews related work on RL and similar studies             rithm [15], which uses subgoals. HER regards a failure as
+to our reward shaping with subgoal knowledge. The pre-                a success in hindsight, and it generates a reward for the
+liminaries including notations and algorithms for RL and              failure. The algorithm interprets a failure as a process for
+potential based reward shaping are described in Section III.          achieving a target, and it is really similar to a subgoal. HER
+Then, we explain the definition of subgoals, a subgoal-based          accelerates learning in a multi-goal environment. We focus on
+reward shaping algorithm we proposed in Section IV. The               a single-goal environment, but our method is compared with
+next Section V gives an overview of user study in which               a method with random subgoals. The method with random
+we obtained subgoal knowledge from participants. The set-             subgoals is similar to HER.
+ting and results of various experiments we conducted for                 Hierarchical reinforcement learning(HRL) utilizes sub-
+evaluation of our proposed method and descriptions on                 goals. The option framework is major in the field of HRL. The
+three domains, four-rooms, pinball, pick and place tasks in           framework of Sutton et al. [16] was able to transfer learned
+Section VI. In Section VII, discussions on subgoals given             policies in an option. An option consists of an initiation set,
+by participants, hyper parameters tuning and others are dis-          an intra-option policy, and a termination function. An option
+cussed. The conclusion is provided in Section VIII.                   expresses a combination of a subtask and a policy for it. The
+                                                                      termination function takes on the role of subgoal because it
+II. RELATED WORK                                                      terminates an option and triggers the switching to another
+A. HUMAN KNOWLEDGE FOR REINFORCEMENT                                  option. Recent methods have found good subgoals for a
+LEARNING                                                              learner simultaneously with policy learning [17], [18]. The
+There are many studies utilizing human knowledge to RL;               differences with our method are whether the policy is over
+trajectory, policy, preference, action, feedback, and subgoal.        abstract states or not and whether rewards are generated. The
+From policy or trajectory which human provides, IRL infers            framework intends to recycle a learned policy, but our method
+an unobserved reward function [8]. It is known to be diffi-           focuses on improving learning efficiency.
+cult to design the reward functions because of an unspeci-               The RGoal architecture by Ichisugi et al. [19] deals with
+fied reward [9] and a reward hacking [10]. The unspecified            recursive subgoals in HRL. The method solves a MDP
+
+97558                                                                                                                             VOLUME 9, 2021
+T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+with an augmented state space in which each subgoal has                         III. PRELIMINARIES
+a state space. In multitask settings, the method speeds up                      A. REINFORCEMENT LEARNING
+learning by sharing subroutines between tasks. The objec-                       Reinforcement learning is a framework for acquiring a pol-
+tive is different from ours, and the paper suggests that a                      icy maximizing future rewards through interactions between
+non-hierarchical RL method is faster than HRL in single task                    an agent and an environment. This works under a Markov
+settings. Murata et al. [20] used subgoals for accelerating                     decision process(MDP). A MDP is represented as a tuple
+learning in RL. A reward is generated upon the achievement                      (S, A, T , γ , R), where S is a finite set of states, A is a set
+of each subgoal, and there is a Q-function for each sub-                        of actions of k ≥ 2, T = P(st+1 |st , a) is a state tran-
+goal. The policy selects an action according to the weighted                    sition function, γ ∈ (0, 1] is the discount factor, and R
+sum of Q-functions of subgoals and an original Q-function.                      specifies a reward function. An agent has a policy π(a|s)
+This method is applicable for only table-style value func-                      and a value function V (s), Q(s, a). There are two methods
+tions. Our method can be applied to function-style value                        for learning an optimal policy, the value-based method [28]
+functions.                                                                      and the policy gradient-based method [29]. The value-based
+   There are a few methods that can be compared with our                        method indirectly learns a policy by estimating the optimal
+method. For fair comparison, the objective of the method and                    value function. The policy gradient-based method directly
+the input, which is a subgoal series should in this case, should                learns the parameters of a policy.
+be the same as our method.
+                                                                                B. POTENTIAL BASED REWARD SHAPING
+C. REWARD SHAPING                                                               Potential based reward shaping (PBRS) [7], [30] is an
+Reward shaping has been studied actively. Marom and Ros-                        effective method for keeping an original optimal policy in
+man [21] proposed the reward shaping based on Bayesian                          an environment with an additional reward function. If the
+methods called belief reward shaping(BRS). The expected                         potential-based shaping function F is formed as
+value over the estimated probability distribution of an envi-
+ronmental reward over a state and an action is used as shaping                                F(st , st+1 ) = γ 8(st+1 ) − 8(st )           (1)
+rewards. They proved that the policy learned by Q-learning                      it is guaranteed that policies in MDP M = (S, A, T , γ , R) are
+augmented with BRS is consistent to an optimal policy over                      consistent with those in MDP M 0 = (S, A, T , γ , R+F). 8(st )
+original MDP.                                                                   is a function with a state st as an argument. Wiewiora showed
+   The landmark-based reward shaping of Demir et al. [22] is                    that a reinforcement learner with initial Q-values based on the
+the closest to our method. The method shapes only rewards                       potential function make the same updates throughout learning
+on a landmark using a value function. Their study focused                       as a learner receiving potential based shaping reward [30].
+on a POMDP environment, and landmarks automatically                             We assume two learners L and L 0 . L initializes the Q-value
+become abstract states. We focus on a Markov decision pro-                      to Q0 (s, a) and updates its policy with an environmental
+cess (MDP) environment, and acquire subgoals from human                         reward r and the shaping reward F. The Q-value of L 0 is
+participants.                                                                   initialized to Q00 (s, a) = Q0 (s, a) + 8(s), and L 0 uses only
+   Reward shaping in HRL has been studied in [23], [24].                        the reward r. The Q-values are disassembled into the ini-
+Gao and Toni [23] showed that potential-based reward                            tial values Q0 and Q00 and the updated values 1Q(s, a) and
+shaping remains policy invariant to the MAX-Q algorithm.                        1Q0 (s, a) through learning, respectively. If L and L 0 learn on
+Designing potentials every level is laborious work. We use a                    the same sequence of experiences, 1Q(s, a) is always equal
+single high-level value function as a potential, which reduces                  to 1Q0 (s, a). Moreover, value-based policies of L and L 0 have
+the design load. Li et al. [24] incorporated an advantage                       an identical probability distribution for their next action. Our
+function in high-level state-action space into reward shaping.                  proposed method uses potential-based shaping rewards to
+The reward shaping method in [25] utilized subgoals that                        keep an optimal policy in an original MDP.
+are automatically discovered with expert trajectories. The
+potentials generated every subgoal are different.                               IV. SUBGOAL-BASED REWARD SHAPING
+   Potential-based advice is reward shaping for states and                      We propose subgoal-based reward shaping(SRS), which
+actions [26]. The method shapes the Q-value function directly                   incorporates human knowledge of subgoals into an algorithm
+for a state and an action, and it makes it easy for a human                     via reward shaping. In [7], it was mentioned that learning
+to give advice to an agent regarding whether an action in an                    sped up with a learned value function used as the potential
+arbitrary state is better or not. Subgoals show what ought to be                function. Since a policy learned with potential-based reward
+achieved on the trajectory to a goal. We adopted the shaping                    shaping is equivalent to that with Q-value initialization with
+of a state value function.                                                      the potential function [30], using the learned value function
+   Harutyunyan et al. [27] has shown that the Q-values                          for the potential function is equivalent to initializing the
+learned by arbitrary rewards can be used for potential-based                    value function with the learned value function. It is impos-
+advice. The method mainly assumes that a teacher negates the                    sible to prepare the learned values before learning. There-
+agent’s selected action. The method uses failures in trial and                  fore, we consider an approximation of the optimal values by
+errors. In contrast, our method uses successes.                                 using subgoals without a learned value function. To this end,
+
+VOLUME 9, 2021                                                                                                                            97559
+                                                                    T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+                                                                       where ht is the history of the states that an agent visited
+                                                                       until state st , expressed as an equation, ht = [s0 , · · · , st ].
+                                                                       To prove the policy invariance, we first define the return in
+                                                                       any arbitrary policy π when visiting a state sk in a discount
+                                                                       manner without shaping. Formally,
+                                                                                                             ∞
+                                                                                                             X
+                                                                                              Uπ (sk ) =           γ t rt,π                  (3)
+                                                                                                             t=0
+
+                                                                          Note that t is a time step. The Q function can be rewritten
+                                                                       as follows:
+                                                                                               X
+                                                                                 Qπ (sk , a) =      P(sk+1 |sk , a)Uπ (sk+1 )     (4)
+                                                                                                     sk+1
+
+                                                                          Now consider the same policy but with a reward function
+                                                                       modified by adding a potential-based reward function of the
+                                                                       form given in Equation (2). The return of the shaped policy
+                                                                       Uπ,8 experiencing the same sequence sk+1 is,
+FIGURE 1. Ordered subgoals.
+                                                                                              ∞
+                                                                                              X
+                                                                                                    γ t rt,π + F(ht+k , ht+k+1 )
+                                                                                                                                
+we define the subgoal first, and we extend the potential-based            Uπ,8 (hk+1 ) =
+reward shaping, and then we propose a subgoal-based poten-                                    t=0
+tial in this section.                                                                         ∞
+                                                                                              X
+                                                                                                    γ t rt,π + γ 8(ht+k+1 ) − 8(ht+k )
+                                                                                                                                      
+                                                                                         =
+A. SUBGOAL                                                                                    t=0
+We define a subgoal as a state s if s is a goal in one of the                                 X∞
+sub-tasks decomposed from a task. In the option framework,                               =          γ t rt,π − 8(hk )
+the subgoal is the goal of a sub-task, and it is expressed                                    t=0
+as a termination function [16]. Many studies on the option                               = Uπ (sk ) − 8(hk )                                 (5)
+framework have developed automatic subgoal discovery [17].
+We aim to incorporate human subgoal knowledge into the                 where hk = [s0 , · · · , sk ] is written. Qπ,8 follows from
+reinforcement learning algorithm with less human effort                Equation (4) and is expressed as follows.
+required. The property of a subgoal might be a part of the opti-                          X
+                                                                         Qπ,8 (sk , a) =      P(sk+1 |sk , a)Uπ,8 (hk+1 )
+mal trajectories because a human should decompose a task to
+                                                                                              sk+1
+achieve a goal. We acquire a subgoal series and incorporate                                   X
+subgoals into our method in the experiments. The subgoal                                  =          P(sk+1 |sk , a) (Uπ (sk+1 ) − 8(hk ))
+series is written formally as (SG, ≺). SG is a set of subgoals                                sk+1
+                                                                                              X
+and a sub-set of S. There are two types of subgoal series,                                =          P(sk+1 |sk , a)Uπ (sk+1 )
+totally ordered and partially ordered as shown as Fig. 1.                                     sk+1
+   With totally ordered subgoals, a subgoal series is deter-                                      X
+                                                                                              −          P(sk+1 |sk , a)8(hk )
+ministically determined at any subgoal. In contrast, partially
+                                                                                                  sk+1
+ordered subgoals have several transitions to the subgoal series
+                                                                                          = Qπ (sk , a) − 8(hk )                             (6)
+from a subgoal. We used only the totally ordered subgoal
+series in this paper, but both types of ordered subgoals can              Given by Equation (6), 8 does not have action a in param-
+be used with our proposed reward shaping. Since an agent               eters. As 8 is independent of the action taken, in any given
+needs to achieve a subgoal only once, the transition between           state, the best action remains constant regardless of shaping.
+subgoals is unidirectional.                                            Therefore, we can conclude that the guarantee of policy
+B. POTENTIAL BASED REWARD SHAPING WIT STATE
+                                                                       invariance remains.
+HISTORY GUARANTEES THE POLICY INVARIANCE
+                                                                       C. SUBGOAL-BASED POTENTIALS
+We extended potential-based reward shaping to allow the
+history of the states an agent visited as an input of a potential      The subgoal-based potential is the main part of our method.
+function. Informally, if the potential function obtains the            We design potentials that utilize subgoals to approximate of
+history of states in the difference equation, the guarantees of        the optimal value functions. Generally, the larger the optimal
+policy invariance remain. Formally,                                    value is, the closer a state is in an environment with only goal
+                                                                       reward. We consider subgoal achievement as approaching the
+              F(ht , ht+1 ) = γ 8(ht+1 ) − 8(ht )            (2)       goal, and we design a potential that grows every subgoal
+
+97560                                                                                                                              VOLUME 9, 2021
+T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+FIGURE 2. Potential function for subgoals.
+
+
+achievement. Formally, we define subgoal-based potentials                       FIGURE 3. UI for acquiring subgoals.
+as
+
+                          8(h) = η ∗ c(h)                             (7)       V. USER STUDY: HUMAN SUBGOAL ACQUISITION
+                                                                                In this section, we explain a user study done to acquire human
+where η is a hyper parameter, and c(h) is a function for                        knowledge of subgoals. We used navigation tasks in two
+calculating the number of achieved subgoals in a visited state                  domains, four-rooms and pinball, that express the state space
+sequence of h from the last achieved subgoal. An output                         spatially. Additionally, we conducted a pick and place task,
+sequence of the potential function is shown in Fig. 2.                          which is a basic robotics task and one for which humans can
+  Fig. 2 shows the sequence of an agent achieving three                         have difficulty controlling the robot.
+subgoals. When the agent achieves sg1 , the potential function
+generates η ∗ c(h). Upon the achievement of sg2 , this value                    A. NAVIGATION TASK
+becomes larger than sg1 because c(h) increases.                                 An online user study done to acquire human subgoal knowl-
+                                                                                edge using a web-based GUI in Fig. 3 was conducted.
+D. WHOLE ALGORITHM                                                                 We recruited 10 participants who consisted of half graduate
+The pseudocode is shown in Algorithm 1:                                         students in the department of computer science and half
+                                                                                others(6 males and 4 females, ages 23 to 60, average of 36.4).
+Algorithm 1 Subgoal Potential-Based Reward Shaping                              We confirmed they did not have expertise on subgoals in the
+Ensure: γ , η, SG                                                               two domains. Participants were given the same instructions
+ 1: s ← s0 , h ← [], h0 ← []                                                    as follows for the two domains, and they were then asked
+ 2: repeat                                                                      to designate their two subgoals both for the four-rooms and
+ 3:    Choose a according to π                                                  pinball domains in this fixed order. The number of subgoals
+ 4:    Take a in s, observe s0 , r                                              was the same as the hallways in the optimal trajectory for
+ 5:    h0 ← h                                                                   the four-rooms domain. The instructions explained to the
+ 6:    Append s0 into h0                                                        participants what the subgoals were and how to set them
+ 7:    8(h0 ) = η ∗ c(h0 )                                                      through the GUI shown in Fig. 3. Also, specific explanations
+ 8:    F(h, h0 ) = γ 8(h0 ) − 8(h)                                              of the two task domains were given to the participants. In this
+ 9:    Update value function and policy with F(h, h0 )                          experiment, we acquired just two subgoals for learning since
+10:    s ← s0 , h ← h0                                                          they are intuitively considered easy to give on the basis of the
+11: until termination.                                                          structure of the problems. We considered the two subgoals to
+                                                                                be totally ordered ones.
+   Though we consider totally ordered subgoals in the experi-
+ments, we can easily extend the algorithm with a sequence of                    B. PICK AND PLACE TASK
+partially ordered subgoals. We modify only the function c(h)                    A user study for the pick and place task was also done
+for partially ordered subgoals. After an agent takes an action                  online. Since it was difficult to acquire human subgoal knowl-
+a and receives a state s0 from an environment, the state s0                     edge with a GUI, we used a descriptive answer-type form.
+is added to the history of states h0 . The calculation of 8                     We assumed that humans use subgoals when they teach
+involves h and h0 . The function 8(h) is used for computing                     behavior in a verbal fashion. They state not how to move
+F(h, h0 ). Even if we only give subgoals without a sequence,                    but what to achieve in the middle of behavior. The results
+the algorithm can work. Since they are partially ordered                        of this paper minorly support this assumption. We recruited
+subgoals that have only a single tier of a sequence of subgoals,                five participants who were amateurs in the field of com-
+the extension mentioned above is available.                                     puter science(3 males and 2 females, ages 23 to 61, average
+
+VOLUME 9, 2021                                                                                                                            97561
+                                                                  T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+                                                                     state. The potential function is written formally as follows.
+                                                                                                (
+                                                                                                  η s = sg
+                                                                                        8(s) =                                   (8)
+                                                                                                  0 s 6= sg
+
+                                                                        The difference from our method is that the positive poten-
+                                                                     tial is only for subgoals. A separate baseline RL algorithm
+                                                                     was implemented for each domain. This is to show that our
+                                                                     method can be adapted to various RL algorithms. The differ-
+                                                                     ent baseline RL algorithms are used each domain to show the
+                                                                     availability for several RL algorithms. The reward shaping
+                                                                     method, HSRS, RSRS, and NRS were implemented in the
+                                                                     baseline algorithm. HSRS used the participants’ subgoals
+                                                                     described in Section V.
+                                                                        Each domain had 20 subgoals the same as the number
+                                                                     of participants’ subgoals. For pick and place, we generated
+                                                                     two random observations with ranges as subgoals. The sub-
+                                                                     goals of pinball and pick and place had these ranges because
+                                                                     both domains had a continuous state space. We evaluated
+                                                                     the learning efficiency with the time to threshold and the
+                                                                     asymptotic performance [31] in terms of human subgoal
+                                                                     knowledge effects. The time to threshold was the number
+                                                                     of episodes to get below a predefined number of threshold
+                                                                     steps. The asymptotic performance was the final performance
+                                                                     of learning. All the experiments were conducted with a PC
+FIGURE 4. Three domains.                                             [Ryzen 9 5950X, 16 cores(3.4GHz), 128 GB of memory].
+                                                                     A. NAVIGATION IN FOUR-ROOMS DOMAIN
+of 38.4). The participants read the instructions and then typed
+                                                                     The four-rooms domain had four rooms, and the rooms were
+the answer in a web form. The instructions consisted of a
+                                                                     connected by four hallways. The four-rooms domain is a
+description of the pick and place task, a movie of manipulator
+                                                                     common RL task. In this experiment, learning consisted
+failures, a glossary, and a question on how a human can
+                                                                     of 1000 episodes. An episode was a trial run until an agent
+teach successful behavior. The question included the sentence
+                                                                     reached a goal state successfully or when 1000 state actions
+‘‘Please teach behavior like you would teach your child.’’
+                                                                     ended in failure. A state was expressed as a scalar value
+This is because some participants answered that they did not
+                                                                     labeled through all states. An agent could select an action
+know how to teach the robot in a preliminary experiment.
+                                                                     from up, down, left, and right. The agent’s action failed with
+We imposed no limit on the number of subgoals.
+                                                                     a probability of 0.33, and another random action was then
+VI. EXPERIMENTS FOR EVALUATION                                       performed. A reward of +1 was generated when the agent
+As mentioned above, we conducted experiments to evaluate             reached a goal state. The start state and goal state were placed
+our proposed method in three domains: four-rooms, pinball,           at a fixed position. The agent repeated learning 100 times.
+and pick and place. The four-rooms and pinball domains are
+                                                                     1) ALGORITHM SETUP
+navigation tasks in which an agent travels to its goal with
+                                                                     SARSA is a basic RL algorithm. We used SARSA as a base-
+the shortest number of steps. The pick and place domain is
+                                                                     line RL algorithm. The value function was in table form. The
+a robotics task. A robot aims to pick up an object and bring it
+                                                                     policy was soft-max. We set the learning rate to 0.01 and the
+to a target space. Fig. 4 shows images of the three domains.
+                                                                     discount rate to 0.99. The function c(h) counted the number
+   We compared human subgoal-based reward shap-
+                                                                     of subgoals in a sequence in order from the front of a state
+ing (HSRS) with three other methods. They were a base-
+                                                                     sequence h. We set η to 0.01 for HSRS, RSRS and NRS
+line RL algorithm, random subgoal potential-based reward
+                                                                     after grid search was performed on grids of 0.01, 0.1, 1, 10,
+shaping (RSRS), and a naive subgoal reward method (NRS).
+                                                                     and 100.
+As mentioned in Section II, there are a few methods that
+can be compared with our method. For fair comparison,                2) SUBGOALS
+the objective of the method needs to be the same as well             Fig. 5 shows the subgoal distribution acquired from the partic-
+as the input, that is, a subgoal series. RSRS is a similar           ipants and the random subgoal distribution in the four-rooms
+approach to the HER algorithm. NRS is a simple method, and           domain.
+many algorithm designers should come up this approach first.            The numbers in the cells stand for the frequencies of the
+In NRS, the function 8(s) in potential-based reward shaping          subgoals in Fig. 5; higher values are in yellow and lower
+generates a scalar value η just when an agent visits a subgoal       values are in orange. The number in a cell was the frequency
+
+97562                                                                                                                            VOLUME 9, 2021
+T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+                                                                                TABLE 1. Mean and standard deviation:mean(S.D.).
+
+
+
+
+                                                                                TABLE 2. Summary of ANOVA and sub-effect tests for time (episode) to
+                                                                                threshold steps. ∗ stands for p < .05.
+
+
+
+
+FIGURE 5. Subgoal distributions of a four-rooms domain.
+
+
+
+                                                                                TABLE 3. Asymptotic performances in four-rooms domain. Ind.
+                                                                                is indicator, and S.D. is standard deviation.
+
+
+
+
+FIGURE 6. Learning curves compared with three methods.
+
+
+
+at which the participants selected that cell as a subgoal. These
+subgoals are totally ordered subgoals. As shown in Fig. 5(a),
+participants tended to set the subgoals in the hallways. In
+Fig. 5(a), the color of the start point, the goal, and subgoals
+are blue, red, and green, respectively. HSRS and NRS used                       FIGURE 7. Asymptotic performance in four-rooms domain.
+the subgoals as shown in Fig. 5(a), and RSRS used as shown
+in Fig. 5(b).                                                                      Table 2 shows the results of the sub effect tests by the
+                                                                                Holm-Bonferroni method for HSRS, RSRS, SARSA and
+3) RESULTS                                                                      NRS.
+We show the results of the learning experiment. Fig. 6 shows                       As shown in Tables 1 and 2, HSRS, RSRS, and SARSA
+the learning curves of our proposed method and the three                        were significantly lower than NRS but did not have signif-
+other methods.                                                                  icant differences between the three of them. From Table 1,
+   We plotted HSRS with an average totaling 1000 learnings                      HSRS shortened the number of learnings by up to 18 episodes
+over all participants. RSRS was also averaged by 1000 learn-                    from SARSA. Table 6 shows the asymptotic performances of
+ings over all participants. SARSA was averaged by 100 learn-                    all four methods, and Fig. 7 shows them by box plot.
+ings because it does not use subgoals. NRS had almost the                          There were no significant differences among the four meth-
+same conditions as HSRS. HSRS seemed to have the fewest                         ods in terms of asymptotic performance.
+steps for almost all episodes. The performance of RSRS was
+close to HSRS but worse than HSRS. NRS had the worst                            B. NAVIGATION IN PINBALL DOMAIN
+performance. This shows the difficulty of transformation                        The navigation task in the pinball domain involves moving a
+from subgoals into an additional reward function. We also                       ball to a designated target by giving it velocity. The pinball
+performed an ANOVA for the time to reach the thresh-                            domain makes it difficult for humans to control the ball
+old among HSRS, RSRS, SARSA, and NRS. The analysis                              because it needs them to control the ball with delicate actions.
+showed a significant difference at the level of p < .01 among                   Delicate control is often necessary in the control domain. It is
+these methods. The Holm-Bonferroni method was used for                          easier to give a subgoal than trajectories in this domain.
+sub-effect tests. We set the thresholds to 500, 300, 100, and                     The difference with the four-rooms domain is the contin-
+50 steps. Table 1 shows the mean episodes and the standard                      uous state space over the position and velocity of the ball
+deviations of the compared methods for each threshold step.                     on the x-y plane. An action space has five discrete actions,
+
+VOLUME 9, 2021                                                                                                                                  97563
+                                                                  T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+FIGURE 8. Subgoal distributions of a pinball domain.
+                                                                     FIGURE 9. Learning curve in pinball domain.
+four types of force and no force. In this domain, a drag             TABLE 4. Mean and standard deviation: mean(SD).
+coefficient of 0.995 effectively stops ball movements after
+a finite number of steps when the no-force action is chosen
+repeatedly; collisions with obstacles are elastic. The four
+types of force are up, down, right, left on a plane. An episode
+terminates with a reward of +10,000 when the agent reaches
+the goal. Interruption of any episode occurs when the episode
+takes more than 10000 steps. Learnings of the methods are            TABLE 5. Summary of ANOVA and sub effect tests for time(episode) to
+repeated 100 times from scratch, and we used the results to          threshold steps. Otherwise is abbreviated to o.w., and n.s. means not
+                                                                     significant. ∗ stands for p < .05.
+evaluate the learning efficiency.
+1) ALGORITHM SETUP
+We used the actor-critic algorithm(AC) [32] as the baseline
+RL algorithm. AC is a basic RL algorithm that directly
+optimizes a policy with parameters using the value function.
+A policy with parameters is called the actor part, and a
+value function is the critic part. Both parts needed to update       3) RESULTS
+parameters. We used AC as the critic with linear function            Fig. 9 shows the learning curves. It took an average shift
+approximation over a Fourier basis [33] of order 3. A subgoal        of 10 episodes.
+had only a center position and a radius in this domain. The             HSRS mostly performed the best of the three methods.
+radius was the same as that of the target. We assumed that           The performance of RSRS was close to HSRS but worse
+a subgoal was achieved when the ball entered a circle with           than HSRS. We evaluated the learning efficiency by using
+the center position and radius at any velocity. We used a            the time to threshold. We used each learning result smoothed
+soft-max policy as the actor. The learning rates were set to         by using a simple moving average with the number of time
+0.01 for both the actor and the critic. The discount factor          periods being 10 episodes, and we performed a Student’s
+was set to 0.99. The parameters for HSRS, RSRS, NRS,                 t-test to confirm the difference among the three methods.
+and η were set to 100 after a grid search on grids of 10,            Table 4 shows the mean and standard deviations, and Table 5
+100, 1,000, and 10,000. The function c(h) was almost the             summarizes the results for the time to threshold, where Thres.
+same as in the four-rooms domain excluding the judgement             is the number of steps. From the result of the ANOVA, there
+of whether a state is a subgoal. We compared HSRS with the           was a significant difference at the level of p < .01 among
+three other methods in terms of learning efficiency with the         the four methods for 1000, 2000, and 3000, and there was a
+time to threshold. We defined this threshold in this domain as       difference at p < .05 for 500. The Holm-Bonferroni method
+the number of episodes required to reach the steps.                  was used for the sub-effect tests.
+                                                                        From Table 5, HSRS and RSRS had fewer steps than AC
+2) SUBGOALS                                                          for the thresholds of 3000, 2000, and 1000, which was signif-
+Fig. 8 shows the subgoal distribution acquired from the par-         icant. There was no significant difference between HSRS and
+ticipants and the random subgoal distribution in the pinball         RSRS for any of the thresholds. Table 6 shows the asymptotic
+domain.                                                              performances of all four methods, and Fig. 10 shows them by
+   The participants focused on four regions of branch points         box plot.
+to set subgoals in comparison with random subgoals from                 There were no significant differences among the four meth-
+Fig. 8(a) and Fig. 8(b). HSRS and NRS used the subgoals              ods in terms of asymptotic performance. Our method with
+as shown in Fig. 8(a), and RSRS used those as shown                  random and human subgoals lead to more efficient learning
+in Fig. 8(b).                                                        than the basic RL algorithm in the pinball domain.
+
+97564                                                                                                                            VOLUME 9, 2021
+T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+TABLE 6. Asymptotic performances in pinball domain. Ind. is indicator,
+and S.D. is standard deviation.
+
+
+
+
+                                                                                FIGURE 11. Example of subgoals from participant in a pick and place
+                                                                                domain.
+
+
+
+
+FIGURE 10. Asymptotic performance in pinball domain.
+
+
+C. PICK AND PLACE
+We used a fetch environment based on the 7-DoF Fetch
+robotics arm of OpenAI Gym [34]. In pick and place,
+the robotic arm learns to grasp a box and move it to a
+target position [35]. We converted the original task into
+a single-goal reinforcement learning framework because
+potential-based reward shaping is not developed to deal with                    FIGURE 12. Learning curves in pick and place task.
+the multiple goals [7]. The dimension of observation is larger
+than the previous navigation tasks, and the action is contin-
+uous. An observation is 25-dimensional, and it includes the                     severe condition to achieve subgoals. η was set as 1 for HSRS,
+Cartesian position of the gripper and the object as well as the                 RSRS, and NRS. The learning repeated 10 times, and the
+object’s position relative to the gripper. The reward function                  results were averaged over 10 learnings.
+generates a reward of −1 every step and a reward of 0 when
+the task is successful. In [35], the task is written about in                   2) SUBGOALS
+detail.                                                                         All five participants determined the subgoal series, the first
+                                                                                subgoal was reaching the location available to grasp the
+1) ALGORITHM SETUP                                                              object, and the second subgoal was grasping the object.
+We compared HSRS with RSRS, NRS, and DDPG [36]                                  Fig. 11 shows the example of the subgoal series in pick and
+in terms of learning efficiency with the time to threshold                      place domain.
+and asymptotic performance. HSRS, RSRS, and NRS used
+DDPG as a base. We defined this threshold in the task                           3) RESULTS
+as the number of epochs required to reach the designated                        We used the subgoal series for the input of our method. Fig. 12
+success rate. The asymptotic performance was the average                        shows the learning curves of HSRS, RSRS, NRS, and DDPG.
+success rate between 190 and 200 epochs. Ten workers stored                        As shown in Fig. 12, the results were averaged across five
+episodes and calculated the gradient simultaneously in an                       learnings, and the shaded areas represent one standard error.
+epoch. HSRS and NRS used ordered subgoals provided by                           The random seeds and the locations of the goal and object
+five participants. RSRS used subgoals randomly generated.                       were varied every learning. HSRS worked more effectively
+The learning in 200 epochs took several hours. We used                          than DDPG, especially after about the 25th epoch. The perfor-
+an OpenAI Baselines [37] implementation for DDPG with                           mances of RSRS and NRS were similar. NRS had the worst
+default hyper-parameter settings. We built the hidden and                       performance through almost all epochs.
+output layers of the value network over abstract states with                       Table 7 shows the mean episodes and the standard devia-
+the same structure as the Q-value network. We excluded the                      tions of the compared methods for each threshold steps.
+action from the input layer. The input of the network was                          Table 8 shows the asymptotic performances of all four
+only the observation of subgoal achievement, and the network                    methods, and Fig. 13 shows them by box plot.
+learned from the discount accumulated reward until subgoal                         HSRS was significantly different from RSRS and NRS at
+achievement. A subgoal was defined from the information in                      0.6 in terms of the time to threshold. For the rest, there were
+the observation. We set the margin to ±0.01 to loosen the                       no differences in both the time to threshold and the asymptotic
+
+VOLUME 9, 2021                                                                                                                                   97565
+                                                                         T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+TABLE 7. Mean and standard deviation in pick and place:mean(S.D.).
+
+
+
+
+TABLE 8. Asymptotic performances in pick and place. Ind. is indicator,
+and S.D. is standard deviation.
+
+
+
+
+FIGURE 13. Asymptotic performance in pick and place task.
+
+
+performance, but HSRS was the best compared with the other
+three methods.
+   In this section, we evaluated our method for four-rooms,                 FIGURE 14. Results of grid searches.
+
+pinball, and pick and place. In all domains, HSRS performed
+better than the other three methods in terms of the time                    optimal trajectory in the pick and place task. The random
+to threshold and the asymptotic performance. There was,                     subgoals were better in the four-rooms and pinball domains
+in particular, a significant difference between HSRS and AC                 than in the pick and place task. This is because these two
+as the baseline RL algorithm for pinball. The performance                   domains might have had more states in the optimal trajectory
+of RSRS was close to HSRS in the four-rooms and pinball                     than the pick and place task. We think that the small difference
+domains. In contrast, RSRS performed the second worst of                    between HSRS and RSRS was caused by the domains having
+all for pick and place. The results showed the subgoal-based                states in the optimal trajectory. The pick and place task has a
+reward shaping with human knowledge of subgoal improved                     large state space, so the random subgoals are not likely to be
+the learning efficiency from the baseline RL algorithm, and                 placed on the optimal trajectories. The larger the state space
+the human knowledge was more useful for SRS than random.                    becomes, the larger the difference between HSRS and RSRS
+The naive reward shaping made the learning efficiency worse                 may become.
+than the baseline RL algorithm, so it is not easy for designers                Potential-based reward shaping keeps a policy invariant
+to incorporates the knowledge of subgoal over PBRS. This is                 from the transformation of a reward function. From the exper-
+why we proposed SRS, and SRS could improve the learning                     imental results in the pinball domain, the asymptotic perfor-
+efficiency just by providing the subgoal series.                            mances of HSRS were statistically significantly lower than
+                                                                            RSRS. There was no significant difference in the four-rooms
+VII. DISCUSSION                                                             domain. As shown in Fig. 6, the performance was clearly
+A. ANALYZING PERFORMANCES                                                   asymptotic at the 121th of 1000 episodes. The learning was
+There was a small difference between HSRS and RSRS in                       clearly asymptotic as the 200th episode for the pinball domain
+the four-rooms domain from Fig. 6 and the pinball domain                    in Fig. 9. Since our proposed method is based on PBRS,
+from Fig. 9. The difference between HSRS and RSRS was                       RSRS converges to the same performance as HSRS if learn-
+large in the pick and place domain. Approximately 65% of                    ing continues.
+states generated randomly were in an optimal trajectory for
+the four-rooms domain. The pinball task seemed to have                      B. TUNING HYPER PARAMETERS
+approximately 20% of states generated randomly in the opti-                 Fig. 14 shows the results of grid searches. In the searches,
+mal trajectory. There was no state generated randomly in an                 we used only a single participant’s subgoals which were
+
+97566                                                                                                                                   VOLUME 9, 2021
+T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+randomly selected, and the number of learnings was a half                         We consider that people change a strategy for providing
+that of the experimental results.                                               subgoals in response to the task properties, especially envi-
+   As seen in this figure, our method was significantly sensi-                  ronment structure. The test for this hypothesis is future work.
+tive to the hyper parameter η. A wrong η such as η = 1 in the
+four-rooms domain could deteriorate the performance of the                      3) DIFFICULTIES OF PROVIDING SUBGOALS
+method. This may incur a cost for tuning hyper parameters.                      There are other limitations and future work regarding this
+To solve this problem, we must fit η to the optimal value.                      work. We implicitly assumed that a human can set subgoals
+The environmental rewards of goals were 1 and 10,000 for                        more easily than providing the optimal trajectories from a
+four-rooms and pinball, respectively. The best η was 0.01 for                   start state to a goal state, which is conventional human knowl-
+four-rooms and 100 for pinball. Both η were one-hundredth                       edge that improves efficiency of reinforcement learning with
+of the environmental rewards.                                                   IRL. We need to verify this assumption by conducting exper-
+                                                                                iments with participants to measure the cognitive load in
+C. LIMITATIONS
+                                                                                setting various subgoals and trajectories.
+1) DIFFICULTIES OF HYPER PARAMETERS                                                The ease of providing subgoals may depend on the kind of
+Since we didn’t know the preferable hyper parameter η                           task. We think that there are two steps that a human can take
+explicitly, we tuned hyper parameters by grid searches. The                     to set subgoals in a task. In the first, the human comes up
+traditional reward shaping method has tackled the same prob-                    with an optimal trajectory for a task. The optimal trajectory
+lem. The SARSA-RS method uses a value function over                             includes subgoals. If the human cannot come up with this
+abstract states as a potential function [38]. The method                        trajectory, he or she cannot know the subgoals. In the second,
+doesn’t require hyper parameters of the potential function.                     the human selects states as subgoals in a trajectory. The
+If we can make SARSA-RS incorporate a series of subgoals,                       trajectory includes states, and the human must prioritize them
+we can ignore the hyper parameter η because η can be                            because the high-prioritized states become subgoals. A task
+obtained through learning. To do this, we proposed dynamic                      in which a human can process these two steps easily would
+trajectory aggregation in another paper [39]. The method uses                   be an appropriate one for subgoals.
+a sequence of subgoals to build abstract states. The part of                       We plan to conduct a large user study to make clear what
+a trajectory until subgoal achievement becomes an abstract                      the best task for providing subgoals is. The viewpoint of the
+state, and the part until the next subgoal achievement becomes                  human teacher may be a factor. For this, we can consider a
+another abstract state. The value of the abstract states is used                bird’s-eye view and a first-person view as levels. The naviga-
+for shaping. With the method, the designer provides only a                      tion tasks in this paper involved a bird’s-eye view. An exam-
+sequence of subgoals.                                                           ple of a task with a first-person view is a first-person shooter
+                                                                                game such as ViZDoom [41]. Our hypothesis is that a task
+2) TEACHING KNOWLEDGE OF SUBGOALS                                               with a bird’s-eye view is more suitable for providing subgoals
+Our method depends on whether the teacher can provide                           than one with a first-person view. Another factor may be the
+the sequence of subgoals in a task, and can be used to                          explainability of the optimal trajectories. The trajectory of the
+the task which the teacher can provide it. The limitation                       four-rooms domain is easy for a human teacher to explain,
+of subgoals is that no established method to provide them,                      such as explaining that the agent should first go the top-right
+and it may depend on individual intuitive consideration. For                    hallway and then the bottom-right hallway. The teacher can
+the four-rooms domain, as shown in Fig. 5, almost all the                       select subgoals easily in this domain like the top-right and
+subgoals were located within the right-top and right-bottom                     bottom-right hallways. In the Hand Manipulation task [35],
+rooms. From this, we think that many participants tended                        it is hard for the teacher to explain how the robotic hand
+to consider the right-down path as the shortest one. This                       of the agent shold move. It may be also difficult for the
+may mean humans abstractly have a common methodology                            teacher to select subgoals. These are related to explicit and
+and preference for giving subgoals. Additionally, there was                     implicit knowledge, respectively. Our hypothesis is that a task
+the interesting observation that half of the participants set a                 including an optimal trajectory that the teacher can explain is
+subgoal in the hallways.                                                        more suitable than one in which the teacher cannot explain
+   For the pinball domain, as shown in Fig. 8, the subgoals                     the trajectory under subgoal settings. Future work is also to
+were scattered at the gap between objects and at the branch                     test these hypotheses in a large user study.
+points. They seem to be at the change points of actions on an
+optimal trajectory. We can consider that the repeated actions                   VIII. CONCLUSION
+are composed in a macro-action. This is a similar approach                      In reinforcement learning, learning a policy is time-
+to [40].                                                                        consuming. We aim for accelerating learning with reward
+   For the pick and place task, five participants provided the                  transformation based on human subgoal knowledge. The dif-
+same subgoals. The way to provide subgoals was different                        ficulty of integrating subgoal knowledge into the potentials
+from the other tasks. We used the descriptive answer-type                       was a problem in improving learning efficiency. We proposed
+form. These results almost show the tendency for people to                      a method by which a human deals with several characteristic
+provide similar subgoals exists.                                                states as a subgoal. We defined a subgoal as the goal state
+
+VOLUME 9, 2021                                                                                                                             97567
+                                                                                     T. Okudo, S. Yamada: Subgoal-Based Reward Shaping to Improve Efficiency in RL
+
+
+
+
+in one of the sub-tasks into which a human decomposes a                                 [18] A. S. Vezhnevets, S. Osindero, T. Schaul, N. Heess, M. Jaderberg,
+task. The main part of our method is an approximation of the                                 D. Silver, and K. Kavukcuoglu, ‘‘Feudal networks for hierarchical rein-
+                                                                                             forcement learning,’’ in Proc. 34th Int. Conf. Mach. Learn. (ICML), vol. 70,
+optimal value function with subgoals. We collected ordered                                   Aug. 2017, pp. 3540–3549.
+subgoals from participants and used them for evaluation.                                [19] Y. Ichisugi, N. Takahashi, H. Nakada, and T. Sano, ‘‘Hierarchical rein-
+We evaluated navigation for four-rooms, pinball, and a pick                                  forcement learning with unlimited recursive subroutine calls,’’ in Artificial
+                                                                                             Neural Networks and Machine Learning. Cham, Switzerland: Springer,
+and place task. The experimental results revealed that our                                   2019, pp. 103–114.
+method with human subgoals enabled faster learning com-                                 [20] J. Murata, Y. Abe, and K. Ota, ‘‘Introduction and control of subgoals in
+pared with the baseline method, and human subgoal series                                     reinforcement learning,’’ in Proc. 25th Conf. Int. Multi-Conf., Artif. Intell.
+                                                                                             Appl. Innsbruck, Austria: ACTA Press, 2007, pp. 329–334.
+were more helpful than random ones. The availability of our                             [21] O. Marom and B. Rosman, ‘‘Belief reward shaping in reinforcement
+method depends on the ease of getting subgoals. The limita-                                  learning,’’ in Proc. 32nd AAAI Conf. Artif. Intell. (AAAI). Menlo Park, CA,
+tions of subgoals are that there is no established methodology                               USA: AAAI Press, 2018, pp. 3762–3769.
+                                                                                        [22] A. Demir, E. Çilden, and F. Polat, ‘‘Landmark based reward shaping in
+for giving them and what kinds of tasks are suitable for them                                reinforcement learning with hidden states,’’ in Proc. 18th Int. Conf. Auto.
+is unknown. Elucidating this is our future work.                                             Agents MultiAgent Syst., 2019, pp. 1922–1924.
+                                                                                        [23] Y. Gao and F. Toni, ‘‘Potential based reward shaping for hierarchical
+                                                                                             reinforcement learning,’’ in Proc. 24th Int. Conf. Artif. Intell. Menlo Park,
+REFERENCES                                                                                   CA, USA: AAAI Press, 2015, pp. 3504–3510.
+ [1] M. E. Taylor, ‘‘Improving reinforcement learning with human input,’’ in            [24] S. Li, R. Wang, M. Tang, and C. Zhang, ‘‘Hierarchical reinforcement
+     Proc. 27th Int. Joint Conf. Artif. Intell., Jul. 2018, pp. 5724–5728.                   learning with advantage-based auxiliary rewards,’’ in Proc. Adv. Neural
+ [2] Z. Wang and M. E. Taylor, ‘‘Effective transfer via demonstrations in rein-              Inf. Process. Syst., vol. 32, 2019, pp. 1409–1419.
+     forcement learning: A preliminary study,’’ in Proc. AAAI Spring Symposia,          [25] S. Paul, J. Vanbaar, and A. Roy-Chowdhury, ‘‘Learning from trajectories
+     Stanford University, Palo Alto, CA, USA, Mar. 2016, pp. 77–83.                          via subgoal discovery,’’ in Proc. Adv. Neural Inf. Process. Syst., 2019,
+ [3] S. Griffith, K. Subramanian, J. Scholz, C. L. Isbell, and A. L. Thomaz,                 pp. 8411–8421.
+     ‘‘Policy shaping: Integrating human feedback with reinforcement learn-             [26] E. Wiewiora, G. Cottrell, and C. Elkan, ‘‘Principled methods for advising
+     ing,’’ in Proc. Adv. Neural Inf. Process. Syst., C. J. C. Burges, L. Bottou,            reinforcement learning agents,’’ in Proc. 20th Int. Conf. Mach. Learn.,
+     M. Welling, Z. Ghahramani, and K. Q. Weinberger, Eds. Red Hook, NY,                     2003, pp. 792–799.
+     USA: Curran Associatess, 2013, pp. 2625–2633.                                      [27] A. Harutyunyan, S. Devlin, P. Vrancx, and A. Nowe, ‘‘Expressing arbitrary
+ [4] Y. Aytar, T. Pfaff, D. Budden, T. L. Paine, Z. Wang, and N. D. Freitas,                 reward functions as potential-based advice,’’ in Proc. 29th AAAI Conf.
+     ‘‘Playing hard exploration games by watching youtube,’’ in Proc. Adv.                   Artif. Intell. Menlo Park, CA, USA: AAAI Press, 2015, pp. 2652–2658.
+     Neural Inf. Process. Syst. Red Hook, NY, USA: Curran Associates, 2018,             [28] C. Szepesvari, Algorithms for Reinforcement Learning. San Rafael, CA,
+     pp. 2935–2945.                                                                          USA: Morgan & Claypool, 2010.
+ [5] A. Y. Ng and S. J. Russell, ‘‘Algorithms for inverse reinforcement learn-          [29] R. S. Sutton, D. A. McAllester, S. P. Singh, and Y. Mansour, ‘‘Policy gradi-
+     ing,’’ in Proc. 17th Int. Conf. Mach. Learn., 2000, pp. 663–670.                        ent methods for reinforcement learning with function approximation,’’ in
+ [6] J. Ho and S. Ermon, ‘‘Generative adversarial imitation learning,’’ in Proc.             Proc. Adv. Neural Inf. Process. Syst., 2000, pp. 1057–1063.
+     Adv. Neural Inf. Process. Syst. Red Hook, NY, USA: Curran Associates,              [30] E. Wiewiora, ‘‘Potential-based shaping and Q-value initialization are
+     2016, pp. 4565–4573.                                                                    equivalent,’’ J. Artif. Intell. Res., vol. 19, pp. 205–208, Sep. 2003.
+ [7] A. Y. Ng, D. Harada, and S. J. Russell, ‘‘Policy invariance under reward           [31] M. E. Taylor and P. Stone, ‘‘Transfer learning for reinforcement learn-
+     transformations: Theory and application to reward shaping,’’ in Proc. 16th              ing domains: A survey,’’ J. Mach. Learn. Res., vol. 10, pp. 1633–1685,
+     Int. Conf. Mach. Learn., 1999, pp. 278–287.                                             Jul. 2009.
+ [8] S. Arora and P. Doshi, ‘‘A survey of inverse reinforcement learning:               [32] V. R. Konda and J. N. Tsitsiklis, ‘‘Actor-critic algorithms,’’ in Proc. Adv.
+     Challenges, methods and progress,’’ Artif. Intell., vol. 297, Aug. 2021,                Neural Inf. Process. Syst., 2000, pp. 1008–1014.
+     Art. no. 103500. [Online]. Available: https://www.sciencedirect.com/               [33] G. Konidaris, S. Osentoski, and P. Thomas, ‘‘Value function approximation
+     science/article/pii/S0004370221000515                                                   in reinforcement learning using the Fourier basis,’’ in Proc. 25nd AAAI
+ [9] D. Amodei, C. Olah, J. Steinhardt, P. Christiano, J. Schulman, and                      Conf. Artif. Intell., 2011, pp. 380–385.
+     D. Mané, ‘‘Concrete problems in AI safety,’’ 2016, arXiv:1606.06565.               [34] G. Brockman, V. Cheung, L. Pettersson, J. Schneider, J. Schulman, J. Tang,
+     [Online]. Available: http://arxiv.org/abs/1606.06565                                    and W. Zaremba, ‘‘Openai gym,’’ 2016, arXiv:1606.01540. [Online].
+[10] S. Russell and P. Norvig, Artificial Intelligence: A Modern Approach,                   Available: https://arxiv.org/abs/1606.01540
+     3rd ed. Upper Saddle River, NJ, USA: Prentice-Hall, 2009.                          [35] M. Plappert, M. Andrychowicz, A. Ray, B. McGrew, B. Baker, G. Powell,
+[11] P. F. Christiano, J. Leike, T. Brown, M. Martic, S. Legg, and D. Amodei,                J. Schneider, J. Tobin, M. Chociej, P. Welinder, V. Kumar, and W. Zaremba,
+     ‘‘Deep reinforcement learning from human preferences,’’ in Proc. Adv.                   ‘‘Multi-goal reinforcement learning: Challenging robotics environments
+     Neural Inf. Process. Syst., 2017, pp. 4299–4307.                                        and request for research,’’ 2018, arXiv:1802.09464. [Online]. Available:
+[12] S. Ross, G. Gordon, and D. Bagnell, ‘‘A reduction of imitation learn-                   https://arxiv.org/abs/1802.09464
+     ing and structured prediction to no-regret online learning,’’ in Proc.             [36] T. P. Lillicrap, J. J. Hunt, A. Pritzel, N. Heess, T. Erez, Y. Tassa, D. Silver,
+     14th Int. Conf. Artif. Intell. Statist. in Proceedings of Machine Learning              and D. Wierstra, ‘‘Continuous control with deep reinforcement learning,’’
+     Research, vol. 15, G. Gordon, D. Dunson, and M. Dudík, Eds. Fort Laud-                  in Proc. ICLR, 2016.
+     erdale, FL, USA: PMLR, Apr. 2011, pp. 627–635. [Online]. Available:                [37] P. Dhariwal, C. Hesse, O. Klimov, A. Nichol, M. Plappert, A. Radford,
+     http://proceedings.mlr.press/v15/ross11a.html                                           J. Schulman, S. Sidor, Y. Wu, and P. Zhokhov. (2017). Openai Baselines.
+[13] F. Cruz, S. Magg, Y. Nagai, and S. Wermter, ‘‘Improving interactive                     [Online]. Available: https://github.com/openai/baselines
+     reinforcement learning: What makes a good teacher?’’ Connection Sci.,              [38] M. Grzes and D. Kudenko, ‘‘Online learning of shaping rewards in
+     vol. 30, no. 3, pp. 306–325, Jul. 2018.                                                 reinforcement learning,’’ Neural Netw., vol. 23, no. 4, pp. 541–550,
+[14] W. B. Knox and P. Stone, ‘‘Interactively shaping agents via human rein-                 May 2010.
+     forcement: The TAMER framework,’’ in Proc. 5th Int. Conf. Knowl. Cap-              [39] T. Okudo and S. Yamada, ‘‘Reward shaping with dynamic trajectory
+     ture (K-CAP), 2009, pp. 9–16.                                                           aggregation,’’ in Proc. Int. Joint Conf. Neural Netw. (IJCNN), Jul. 2021.
+[15] M. Andrychowicz, F. Wolski, A. Ray, J. Schneider, R. Fong, P. Welinder,            [40] A. S. Lakshminarayanan, S. Sharma, and B. Ravindran, ‘‘Dynamic action
+     B. McGrew, J. Tobin, O. P. Abbeel, and W. Zaremba, ‘‘Hindsight experi-                  repetition for deep reinforcement learning,’’ in Proc. 31st AAAI Conf. Artif.
+     ence replay,’’ in Proc. Adv. Neural Inf. Process. Syst., 2017, pp. 5048–5058.           Intell. Menlo Park, CA, USA: AAAI Press, 2017, pp. 2133–2139.
+[16] R. S. Sutton, D. Precup, and S. Singh, ‘‘Between MDPs and semi-MDPs:               [41] M. Kempka, M. Wydmuch, G. Runc, J. Toczek, and W. Jaskowski,
+     A framework for temporal abstraction in reinforcement learning,’’ Artif.                ‘‘ViZDoom: A doom-based AI research platform for visual rein-
+     Intell., vol. 112, nos. 1–2, pp. 181–211, Aug. 1999.                                    forcement learning,’’ 2016, arXiv:1605.02097. [Online]. Available:
+[17] P.-L. Bacon, J. Harb, and D. Precup, ‘‘The option-critic architecture,’’ in             https://arxiv.org/abs/1605.02097
+     Proc. 31st AAAI Conf. Artif. Intell., 2017, pp. 1726–1734.
+
+
+97568                                                                                                                                                       VOLUME 9, 2021
+

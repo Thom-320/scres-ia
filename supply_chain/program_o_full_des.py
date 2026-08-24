@@ -727,7 +727,10 @@ class ProgramOFullDESSimulation(MFSCSimulation):
 
     def run_contract(self) -> "ProgramOFullDESSimulation":
         self._start_processes()
-        self.env.run(until=self.program_o_warmup_event)
+        # Stop on a derived condition so SimPy processes every callback waiting
+        # on the warm-up event before its internal StopSimulation callback fires.
+        warmup_barrier = self.env.any_of((self.program_o_warmup_event,))
+        self.env.run(until=warmup_barrier)
         if self.program_o_decision_start is None:
             raise RuntimeError("Program O warm-up did not establish both product lots")
         score_time = (
