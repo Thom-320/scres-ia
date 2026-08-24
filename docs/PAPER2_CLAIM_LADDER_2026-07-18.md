@@ -19,7 +19,7 @@ stage: `821c8d8` (later commits on that branch are non-promotable sandbox).
 ## Not confirmed
 - **Neural premium over belief-MPC** (Delta_N ≈ −0.002, LCB95 −0.008..−0.014; 0-2/10 seeds).
 - **Tail-safe deployment** (never claimed; CVaR secondary only).
-- **Sealed independent replication** (Program Q, frozen 2026-07-18, N=128/cell, block 7490001+).
+- **Sealed independent replication** (Program Q, frozen 2026-07-18, N=128/cell, block 7490001+; reserved namespace `7490001`-`7490256`).
 - **Retained-learning value** (Paper 3; blocked until Q passes E1 with premium or equivalence).
 
 ## Estimand rename (prospective only)

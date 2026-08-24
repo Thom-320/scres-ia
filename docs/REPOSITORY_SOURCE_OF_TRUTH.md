@@ -162,5 +162,5 @@ preregistered estimands: **H_OL (learner vs complete 65,536 open-loop frontier) 
 *learned adaptation real; no neural premium over structured decision theory.* Virgin 7480101-48
 sealed forever. Prospective replication frozen as
 `contracts/program_q_frozen_policy_replication_v1.json` (N=128/cell by frozen power rule, block
-7490001+, four terminal outcomes, David-challenger clause). See
+7490001+; reserved namespace 7490001-7490256; four terminal outcomes, David-challenger clause). See
 `docs/PAPER2_CLAIM_LADDER_2026-07-18.md`.
