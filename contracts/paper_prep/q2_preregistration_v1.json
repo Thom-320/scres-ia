@@ -1,0 +1,174 @@
+{
+  "schema_version": "paper_prep_q2_preregistration_v1",
+  "contract_id": "q2_preregistration_v1",
+  "status": "DRAFT_PREREGISTRATION_NOT_OPENED",
+  "purpose": "Skeleton only for a separately named Q2 candidate; it is not an execution authorization, result, or amendment to O, O-R, or Q.",
+  "scientific_scope": {
+    "new_training": true,
+    "physics_change": false,
+    "candidate_policy_must_be_frozen_before_virgin_evaluation": true,
+    "historical_contracts_immutable": true,
+    "no_post_hoc_endpoint_or_comparator_selection": true
+  },
+  "estimands": {
+    "efficacy": {
+      "estimand_id": "Delta_eff",
+      "definition": "paired mean ret_excel_full_ledger(candidate policy minus one frozen deployable classical comparator) over the virgin evaluation tapes",
+      "primary_endpoint": "ret_excel_full_ledger",
+      "unit_of_resampling": "tape",
+      "crn_pairing": "the candidate and comparator use the same tape",
+      "delta": 0.01,
+      "delta_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.neural_premium_rule",
+      "decision_rule": "pass only if the simultaneous max-t LCB95(Delta_eff) is at least delta in every declared cell",
+      "falsifier": "any cell with LCB95(Delta_eff) below delta blocks efficacy"
+    },
+    "safety": {
+      "estimand_id": "Delta_safe_vector",
+      "definition": "a vector of non-inferiority contrasts, never collapsed into the efficacy score",
+      "estimands": [
+        {
+          "id": "Delta_safe_ret_full",
+          "definition": "ret_full(candidate) minus ret_full(comparator)",
+          "direction": "higher_is_better",
+          "margin": -0.01,
+          "margin_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.equivalence_rule"
+        },
+        {
+          "id": "Delta_safe_quantity_ret_full",
+          "definition": "quantity_ret_full(candidate) minus quantity_ret_full(comparator)",
+          "direction": "higher_is_better",
+          "margin": -0.01,
+          "margin_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.equivalence_rule"
+        },
+        {
+          "id": "Delta_safe_worst_product_fill",
+          "definition": "worst_product_fill(candidate) minus worst_product_fill(comparator)",
+          "direction": "higher_is_better",
+          "margin": -0.01,
+          "margin_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.equivalence_rule"
+        },
+        {
+          "id": "hard_safety_lost_orders",
+          "definition": "lost_orders(candidate) must not exceed lost_orders(comparator)",
+          "direction": "lower_is_better",
+          "threshold": "no increase",
+          "margin_source": "contracts/program_q_frozen_policy_replication_v1.json::secondary_nonblocking"
+        },
+        {
+          "id": "hard_safety_unresolved_orders",
+          "definition": "unresolved_orders(candidate) must not exceed unresolved_orders(comparator)",
+          "direction": "lower_is_better",
+          "threshold": "no increase",
+          "margin_source": "contracts/program_q_frozen_policy_replication_v1.json::secondary_nonblocking"
+        }
+      ],
+      "delta": 0.01,
+      "decision_rule": "all margin-bearing safety LCBs must be at least -delta and both hard count constraints must show no increase; no safety endpoint may be traded against efficacy",
+      "missing_endpoint_rule": "if worst_product_fill is not persisted at evaluation time, safety is unscorable and authorization is forbidden",
+      "falsifier": "any safety LCB below -delta, endpoint omission, resource inequality, or ledger failure blocks authorization"
+    },
+    "authorization": {
+      "estimand_id": "A_Q2",
+      "definition": "indicator that the predeclared efficacy, safety, integrity, deployment, and custody gates all pass",
+      "not_a_scalarized_effect": true,
+      "decision_rule": "A_Q2 = 1 only if efficacy passes, every safety estimand passes, resources and ledgers pass, the comparator is deployable, the policy/checkpoint hashes match, and an independent authorization receipt exists",
+      "delta_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.neural_premium_rule and ::inference.equivalence_rule",
+      "falsifier": "any missing gate or missing independent authorization forces A_Q2 = 0"
+    }
+  },
+  "inference": {
+    "method": "studentized simultaneous max-t",
+    "confidence_level": 0.95,
+    "confidence_source": "contracts/ret_metric_repair_confirmation_v1.json::inference.confidence",
+    "all_cells_simultaneous": true,
+    "resampling_units": ["tape", "candidate_training_seed_if_applicable"],
+    "reselect_comparator_inside_bootstrap": false,
+    "reselection_rule": "the deployable comparator is frozen before virgin evaluation; no bootstrap winner selection",
+    "common_delta": 0.01,
+    "common_delta_source": "contracts/program_q_frozen_policy_replication_v1.json::inference.neural_premium_rule"
+  },
+  "cells": [
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "comparator": {
+    "id": "q2_frozen_deployable_classical_comparator",
+    "selection_status": "MUST_BE_FROZEN_BEFORE_OPENING",
+    "selection_rule": "one named deployable classical policy or fixed family member, selected on the declared development artifact only and then hashed",
+    "strongest_classical_family_not_a_post_hoc_virgin_winner": true,
+    "resource_equality_required": true,
+    "deployment_audit_required": true,
+    "checkpoint_or_config_sha256": null
+  },
+  "candidate": {
+    "policy_id": "q2_candidate_to_be_named_before_hash",
+    "training_seed_range": null,
+    "training_seed_status": "NOT_ALLOCATED_AND_NOT_OPENED",
+    "checkpoint_sha256": null,
+    "final_checkpoint_only": true,
+    "architecture_search_after_freeze": false
+  },
+  "virgin_evaluation_tapes": {
+    "candidate_range": {
+      "start": 950300001,
+      "end": 950300256,
+      "n": 256,
+      "status": "CANDIDATE_RANGE_ONLY_NOT_OPENED",
+      "range_selection_note": "Fresh numeric range selected for this skeleton; it is not evidence of virginity until the opening-time collision scan and custody receipt pass."
+    },
+    "n_source": "contracts/program_q_frozen_policy_replication_v1.json::confirmation.N",
+    "prior_q_confirmation": {
+      "range": [7490001, 7490256],
+      "opened": false,
+      "source": "contracts/program_q_frozen_policy_replication_v1.json::confirmation.reserved_block and ::confirmation.opened"
+    },
+    "collision_scan_before_opening": {
+      "required": true,
+      "current_local_scan": "NO_LITERAL_COLLISION_FOUND_FOR_950300001_950300256",
+      "scan_sources": [
+        "research/seed_custody_registry.json::blocks",
+        "research/paper2_exhaustive_search/seed_burn_ledger.json::blocks",
+        "contracts::seed ranges and reservations",
+        "results and manifests::seed-bearing artifacts"
+      ],
+      "scan_is_not_authorization": true,
+      "repeat_scan_at_opening": true
+    },
+    "virginity_claim": "not yet established",
+    "opened": false,
+    "opened_count": 0
+  },
+  "falsifiers_first": [
+    "candidate/checkpoint hash missing or changed",
+    "opening-time collision or non-virgin custody evidence",
+    "comparator not frozen and deployable before virgin evaluation",
+    "resource or demand-ledger inequality",
+    "missing worst_product_fill or any other declared safety field",
+    "efficacy LCB below delta",
+    "any safety LCB below -delta",
+    "independent authorization absent"
+  ],
+  "opening_gate": {
+    "pre_opening_hash_required": true,
+    "contract_sha256_before_opening": null,
+    "independent_authorization_required": true,
+    "collision_scan_receipt": null,
+    "seed_opening_receipt": null,
+    "opened": false,
+    "opening_authorized": false,
+    "reason_not_opened": "This artifact is a preregistration skeleton only; no training, evaluation, seed inspection, or authorization was requested or performed."
+  },
+  "authorization": {
+    "authorized": false,
+    "receipt": null,
+    "paper3_authorized": false,
+    "source_boundary": "contracts/program_q_frozen_policy_replication_v1.json::paper3_authorized"
+  },
+  "historical_boundary": {
+    "program_o": "immutable; not re-adjudicated",
+    "program_o_r": "immutable; not re-adjudicated",
+    "program_q": "immutable; not opened or re-adjudicated",
+    "source": "contracts/program_q_frozen_policy_replication_v1.json::historical_verdicts_immutable"
+  }
+}
