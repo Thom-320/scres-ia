@@ -72,12 +72,24 @@ The `ReT` construct is not one endpoint but a family, and the members do not agr
 as a finding about the family rather than as a defect to be hidden, and we state our identification
 decision before showing the evidence.
 
-**Our decision (declared as ours, not the thesis's).** The primary endpoint is
-`ret_excel_request_snapshot_v2` — the clipped request-snapshot member — fixed in
-`docs/RET_EXCEL_REQUEST_SNAPSHOT_V2_CONTRACT_2026-07-14.md` and used unchanged by every Program O,
-O-R and Q contract. `ret_excel_full_ledger` is reported as a **declared, pre-specified sensitivity**,
-never as an alternative primary. The thesis does not settle the choice; we settle it, and the price
-of settling it is the table below.
+**The situation, stated before the decision.** Two of our own frozen contracts already name
+*different* primaries, on different tracks:
+
+- Program O / O-R / Q — the contracts that produce every Level 1–4 number in this paper — fix
+  `ret_excel_request_snapshot_v2`. Its defining property is the *provenance and timing* of `Bt`/`Ut`
+  (frozen on each order at request generation `OPTj`, never reconstructed from completion time), and
+  the per-order formula is explicitly **not clipped**
+  (`docs/RET_EXCEL_REQUEST_SNAPSHOT_V2_CONTRACT_2026-07-14.md:19-21`).
+- The thesis-native risk-corrective track fixes `ret_excel_clipped_0_1`
+  (`contracts/ret_metric_repair_confirmation_v1.json::primary_endpoint`).
+
+**Our decision (declared as ours, not the thesis's).** The manuscript's primary endpoint is
+`ret_excel_request_snapshot_v2`. The reason is not that it is the most stable member — the evidence
+below says it is not the axis on which stability turns — but that it is the endpoint under which
+every reported estimand was computed, and switching now would require re-scoring the entire ladder
+rather than relabelling it. `ret_excel_full_ledger` is reported as a **declared, pre-specified
+sensitivity**, never as an alternative primary. The thesis does not settle the choice; we settle it,
+and the price of settling it is the table below.
 
 **The test.** Holding the policy pair, the comparator and the physics fixed, we re-score the same
 frozen incumbent against the same MPC arm on two **disjoint** tape blocks — the corrective
@@ -117,11 +129,13 @@ SHA-256 prefixes: `results/paper_prep/endpoint_block_inversion_v1/endpoint_block
 
 2. *Within-block, and this is the reading that survives (assumes nothing about block
    comparability).* On the **same tapes**, with the **same policy pair**, `ret_excel_full_ledger`
-   disagrees in sign with all three clipped/snapshot members in **both** blocks — +0.0125 vs
-   −0.0045 in Block A, and −0.0122 vs +0.0084 in Block B. The `ReT` family splits into two
-   sub-families that can return opposite verdicts on identical data. No block-comparability
-   assumption is needed to see it, and it cannot be attributed to sampling: every one of these four
-   intervals excludes zero.
+   disagrees in sign with **all four** other members of the family — `ret_excel`,
+   `ret_excel_clipped_0_1`, `ret_excel_quantity_time_clipped_0_1` and `ret_thesis` — in **both**
+   blocks: +0.0125 vs −0.0045 in Block A, and −0.0122 vs +0.0084 in Block B. The `ReT` family
+   therefore does not split on clipping, which is what one would guess from the member names; it
+   splits on **ledger provenance**, with the full-ledger member standing alone against the four
+   snapshot/visible-ledger members. No block-comparability assumption is needed to see it, and it
+   cannot be attributed to sampling: every one of these four intervals excludes zero.
 
 3. *Family-conditional (the part that is easy to miss).* R1r shows **no** disagreement, within or
    across blocks, on any endpoint. The instability is not a property of the metric in the abstract;
@@ -138,6 +152,15 @@ the *endpoint*, where §5.1 observed it in the *policy*. A scalarised resilience
 unable to detect the substitution; under a different admissible scalarisation of the same construct
 it can *reward* it.
 
+**The incumbent is the third axis, and we can show it directly.** A companion analysis
+(`results/paper_prep/endpoint_sensitivity.json`) scores the same MPC arm on the same Step-3 block
+against the *pooled best static posture* — `[0, 672, 168]` for R2r
+(`results/step3_pooled/result.json::families.R2r.best_static_posture`) — rather than against the
+frozen incumbent `[336, 0, 168]`. Where the two analyses share an estimand they agree to five
+decimals (full-ledger against best-static: −0.00099085 there, −0.0009908 here). Where the incumbent
+differs, the R2r contrasts move by an order of magnitude and several change sign. Endpoint, incumbent
+and block are three axes, not one, and a result is only well posed once all three are named.
+
 **What we conclude, and what we do not.** We conclude that no claim of the form "controller X
 converts headroom" is well posed in this model family until **endpoint, incumbent and tape block are
 all three fixed and declared**; we fix ours above. We do **not** conclude that our Level 1–4 results
@@ -146,6 +169,17 @@ endpoint with the comparator reselected inside every resample, and the R2r insta
 here belongs to the thesis-native risk-corrective track, a different physics and a different
 comparator set. That distinction is itself a claim a reviewer may test, which is why the artifact,
 the script and both blocks ship with the paper.
+
+> **[OPEN — PI decision required]** A companion preparation analysis recommends
+> `ret_excel_full_ledger` as the forward manuscript primary, on the ground that it is the one member
+> that does not change sign across the displayed matrix
+> (`results/paper_prep/endpoint_sensitivity.md`). That recommendation and the decision recorded above
+> are not reconcilable by argument alone and should not be settled silently: adopting full-ledger as
+> primary means re-scoring Levels 1–4, which no contract currently authorises, while keeping
+> `ret_excel_request_snapshot_v2` means the manuscript's primary is *not* the member with the best
+> demonstrated sign stability on the corrective track. We record both positions, report full-ledger
+> as the declared sensitivity either way, and flag this as requiring the PI's sign-off before the
+> abstract is written.
 
 > **[SLOT — CODEX, pending]** The companion analysis on the *primary* Program O/O-R estimands:
 > CRN-paired confidence intervals **on the differences** (not on the marginals), for `H_OL` and
