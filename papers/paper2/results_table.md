@@ -12,4 +12,4 @@
 | L4 neural premium Δ_N | rho75_share90 | est -0.00165 | LCB95 = -0.00879 | 1/10 seeds beat both comparators | `result.json@dc55880f0dca` |
 | L4 neural premium Δ_N | rho90_share75 | est -0.00273 | LCB95 = -0.01400 | 0/10 seeds beat both comparators | `result.json@dc55880f0dca` |
 | L4 neural premium Δ_N | rho90_share90 | est -0.00150 | LCB95 = -0.00828 | 2/10 seeds beat both comparators | `result.json@dc55880f0dca` |
-| Q prospective replication | all | PENDING | contract frozen: N=128/cell, block 7490001+ | outcomes: PASS_PREMIUM / PASS_EQUIVALENT / BOUND / STOP | `contract@frozen` |
+| Q preregistered replication (executed 2026-07-18) | all | STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION | E1 H_OL PASS 3/3 · E2 equivalence PASS 3/3 · premium FAIL 3/3 | N=256/cell, seeds 7490001–7490256; guardrail worst_product_fill FAIL in all cells (LCB95 −0.02266/−0.02566/−0.02632 vs classical) → composite STOP; evidential status fixed by docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md | `adjudication.json@e13e17f001a1` |

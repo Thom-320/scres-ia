@@ -93,14 +93,30 @@ def main() -> int:
 
     # ---- Program Q ---------------------------------------------------------------------------
     if a.program_q and Path(a.program_q).exists():
-        q = json.loads(Path(a.program_q).read_text())
-        rows.append(("Q prospective replication", "all",
-                     str(q.get("terminal_outcome") or q.get("status")), "", "",
-                     f"{Path(a.program_q).name}@{sha(Path(a.program_q))}"))
+        qp = Path(a.program_q)
+        q = json.loads(qp.read_text())
+        cg = q.get("cell_gates", {})
+        cells = sorted(cg)
+        n = max(len(cells), 1)
+        cnt = lambda g: sum(1 for c in cells if cg[c].get(g) is True)
+        rows.append((
+            "Q preregistered replication (executed 2026-07-18)",
+            "all",
+            str(q.get("verdict")),
+            f"E1 H_OL PASS {cnt('H_OL')}/{n} · E2 equivalence PASS {cnt('equivalence')}/{n} · "
+            f"premium FAIL {n - cnt('neural_premium')}/{n}",
+            "N=256/cell, seeds 7490001–7490256; guardrail worst_product_fill FAIL in all cells "
+            "(LCB95 −0.02266/−0.02566/−0.02632 vs classical) → composite STOP; evidential status "
+            "fixed by docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md",
+            f"{qp.name}@{sha(qp)}",
+        ))
     else:
-        rows.append(("Q prospective replication", "all", "PENDING",
-                     "contract frozen: N=128/cell, block 7490001+",
-                     "outcomes: PASS_PREMIUM / PASS_EQUIVALENT / BOUND / STOP", "contract@frozen"))
+        rows.append(("Q preregistered replication", "all", "PENDING — not synthesized here",
+                     "pass --program-q <adjudication.json>",
+                     "executed artifacts are custodied at frozen commit 031d0af "
+                     "(results/program_q/confirmation_v1_20260718/artifacts/confirmation/); status "
+                     "doc: docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md",
+                     "contract@frozen"))
 
     # ---- emit --------------------------------------------------------------------------------
     md = ["| Level | Cell | Point | Bound | Integrity / notes | Source |",
