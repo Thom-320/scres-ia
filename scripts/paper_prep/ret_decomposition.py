@@ -368,30 +368,68 @@ def collect_ledgers(cells, workers: int) -> dict[str, dict[str, Any]]:
 # Decomposition
 
 
-def twofold_components(a_flat: np.ndarray, b_flat: np.ndarray,
-                       shares_equal: bool) -> dict[str, Any]:
-    """Twofold-average split of Delta = mean(a) - mean(b).
+BRANCH_KEYS = (
+    "excel_fill_rate",
+    "excel_autotomy",
+    "excel_recovery",
+    "excel_risk_no_recovery",
+)
 
-    With identical branch shares across arms -- here *proven* row-by-row,
-    since no row of either arm is ever risk-active -- the composition terms of
-    both the Kitagawa form and the Oaxaca mirror form are exactly zero, their
-    average is exactly zero, and intra-regimen absorbs the full difference.
+
+def branch_shares(counts: dict[str, Any]) -> dict[str, float]:
+    """Normalised branch share vector w[k] for one arm (empty arm -> zeros)."""
+    total = float(sum(float(counts.get(k, 0)) for k in BRANCH_KEYS))
+    if total <= 0.0:
+        return {k: 0.0 for k in BRANCH_KEYS}
+    return {k: float(counts.get(k, 0)) / total for k in BRANCH_KEYS}
+
+
+def twofold_components(a_flat: np.ndarray, b_flat: np.ndarray,
+                       w_a: dict[str, float], w_b: dict[str, float],
+                       m_a: dict[str, float], m_b: dict[str, float],
+                       tol: float = 1e-12) -> dict[str, Any]:
+    """Twofold-average Kitagawa/Oaxaca split of Delta = mean(a) - mean(b).
+
+    Contract (contracts/paper_prep/ret_decomposition_preregistration_v1.json):
+
+        Delta = sum_k (w_a_k - w_b_k) * m_b_k     [composition, Kitagawa form]
+              + sum_k w_a_k * (m_a_k - m_b_k)     [intra-regimen]
+
+    and the reported split is the equally weighted average of the Kitagawa form
+    and its Oaxaca mirror, which evaluates the share difference at m_a.
+
+    Falsifier F3, verbatim from the contract: "if composition shares are
+    identical across arms in a cell, the composition component must be exactly
+    zero; a nonzero value would indicate an implementation error."  The
+    component is therefore COMPUTED from the share vectors and then CHECKED.
+    It is never assumed, and equal shares are a precondition of the *check*,
+    not a precondition of running.
     """
     delta = float(a_flat.mean() - b_flat.mean())
-    composition_kitagawa = 0.0
-    composition_oaxaca = 0.0
-    if not shares_equal:
-        raise RuntimeError(
-            "F3 VIOLATION: branch shares differ across arms; the preregistered "
-            "zero-composition conclusion would be false"
-        )
+    composition_kitagawa = float(
+        sum((w_a[k] - w_b[k]) * m_b[k] for k in BRANCH_KEYS)
+    )
+    composition_oaxaca = float(
+        sum((w_a[k] - w_b[k]) * m_a[k] for k in BRANCH_KEYS)
+    )
     composition = 0.5 * (composition_kitagawa + composition_oaxaca)
     intra = delta - composition
+    shares_equal = all(abs(w_a[k] - w_b[k]) <= tol for k in BRANCH_KEYS)
+    if shares_equal and abs(composition) > tol:
+        raise RuntimeError(
+            "F3 VIOLATION: the branch share vectors are identical across arms "
+            f"but the computed composition component is {composition!r} "
+            f"(tolerance {tol}); per the preregistration this indicates an "
+            "implementation error."
+        )
     return {
         "delta": delta,
         "composition": composition,
+        "composition_kitagawa": composition_kitagawa,
+        "composition_oaxaca": composition_oaxaca,
         "intra_regimen": intra,
-        "composition_by_construction": True,
+        "shares_equal_across_arms": shares_equal,
+        "f3_computed_and_checked": True,
     }
 
 
@@ -608,14 +646,48 @@ def analyze_cell(cell: str, cell_ledgers: dict[str, Any],
                 branch_counts[name][branch] = (
                     branch_counts[name].get(branch, 0) + int(value)
                 )
-    shares_identical = all(
-        set(counts) == {"excel_fill_rate"} for counts in branch_counts.values()
+    # Share VECTORS, not key sets: the ledger emits all four branch keys on
+    # every arm, most of them with a count of exactly zero, so a key-presence
+    # test can never pass on real data.
+    shares_by_arm = {
+        name: branch_shares(counts) for name, counts in branch_counts.items()
+    }
+    populated = {
+        name: [k for k in BRANCH_KEYS if float(counts.get(k, 0)) > 0.0]
+        for name, counts in branch_counts.items()
+    }
+    reference_w = shares_by_arm["learner_per_seed"]
+    branch_shares_equal_across_arms = all(
+        abs(w[k] - reference_w[k]) <= 1e-12
+        for w in shares_by_arm.values()
+        for k in BRANCH_KEYS
     )
-    if not shares_identical:
-        raise RuntimeError(
-            f"F3 VIOLATION for {cell}: non-fill-rate branches observed "
-            f"({ {k: v for k, v in branch_counts.items()} })"
+    # Per-branch means are only recoverable from the ledger while a single
+    # branch is populated (then that branch's mean IS the arm mean).  If the
+    # physics ever activates a second branch, the composition genuinely needs
+    # per-branch sums that collect_ledgers does not carry: stop rather than
+    # approximate, in the spirit of F1.
+    multi_branch = {n: b for n, b in populated.items() if len(b) > 1}
+    if multi_branch:
+        raise NotImplementedError(
+            f"{cell}: more than one case branch is populated ({multi_branch}); "
+            "per-branch means are not carried through the ledger, so the "
+            "Kitagawa composition cannot be computed. Extend collect_ledgers "
+            "to emit per-branch sums before re-running."
         )
+
+    def branch_means_of(flat: np.ndarray, arm: str) -> dict[str, float]:
+        """Branch means m[k] for one arm.
+
+        Exactly one branch is populated (guarded above), so its mean is the arm
+        mean.  Unpopulated branches are set to 0.0; they carry share 0 in every
+        arm, so the share difference multiplying them is exactly 0 and their
+        value never enters the composition.
+        """
+        m = {k: 0.0 for k in BRANCH_KEYS}
+        only = populated[arm][0] if populated[arm] else BRANCH_KEYS[0]
+        m[only] = float(np.mean(flat))
+        return m
 
     # ---- Reference anchors --------------------------------------------------
     evaluation = json.loads(
@@ -659,14 +731,25 @@ def analyze_cell(cell: str, cell_ledgers: dict[str, Any],
     # per-tape means (learner seed-mean vs comparator value), the pairing the
     # preregistration's Delta definition implies on shared tapes.
     learner_tape_means = learner_panel.mean(axis=1)
-    pair_ol = twofold_components(learner_tape_means, ol_best_flat, shares_identical)
-    pair_cl = twofold_components(learner_tape_means, cl_best_flat, shares_identical)
+    w_learner = shares_by_arm["learner_per_seed"]
+    m_learner = branch_means_of(learner_tape_means, "learner_per_seed")
+    pair_ol = twofold_components(
+        learner_tape_means, ol_best_flat,
+        w_learner, shares_by_arm["open_loop_all_calendars"],
+        m_learner, branch_means_of(ol_best_flat, "open_loop_all_calendars"),
+    )
+    pair_cl = twofold_components(
+        learner_tape_means, cl_best_flat,
+        w_learner, shares_by_arm["classical_ten"],
+        m_learner, branch_means_of(cl_best_flat, "classical_ten"),
+    )
 
     return {
         "f2_max_abs_recomputed_vs_shard": f2,
         "branch_composition": {
             "counts": branch_counts,
-            "shares_identical_across_arms": shares_identical,
+            "shares_by_arm": shares_by_arm,
+            "branch_shares_equal_across_arms": branch_shares_equal_across_arms,
         },
         "reference_checks": {k: bool(v) for k, v in reference_checks.items()},
         "h_ol_point": h_ol_point,
@@ -699,10 +782,10 @@ def write_markdown(results: dict[str, Any], md_path: Path) -> None:
         "- Program Q confirmation physics is **risk-off**: every skeleton "
         "carries `risk_events = []`, so **no visible order of any arm on any "
         "tape is risk-active**.",
-        "- All visible rows score the **excel_fill_rate** branch; branch share "
-        "vectors are identical across arms ⇒ **composition ≡ 0 by "
-        "construction** in every cell and both pairs — falsifier **F3 "
-        "satisfied trivially**.",
+        "- All visible rows score the **excel_fill_rate** branch, so the branch "
+        "share vectors are identical across arms. The composition component is "
+        "then **computed** from those share vectors and **checked** against "
+        "zero — falsifier **F3** is evaluated, not assumed.",
         "- The entire Δ falls in the **intra-regimen** component. This is a "
         "mechanistic property of the environment, not an implementation error.",
         "",
