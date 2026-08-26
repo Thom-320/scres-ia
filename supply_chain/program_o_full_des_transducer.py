@@ -528,8 +528,16 @@ def simulate_full_des_frontier(
     calendars: np.ndarray | None = None,
     complete_substitution: bool = False,
     trace_out: dict[str, Any] | None = None,
+    arrays_out: dict[str, np.ndarray] | None = None,
 ) -> dict[str, np.ndarray]:
-    """Vectorized replay of every calendar over one direct-DES skeleton."""
+    """Vectorized replay of every calendar over one direct-DES skeleton.
+
+    ``arrays_out`` is an optional read-only passthrough for downstream
+    analyses (e.g. the preregistered ret_decomposition): when given, it is
+    filled with the internal ``visible_values`` / ``completed`` /
+    ``risk_active`` per-order arrays that this function already computes for
+    its own scalar metrics.  It changes no computation.
+    """
     calendars = (
         full_action_calendars(skeleton.decision_weeks)
         if calendars is None
@@ -817,6 +825,15 @@ def simulate_full_des_frontier(
     }
     if tuple(output) != MATRIX_KEYS:
         raise AssertionError("full-DES transducer matrix schema drift")
+    if arrays_out is not None:
+        arrays_out.update(
+            {
+                "visible_values": visible_values,
+                "completed": completed,
+                "risk_active": risk_active,
+                "ct": ct,
+            }
+        )
     if trace_out is not None:
         orders = []
         for order_index in range(n_order):
