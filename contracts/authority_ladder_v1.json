@@ -133,7 +133,10 @@
     ]
   },
   "primary_objective": {
-    "metric": "Excel ReT",
+    "metric": null,
+    "metric_authority_status": "BLOCKED_BY_PAPER_B_METRIC_GATE_V1",
+    "metric_gate_contract": "contracts/paper_b_metric_gate_v1.json",
+    "metric_gate_required_pass_status": "PASS_PAPER_B_METRIC_PRE_FREEZE",
     "selection": "maximize subject to frozen resource budgets",
     "resource_fields": [
       "raw_material_ordered",
@@ -156,7 +159,7 @@
     }
   },
   "sesoi": {
-    "one_common_absolute_ret_sesoi_for_all_masks": true,
+    "one_common_absolute_primary_metric_sesoi_for_all_masks": true,
     "value": null,
     "operational_interpretation": null,
     "garrido_signature_required_before_fresh_data": true,
@@ -245,9 +248,10 @@
   },
   "required_before_freeze": [
     "Submission A editorial-system receipt",
+    "PASS_PAPER_B_METRIC_PRE_FREEZE",
     "Garrido-approved A0 manifest",
     "Garrido-approved physical nodes, routes, capacities, and cadences",
-    "common absolute ReT SESOI and operational interpretation",
+    "common absolute primary-metric SESOI and operational interpretation",
     "resource budgets and physical guardrails",
     "disjoint root and seed blocks",
     "clean commit and tests",
