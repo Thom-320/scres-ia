@@ -32,8 +32,9 @@ Matching belief-MPC with a single forward pass is operationally meaningful even 
 premium: the MPC replans online at every decision, requires an explicit decision model and belief
 machinery at run time, and its cost scales with the enumeration horizon; the learned policy is a
 constant-time function of observations. Where decision latency, compute at the edge, or model
-maintenance matter, an amortized policy certified non-inferior is a deployable artifact. The
-prospective replication therefore reports outcome equivalence and computational cost as separate,
+maintenance matter, an amortized policy shown equivalent within a preregistered indifference zone
+is a deployable artifact. The replication therefore reported outcome equivalence and computational
+cost as separate,
 jointly interpretable endpoints.
 
 ## 4.4 Methodological lessons (paid for, in order)
@@ -65,8 +66,9 @@ three-cell demand family, so out-of-distribution robustness (including the thesi
 operational risks, which were disabled throughout Program O) remains a preregistered but
 unexecuted extension. Joint tail safety was not established and is not claimed. The event-tie
 semantics of the source metric awaits domain confirmation; our dual-semantics sensitivity bounds
-the exposure. Learned-adaptation results are calibration evidence until the frozen-policy
-replication completes, and external validity claims await the source author's answers.
+the exposure. Learned adaptation was subsequently replicated on virgin tapes by the executed
+frozen-policy replication (§3.5), whose compound verdict nonetheless withheld successor-program
+authorization; external validity claims await the source author's answers.
 
 ## 4.6 Implications and next questions
 
@@ -76,4 +78,7 @@ that clairvoyance cannot find. For researchers: the interesting open question is
 "can RL beat a schedule" but *what a learned policy should retain between related campaigns* —
 whether carrying inferred demand-mix beliefs (rather than weights) buys cold-start resilience, a
 question with a clean causal design (persistent vs reset, independent-campaign null) that this
-benchmark now makes executable. That study is gated, deliberately, behind the replication.
+benchmark now makes executable. That study remains gated: the replication's preregistered
+composite did not authorize a successor program
+(<!-- results/program_q/confirmation_v1_20260718/artifacts/confirmation/adjudication.json::paper3_authorized -->
+`false`, frozen commit `031d0af`), and any successor requires its own contract and virgin seeds.
