@@ -1,0 +1,62 @@
+{
+  "schema_version": "paper_prep_ret_decomposition_preregistration_v1",
+  "created_date": "2026-08-25",
+  "status": "FROZEN_BEFORE_ANALYSIS",
+  "author": "Codex (delegated), under PI directive 2026-08-24 and dated decisions 2026-08-25",
+  "purpose": "Preregister the Kitagawa/Oaxaca-style decomposition of ReT differences into an intra-regimen (within-branch) component and a composition (branch-mix) component, before any number is computed.",
+  "scope_and_governance": {
+    "read_only_on_frozen_artifacts": true,
+    "re_adjudicates_O_O_R_Q": false,
+    "opens_new_seeds": false,
+    "trains_or_scores_new_policies": false,
+    "changes_no_frozen_contract": true,
+    "primary_endpoint_of_this_analysis": "ret_excel_request_snapshot_v2 (frozen; docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md)"
+  },
+  "estimand": {
+    "definition": "For two arms a,b scored on the same tapes: Delta = mean(ReT_a) - mean(ReT_b). With per-order branch means m[a,k], m[b,k] over the K=4 snapshot_v2 case branches (excel_fill_rate, excel_autotomy, excel_recovery, excel_risk_no_recovery) and branch shares w[a,k], w[b,k] (shares of that arm's visible rows):",
+    "kitagawa_identity": "Delta = sum_k (w_a_k - w_b_k)*m_b_k  [composition C_x]  +  sum_k w_a_k*(m_a_k - m_b_k)  [intra-regimen E]",
+    "oaxaca_mirror": "Delta = sum_k w_b_k*(m_a_k - m_b_k) + sum_k (w_a_k - w_b_k)*m_a_k",
+    "twofold_average": "the reported primary split uses the equally weighted average of both mirror forms for each component; the two exact mirror decompositions are also recorded in the JSON",
+    "branch_means_are": "unclipped per-order ReT under ret_excel_request_snapshot_v2"
+  },
+  "cells_analyzed": [
+    "rho75_share90",
+    "rho90_share75",
+    "rho90_share90"
+  ],
+  "tapes_analyzed": "all 256 virgin confirmation tapes 7490001-7490256 per cell (Program Q shards); no tape added or dropped",
+  "arms_compared": [
+    {
+      "pair_id": "learner_vs_openloop",
+      "a": "learner per-seed arm (10 frozen seeds 8101-8110)",
+      "b": "best open-loop calendar by mean ReT on these same 256 tapes (reselected inside every bootstrap resample)"
+    },
+    {
+      "pair_id": "learner_vs_bestclassical",
+      "a": "learner per-seed arm (10 frozen seeds 8101-8110)",
+      "b": "per-tape best classical configuration of the frozen ten (reselected inside every bootstrap resample)"
+    }
+  ],
+  "falsifiers_declared_before_running": [
+    "F1: if any learner/open-loop/classical per-order ledger cannot be recovered from the stored shards (no per-row trace in the npz), the corresponding pair is reported NOT_COMPUTABLE rather than approximated from aggregates.",
+    "F2: if any recomputed arm mean differs from the shard scalar panels by more than 1e-9, the discrepancy is reported and the analysis stops for that cell.",
+    "F3: if composition shares are identical across arms in a cell, the composition component must be exactly zero; a nonzero value would indicate an implementation error."
+  ],
+  "inference": {
+    "bootstrap": "two-way resampling over learner seeds and tapes, 10,000 resamples, studentized max-t across the six estimands (3 cells x 2 pairs), comparator reselection inside every resample",
+    "rng_seed_derivation": "int.from_bytes(SHA256('paper-prep-ret-decomposition-v1')[:8],'big')",
+    "confidence": 0.95,
+    "claim_limit": "descriptive/mechanistic decomposition for the manuscript; it adjudicates nothing and changes no verdict"
+  },
+  "outputs": {
+    "json": "results/paper_prep/ret_decomposition.json",
+    "md": "results/paper_prep/ret_decomposition.md",
+    "script": "scripts/paper_prep/ret_decomposition.py"
+  },
+  "source_custody": {
+    "shards_root": "/home/ubuntu/program_o_runs/program-q-confirmation-v1-20260718/artifacts/confirmation/shards",
+    "shard_manifest_repo_path": "results/program_q/confirmation_v1_20260718/artifacts/confirmation/shards/shard_files.sha256 at origin/codex/submission-a-program-q (= 031d0af tree)",
+    "evaluation_result": "results/program_q/confirmation_v1_20260718/artifacts/confirmation/evaluation/result.json sha256 62f6fd390471624f7c301b8baa96d31871db99e22dd5a22d6bb8cf7bba8088b2",
+    "canonical_status_doc": "docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md"
+  }
+}
