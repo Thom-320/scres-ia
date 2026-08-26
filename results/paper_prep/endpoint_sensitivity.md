@@ -1,5 +1,13 @@
 # Sensibilidad de endpoint para cierre de Paper 2
 
+> **[SUPERSEDED — PI decision 2026-08-25]** La recomendación de abajo (`ret_excel_full_ledger`
+> como primario prospectivo del manuscrito) fue **revocada** por
+> `docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md`: el primario del manuscrito es
+> `ret_excel_request_snapshot_v2` y todos los miembros admisibles de la familia —incluido full
+> ledger— se publican como sensibilidad declarada. Este fichero se conserva sin modificar como
+> trazabilidad de la recomendación que fue evaluada; la resolución aplicada al manuscrito está en
+> `papers/paper2/05_conclusion.md` §5.2.
+
 Estado: análisis descriptivo de preparación; no re-adjudica O, O-R ni Q y no modifica contratos congelados.
 
 ## Recomendación

@@ -1,490 +1,646 @@
 {
-  "schema_version": "paper_prep_endpoint_sensitivity_v1",
-  "status": "DESCRIPTIVE_SENSITIVITY_NO_READJUDICATION",
-  "claim_boundary": {
-    "re_adjudicates_O_O_R_Q": false,
-    "changes_frozen_confirmation_contract": false,
-    "opens_new_tapes": false
-  },
-  "contrast": "arm minus incumbent on the same tape; no endpoint-specific sign reversal",
-  "recommended_primary_endpoint": {
-    "endpoint": "ret_excel_full_ledger",
-    "role": "forward_manuscript_primary_recommendation",
-    "reason": "It is the source-aligned full-ledger ReT and keeps the same negative direction in all four displayed blocks; this recommendation does not alter the frozen corrective-confirmation primary.",
-    "supporting_cells": [
-      "table.ret_excel_full_ledger.confirmation_R1r",
-      "table.ret_excel_full_ledger.confirmation_R2r",
-      "table.ret_excel_full_ledger.step3_R1r_replay_mpc_v2",
-      "table.ret_excel_full_ledger.step3_R2r_replay_mpc_v2"
+ "schema_version": "paper_prep_endpoint_sensitivity_v1",
+ "status": "DESCRIPTIVE_SENSITIVITY_NO_READJUDICATION",
+ "claim_boundary": {
+  "re_adjudicates_O_O_R_Q": false,
+  "changes_frozen_confirmation_contract": false,
+  "opens_new_tapes": false
+ },
+ "contrast": "arm minus incumbent on the same tape; no endpoint-specific sign reversal",
+ "recommended_primary_endpoint": {
+  "endpoint": "ret_excel_full_ledger",
+  "role": "forward_manuscript_primary_recommendation",
+  "reason": "It is the source-aligned full-ledger ReT and keeps the same negative direction in all four displayed blocks; this recommendation does not alter the frozen corrective-confirmation primary.",
+  "supporting_cells": [
+   "table.ret_excel_full_ledger.confirmation_R1r",
+   "table.ret_excel_full_ledger.confirmation_R2r",
+   "table.ret_excel_full_ledger.step3_R1r_replay_mpc_v2",
+   "table.ret_excel_full_ledger.step3_R2r_replay_mpc_v2"
+  ]
+ },
+ "historical_confirmation_primary": {
+  "endpoint": "ret_excel_clipped_0_1",
+  "source": "contracts/ret_metric_repair_confirmation_v1.json::primary_endpoint",
+  "preserved": true
+ },
+ "blocks": {
+  "confirmation_R1r": {
+   "label": "corrective confirmation \u00b7 R1r",
+   "kind": "ret_metric_repair_confirmation_v1",
+   "family": "R1r",
+   "n_tapes": 16,
+   "incumbent": [
+    0,
+    0,
+    336
+   ],
+   "arm": "corrective_confirmation",
+   "ci_method": "published paired endpoint-specific CI",
+   "source": {
+    "path": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json",
+    "fields": [
+     "families.R1r.frozen_incumbent",
+     "families.R1r.comparisons.<endpoint>.delta_mean",
+     "families.R1r.comparisons.<endpoint>.ci95",
+     "families.R1r.comparisons.<endpoint>.n_tapes"
     ]
+   }
   },
-  "historical_confirmation_primary": {
-    "endpoint": "ret_excel_clipped_0_1",
-    "source": "contracts/ret_metric_repair_confirmation_v1.json::primary_endpoint",
-    "preserved": true
+  "confirmation_R2r": {
+   "label": "corrective confirmation \u00b7 R2r",
+   "kind": "ret_metric_repair_confirmation_v1",
+   "family": "R2r",
+   "n_tapes": 16,
+   "incumbent": [
+    336,
+    0,
+    168
+   ],
+   "arm": "corrective_confirmation",
+   "ci_method": "published paired endpoint-specific CI",
+   "source": {
+    "path": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json",
+    "fields": [
+     "families.R2r.frozen_incumbent",
+     "families.R2r.comparisons.<endpoint>.delta_mean",
+     "families.R2r.comparisons.<endpoint>.ci95",
+     "families.R2r.comparisons.<endpoint>.n_tapes"
+    ]
+   }
   },
-  "blocks": {
-    "confirmation_R1r": {
-      "label": "corrective confirmation · R1r",
-      "kind": "ret_metric_repair_confirmation_v1",
-      "family": "R1r",
-      "n_tapes": 16,
-      "incumbent": [0, 0, 336],
-      "arm": "corrective_confirmation",
-      "ci_method": "published paired endpoint-specific CI",
-      "source": {
-        "path": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json",
-        "fields": [
-          "families.R1r.frozen_incumbent",
-          "families.R1r.comparisons.<endpoint>.delta_mean",
-          "families.R1r.comparisons.<endpoint>.ci95",
-          "families.R1r.comparisons.<endpoint>.n_tapes"
-        ]
-      }
-    },
-    "confirmation_R2r": {
-      "label": "corrective confirmation · R2r",
-      "kind": "ret_metric_repair_confirmation_v1",
-      "family": "R2r",
-      "n_tapes": 16,
-      "incumbent": [336, 0, 168],
-      "arm": "corrective_confirmation",
-      "ci_method": "published paired endpoint-specific CI",
-      "source": {
-        "path": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json",
-        "fields": [
-          "families.R2r.frozen_incumbent",
-          "families.R2r.comparisons.<endpoint>.delta_mean",
-          "families.R2r.comparisons.<endpoint>.ci95",
-          "families.R2r.comparisons.<endpoint>.n_tapes"
-        ]
-      }
-    },
-    "step3_R1r_replay_mpc_v2": {
-      "label": "Step 3 pooled · R1r · replay_mpc_v2",
-      "kind": "step3_pooled",
-      "family": "R1r",
-      "arm": "replay_mpc_v2",
-      "n_tapes": 12,
-      "incumbent": [0, 0, 336],
-      "ci_method": "paired percentile bootstrap of 12 tape differences, 5000 draws, seed 20260806; same draw order as scripts/merge_step3_shards.py",
-      "source": {
-        "pooled_result_path": "results/step3_pooled/result.json",
-        "pooled_result_fields": [
-          "families.R1r.best_static_posture",
-          "families.R1r.n_tapes",
-          "families.R1r.comparisons.replay_mpc_v2.delta_mean",
-          "families.R1r.comparisons.replay_mpc_v2.lcb95",
-          "families.R1r.comparisons.replay_mpc_v2.ucb95"
-        ],
-        "row_paths": [
-          "results/step3_s1_r1r_a/full/rows.json",
-          "results/step3_s2_r1r_b/full/rows.json",
-          "results/step3_s3_r2r_a/full/rows.json",
-          "results/step3_s4_r2r_b/full/rows.json"
-        ],
-        "row_fields": [
-          "[*].family",
-          "[*].arm",
-          "[*].posture",
-          "[*].tape_seed",
-          "[*].<endpoint>"
-        ],
-        "bootstrap_source": "scripts/merge_step3_shards.py::N_BOOT and main.rng"
-      }
-    },
-    "step3_R2r_replay_mpc_v2": {
-      "label": "Step 3 pooled · R2r · replay_mpc_v2",
-      "kind": "step3_pooled",
-      "family": "R2r",
-      "arm": "replay_mpc_v2",
-      "n_tapes": 12,
-      "incumbent": [0, 672, 168],
-      "ci_method": "paired percentile bootstrap of 12 tape differences, 5000 draws, seed 20260806; same draw order as scripts/merge_step3_shards.py",
-      "source": {
-        "pooled_result_path": "results/step3_pooled/result.json",
-        "pooled_result_fields": [
-          "families.R2r.best_static_posture",
-          "families.R2r.n_tapes",
-          "families.R2r.comparisons.replay_mpc_v2.delta_mean",
-          "families.R2r.comparisons.replay_mpc_v2.lcb95",
-          "families.R2r.comparisons.replay_mpc_v2.ucb95"
-        ],
-        "row_paths": [
-          "results/step3_s1_r1r_a/full/rows.json",
-          "results/step3_s2_r1r_b/full/rows.json",
-          "results/step3_s3_r2r_a/full/rows.json",
-          "results/step3_s4_r2r_b/full/rows.json"
-        ],
-        "row_fields": [
-          "[*].family",
-          "[*].arm",
-          "[*].posture",
-          "[*].tape_seed",
-          "[*].<endpoint>"
-        ],
-        "bootstrap_source": "scripts/merge_step3_shards.py::N_BOOT and main.rng"
-      }
-    }
+  "step3_R1r_replay_mpc_v2": {
+   "label": "Step 3 pooled \u00b7 R1r \u00b7 replay_mpc_v2",
+   "kind": "step3_pooled",
+   "family": "R1r",
+   "arm": "replay_mpc_v2",
+   "n_tapes": 12,
+   "incumbent": [
+    0,
+    0,
+    336
+   ],
+   "ci_method": "paired percentile bootstrap of 12 tape differences, 5000 draws, seed 20260806; same draw order as scripts/merge_step3_shards.py",
+   "source": {
+    "pooled_result_path": "results/step3_pooled/result.json",
+    "pooled_result_fields": [
+     "families.R1r.best_static_posture",
+     "families.R1r.n_tapes",
+     "families.R1r.comparisons.replay_mpc_v2.delta_mean",
+     "families.R1r.comparisons.replay_mpc_v2.lcb95",
+     "families.R1r.comparisons.replay_mpc_v2.ucb95"
+    ],
+    "row_paths": [
+     "results/step3_s1_r1r_a/full/rows.json",
+     "results/step3_s2_r1r_b/full/rows.json",
+     "results/step3_s3_r2r_a/full/rows.json",
+     "results/step3_s4_r2r_b/full/rows.json"
+    ],
+    "row_fields": [
+     "[*].family",
+     "[*].arm",
+     "[*].posture",
+     "[*].tape_seed",
+     "[*].<endpoint>"
+    ],
+    "bootstrap_source": "scripts/merge_step3_shards.py::N_BOOT and main.rng"
+   }
   },
-  "pooled_rows_resolution": {
-    "requested_path": "results/step3_pooled/rows.json",
-    "present": false,
-    "resolution": "The pooled result is a summary artifact. The endpoint table reconstructs the pooled rows from the four shard row files listed in results/step3_pooled/result.json::shards and does not fabricate a fifth source file."
-  },
-  "table": {
-    "delivered_rations": {
-      "role": "operational_diagnostic",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": 3756.3125,
-        "ci95": [634.1875, 7964.8125],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.delivered_rations"
-      },
-      "confirmation_R2r": {
-        "estimate": -25399.0625,
-        "ci95": [-29344.459375, -21173.548437500005],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.delivered_rations"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": 3947.9166666666665,
-        "ci95": [826.6416666666667, 7639.574999999999],
-        "n_tapes": 12,
-        "positive_tapes": 6,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -3149.8333333333335,
-        "ci95": [-8207.416666666666, 216.91666666666666],
-        "n_tapes": 12,
-        "positive_tapes": 1,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "flow_fill_rate": {
-      "role": "aggregate_service_diagnostic_not_preregistered_safety_guardrail",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": 2.0159996052968032e-05,
-        "ci95": [3.4516338982132355e-06, 4.370646622790103e-05],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.flow_fill_rate"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.0023396281336660815,
-        "ci95": [-0.0014491408052876534, 0.0062599437812630885],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.flow_fill_rate"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": 2.0758683199034733e-05,
-        "ci95": [3.728559465580178e-06, 3.9986226319524414e-05],
-        "n_tapes": 12,
-        "positive_tapes": 6,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -0.0014720746200948636,
-        "ci95": [-0.004642651569700858, 0.0005284090007700212],
-        "n_tapes": 12,
-        "positive_tapes": 1,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "lost_orders": {
-      "role": "safety_diagnostic",
-      "direction": "lower_is_better",
-      "sign_inversion_across_blocks": false,
-      "confirmation_R1r": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.lost_orders"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.lost_orders"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "ret_excel": {
-      "role": "metric_sensitivity",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": -1.954003976329104e-05,
-        "ci95": [-4.955658717723581e-05, -1.6796812196908317e-07],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.012515645095362442,
-        "ci95": [0.009003888449569987, 0.015954997659645993],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -2.1654784717607012e-05,
-        "ci95": [-4.688668370270492e-05, 4.235296715501779e-06],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -0.0001675115118154278,
-        "ci95": [-0.003087886039772216, 0.0021486070150789475],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "ret_excel_clipped_0_1": {
-      "role": "historical_confirmation_primary_and_sensitivity",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": -1.954003976329104e-05,
-        "ci95": [-4.940055576932727e-05, -2.0759184996156097e-07],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_clipped_0_1"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.012474736800974866,
-        "ci95": [0.009108598814583101, 0.015909102732916035],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_clipped_0_1"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -2.1654784717607012e-05,
-        "ci95": [-4.688668370270492e-05, 4.235296715501779e-06],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -0.0001675115118154278,
-        "ci95": [-0.003087886039772216, 0.0021486070150789475],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "ret_excel_full_ledger": {
-      "role": "recommended_primary",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": false,
-      "confirmation_R1r": {
-        "estimate": -1.9377592194825025e-05,
-        "ci95": [-4.862549017338952e-05, -6.782449157805233e-08],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_full_ledger"
-      },
-      "confirmation_R2r": {
-        "estimate": -0.004483477888646593,
-        "ci95": [-0.006600459182423437, -0.0023880153128589383],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_full_ledger"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -2.1383599774512426e-05,
-        "ci95": [-4.635861152125526e-05, 4.31420167334875e-06],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": [
-          "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.delta_mean",
-          "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.lcb95",
-          "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.ucb95",
-          "results/step3_s1_r1r_a/full/rows.json",
-          "results/step3_s2_r1r_b/full/rows.json"
-        ]
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -0.0009908485520556398,
-        "ci95": [-0.0037005969730673867, 0.0006825842011338549],
-        "n_tapes": 12,
-        "positive_tapes": 2,
-        "source": [
-          "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.delta_mean",
-          "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.lcb95",
-          "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.ucb95",
-          "results/step3_s3_r2r_a/full/rows.json",
-          "results/step3_s4_r2r_b/full/rows.json"
-        ]
-      }
-    },
-    "ret_excel_quantity_time_clipped_0_1": {
-      "role": "metric_sensitivity_proxy",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": -1.9648235095419246e-05,
-        "ci95": [-4.8634941775350375e-05, -2.8632297925636447e-07],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_quantity_time_clipped_0_1"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.012386684771870205,
-        "ci95": [0.009244266321139326, 0.015258659854362118],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_quantity_time_clipped_0_1"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -2.1654784717607012e-05,
-        "ci95": [-4.688668370270492e-05, 4.235296715501779e-06],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -0.00016504049232055987,
-        "ci95": [-0.0030862928410007075, 0.002153753763472796],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "ret_thesis": {
-      "role": "metric_sensitivity",
-      "direction": "higher_is_better",
-      "sign_inversion_across_blocks": true,
-      "confirmation_R1r": {
-        "estimate": -1.9377592194825025e-05,
-        "ci95": [-4.8328999157322196e-05, -2.655217663084871e-07],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_thesis"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.0003699960639464311,
-        "ci95": [-0.0010844538318445054, 0.0017306137353799477],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_thesis"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -2.1383599774512426e-05,
-        "ci95": [-4.635861152125526e-05, 4.31420167334875e-06],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -5.713233461583074e-06,
-        "ci95": [-3.2944945951210146e-05, 2.000802412686416e-05],
-        "n_tapes": 12,
-        "positive_tapes": 3,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "strategic_injected": {
-      "role": "ledger_diagnostic",
-      "direction": "lower_is_better_for_injected_quantity",
-      "sign_inversion_across_blocks": false,
-      "confirmation_R1r": {
-        "estimate": -88133.25,
-        "ci95": [-107522.4921875, -64976.60468750002],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.strategic_injected"
-      },
-      "confirmation_R2r": {
-        "estimate": -99072.25,
-        "ci95": [-112528.8375, -87077.246875],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.strategic_injected"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -89327.5,
-        "ci95": [-103840.04583333334, -67992.86458333334],
-        "n_tapes": 12,
-        "positive_tapes": 1,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -111784.75,
-        "ci95": [-133362.52916666667, -87610.5916666667],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "terminal_stock": {
-      "role": "inventory_diagnostic",
-      "direction": "context_dependent_not_primary",
-      "sign_inversion_across_blocks": false,
-      "confirmation_R1r": {
-        "estimate": -112037.1875,
-        "ci95": [-130459.7296875, -97796.328125],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.terminal_stock"
-      },
-      "confirmation_R2r": {
-        "estimate": -13446.0,
-        "ci95": [-29312.29375, 13532.893749999977],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.terminal_stock"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": -105072.41666666667,
-        "ci95": [-144736.72291666668, -64326.42916666667],
-        "n_tapes": 12,
-        "positive_tapes": 2,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": -17427.0,
-        "ci95": [-23915.458333333332, -12165.527083333334],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    },
-    "unresolved": {
-      "role": "safety_diagnostic",
-      "direction": "lower_is_better",
-      "sign_inversion_across_blocks": false,
-      "confirmation_R1r": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.unresolved"
-      },
-      "confirmation_R2r": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 16,
-        "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.unresolved"
-      },
-      "step3_R1r_replay_mpc_v2": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      },
-      "step3_R2r_replay_mpc_v2": {
-        "estimate": 0.0,
-        "ci95": [0.0, 0.0],
-        "n_tapes": 12,
-        "positive_tapes": 0,
-        "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
-      }
-    }
+  "step3_R2r_replay_mpc_v2": {
+   "label": "Step 3 pooled \u00b7 R2r \u00b7 replay_mpc_v2",
+   "kind": "step3_pooled",
+   "family": "R2r",
+   "arm": "replay_mpc_v2",
+   "n_tapes": 12,
+   "incumbent": [
+    0,
+    672,
+    168
+   ],
+   "ci_method": "paired percentile bootstrap of 12 tape differences, 5000 draws, seed 20260806; same draw order as scripts/merge_step3_shards.py",
+   "source": {
+    "pooled_result_path": "results/step3_pooled/result.json",
+    "pooled_result_fields": [
+     "families.R2r.best_static_posture",
+     "families.R2r.n_tapes",
+     "families.R2r.comparisons.replay_mpc_v2.delta_mean",
+     "families.R2r.comparisons.replay_mpc_v2.lcb95",
+     "families.R2r.comparisons.replay_mpc_v2.ucb95"
+    ],
+    "row_paths": [
+     "results/step3_s1_r1r_a/full/rows.json",
+     "results/step3_s2_r1r_b/full/rows.json",
+     "results/step3_s3_r2r_a/full/rows.json",
+     "results/step3_s4_r2r_b/full/rows.json"
+    ],
+    "row_fields": [
+     "[*].family",
+     "[*].arm",
+     "[*].posture",
+     "[*].tape_seed",
+     "[*].<endpoint>"
+    ],
+    "bootstrap_source": "scripts/merge_step3_shards.py::N_BOOT and main.rng"
+   }
   }
+ },
+ "pooled_rows_resolution": {
+  "requested_path": "results/step3_pooled/rows.json",
+  "present": false,
+  "resolution": "The pooled result is a summary artifact. The endpoint table reconstructs the pooled rows from the four shard row files listed in results/step3_pooled/result.json::shards and does not fabricate a fifth source file."
+ },
+ "table": {
+  "delivered_rations": {
+   "role": "operational_diagnostic",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": 3756.3125,
+    "ci95": [
+     634.1875,
+     7964.8125
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.delivered_rations"
+   },
+   "confirmation_R2r": {
+    "estimate": -25399.0625,
+    "ci95": [
+     -29344.459375,
+     -21173.548437500005
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.delivered_rations"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": 3947.9166666666665,
+    "ci95": [
+     826.6416666666667,
+     7639.574999999999
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 6,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -3149.8333333333335,
+    "ci95": [
+     -8207.416666666666,
+     216.91666666666666
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 1,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "flow_fill_rate": {
+   "role": "aggregate_service_diagnostic_not_preregistered_safety_guardrail",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": 2.0159996052968032e-05,
+    "ci95": [
+     3.4516338982132355e-06,
+     4.370646622790103e-05
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.flow_fill_rate"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.0023396281336660815,
+    "ci95": [
+     -0.0014491408052876534,
+     0.0062599437812630885
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.flow_fill_rate"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": 2.0758683199034733e-05,
+    "ci95": [
+     3.728559465580178e-06,
+     3.9986226319524414e-05
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 6,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -0.0014720746200948636,
+    "ci95": [
+     -0.004642651569700858,
+     0.0005284090007700212
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 1,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "lost_orders": {
+   "role": "safety_diagnostic",
+   "direction": "lower_is_better",
+   "sign_inversion_across_blocks": false,
+   "confirmation_R1r": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.lost_orders"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.lost_orders"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "ret_excel": {
+   "role": "metric_sensitivity",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": -1.954003976329104e-05,
+    "ci95": [
+     -4.955658717723581e-05,
+     -1.6796812196908317e-07
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.012515645095362442,
+    "ci95": [
+     0.009003888449569987,
+     0.015954997659645993
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -2.1654784717607012e-05,
+    "ci95": [
+     -4.688668370270492e-05,
+     4.235296715501779e-06
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -0.0001675115118154278,
+    "ci95": [
+     -0.003087886039772216,
+     0.0021486070150789475
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "ret_excel_clipped_0_1": {
+   "role": "historical_confirmation_primary_and_sensitivity",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": -1.954003976329104e-05,
+    "ci95": [
+     -4.940055576932727e-05,
+     -2.0759184996156097e-07
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_clipped_0_1"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.012474736800974866,
+    "ci95": [
+     0.009108598814583101,
+     0.015909102732916035
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_clipped_0_1"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -2.1654784717607012e-05,
+    "ci95": [
+     -4.688668370270492e-05,
+     4.235296715501779e-06
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -0.0001675115118154278,
+    "ci95": [
+     -0.003087886039772216,
+     0.0021486070150789475
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "ret_excel_full_ledger": {
+   "role": "recommended_primary",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": false,
+   "confirmation_R1r": {
+    "estimate": -1.9377592194825025e-05,
+    "ci95": [
+     -4.862549017338952e-05,
+     -6.782449157805233e-08
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_full_ledger"
+   },
+   "confirmation_R2r": {
+    "estimate": -0.004483477888646593,
+    "ci95": [
+     -0.006600459182423437,
+     -0.0023880153128589383
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_full_ledger"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -2.1383599774512426e-05,
+    "ci95": [
+     -4.635861152125526e-05,
+     4.31420167334875e-06
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": [
+     "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.delta_mean",
+     "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.lcb95",
+     "results/step3_pooled/result.json::families.R1r.comparisons.replay_mpc_v2.ucb95",
+     "results/step3_s1_r1r_a/full/rows.json",
+     "results/step3_s2_r1r_b/full/rows.json"
+    ]
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -0.0009908485520556398,
+    "ci95": [
+     -0.0037005969730673867,
+     0.0006825842011338549
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 2,
+    "source": [
+     "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.delta_mean",
+     "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.lcb95",
+     "results/step3_pooled/result.json::families.R2r.comparisons.replay_mpc_v2.ucb95",
+     "results/step3_s3_r2r_a/full/rows.json",
+     "results/step3_s4_r2r_b/full/rows.json"
+    ]
+   }
+  },
+  "ret_excel_quantity_time_clipped_0_1": {
+   "role": "metric_sensitivity_proxy",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": -1.9648235095419246e-05,
+    "ci95": [
+     -4.8634941775350375e-05,
+     -2.8632297925636447e-07
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_excel_quantity_time_clipped_0_1"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.012386684771870205,
+    "ci95": [
+     0.009244266321139326,
+     0.015258659854362118
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_excel_quantity_time_clipped_0_1"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -2.1654784717607012e-05,
+    "ci95": [
+     -4.688668370270492e-05,
+     4.235296715501779e-06
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -0.00016504049232055987,
+    "ci95": [
+     -0.0030862928410007075,
+     0.002153753763472796
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "ret_thesis": {
+   "role": "metric_sensitivity",
+   "direction": "higher_is_better",
+   "sign_inversion_across_blocks": true,
+   "confirmation_R1r": {
+    "estimate": -1.9377592194825025e-05,
+    "ci95": [
+     -4.8328999157322196e-05,
+     -2.655217663084871e-07
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.ret_thesis"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.0003699960639464311,
+    "ci95": [
+     -0.0010844538318445054,
+     0.0017306137353799477
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.ret_thesis"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -2.1383599774512426e-05,
+    "ci95": [
+     -4.635861152125526e-05,
+     4.31420167334875e-06
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -5.713233461583074e-06,
+    "ci95": [
+     -3.2944945951210146e-05,
+     2.000802412686416e-05
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 3,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "strategic_injected": {
+   "role": "ledger_diagnostic",
+   "direction": "lower_is_better_for_injected_quantity",
+   "sign_inversion_across_blocks": false,
+   "confirmation_R1r": {
+    "estimate": -88133.25,
+    "ci95": [
+     -107522.4921875,
+     -64976.60468750002
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.strategic_injected"
+   },
+   "confirmation_R2r": {
+    "estimate": -99072.25,
+    "ci95": [
+     -112528.8375,
+     -87077.246875
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.strategic_injected"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -89327.5,
+    "ci95": [
+     -103840.04583333334,
+     -67992.86458333334
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 1,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -111784.75,
+    "ci95": [
+     -133362.52916666667,
+     -87610.5916666667
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "terminal_stock": {
+   "role": "inventory_diagnostic",
+   "direction": "context_dependent_not_primary",
+   "sign_inversion_across_blocks": false,
+   "confirmation_R1r": {
+    "estimate": -112037.1875,
+    "ci95": [
+     -130459.7296875,
+     -97796.328125
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.terminal_stock"
+   },
+   "confirmation_R2r": {
+    "estimate": -13446.0,
+    "ci95": [
+     -29312.29375,
+     13532.893749999977
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.terminal_stock"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": -105072.41666666667,
+    "ci95": [
+     -144736.72291666668,
+     -64326.42916666667
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 2,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": -17427.0,
+    "ci95": [
+     -23915.458333333332,
+     -12165.527083333334
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  },
+  "unresolved": {
+   "role": "safety_diagnostic",
+   "direction": "lower_is_better",
+   "sign_inversion_across_blocks": false,
+   "confirmation_R1r": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R1r.comparisons.unresolved"
+   },
+   "confirmation_R2r": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 16,
+    "source": "results/metric_audit/ret_metric_repair_confirmation_v1/result.json::families.R2r.comparisons.unresolved"
+   },
+   "step3_R1r_replay_mpc_v2": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s1_r1r_a/full/rows.json + results/step3_s2_r1r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   },
+   "step3_R2r_replay_mpc_v2": {
+    "estimate": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ],
+    "n_tapes": 12,
+    "positive_tapes": 0,
+    "source": "results/step3_s3_r2r_a/full/rows.json + results/step3_s4_r2r_b/full/rows.json::paired replay_mpc_v2 minus pooled best static; scripts/merge_step3_shards.py::N_BOOT"
+   }
+  }
+ },
+ "supersession": {
+  "date": "2026-08-25",
+  "decision": "docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md",
+  "manuscript_primary_endpoint": "ret_excel_request_snapshot_v2",
+  "overruled_recommendation": "recommended_primary_endpoint above (ret_excel_full_ledger)",
+  "resolution": "All admissible family members, including ret_excel_full_ledger, are published as declared sensitivities; full ledger remains a prospective candidate for a future contract only.",
+  "applied_in": "papers/paper2/05_conclusion.md section 5.2"
+ }
 }
