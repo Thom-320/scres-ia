@@ -58,16 +58,63 @@ belief-MPC are an order of magnitude smaller than the learned advantage over ope
 scheduling: the network arrives at the structured controller's frontier — a single forward pass
 where the MPC runs an online planning enumeration — and stops there.
 
-## 3.5 Prospective replication (Program Q) — [SLOT]
+## 3.5 Prospective replication (Program Q) — executed and adjudicated
 
-A frozen-policy replication contract (`program_q_frozen_policy_replication_v1`) tests, on
-entirely new tapes with the ten policies frozen by hash: (E1) replicated superiority over the
-complete open-loop frontier, and (E2) the neural relation graded as premium, TOST equivalence
-within ±0.01, or a non-inferiority floor. *(Outcome — PASS_PREMIUM / PASS_EQUIVALENT / BOUND /
-STOP — and its table row are inserted here by the build script when the terminal artifact
-exists; the framing of §3.1–3.4 does not depend on which outcome obtains.)* A mandatory
-computational benchmark (per-decision latency, memory, planner cost at equal hardware)
-accompanies the replication to quantify amortization value separately from outcome value.
+The preregistered replication contract (`program_q_frozen_policy_replication_v1`) was executed on
+2026-07-18 on entirely new tapes — N = 256 virgin seeds per cell, seed block `7490001–7490256`, the
+ten policies frozen by SHA — and adjudicated terminally. The evidence is custodied bit-exactly in
+the frozen scientific commit `031d0af`
+(`results/program_q/confirmation_v1_20260718/artifacts/confirmation/`; `evaluation/result.json`
+SHA-256 `62f6fd39…` ✓, `adjudication.json` SHA-256 `e13e17f0…` ✓); its evidential status is fixed by
+the dated PI decision `docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`. Inference is paired
+per-tape contrast with two-way studentized max-t bootstrap over learner seeds and tapes, 10,000
+resamples, comparator reselected inside every resample
+(`evaluation/result.json::inference.method`).
+
+**E1 — superiority over open-loop replicated in 3/3 cells.** H_OL point estimates
+**+0.0795 / +0.0725 / +0.1172**, simultaneous LCB95 **+0.0661 / +0.0623 / +0.1061**
+(`evaluation/result.json::inference.estimates.<cell>::H_OL`); 10/10 learner seeds positive in every
+cell (`::cell_summaries.<cell>.positive_learner_seeds_H_OL`); favorable-tape fractions
+**84.77% / 89.84% / 95.70%** against the reselected best of the complete 65,536-calendar frontier
+(`::cell_summaries.<cell>.favorable_tapes_fraction_vs_open_loop`). In the evaluated contract,
+recurrent feedback control independently replicated state-dependent ReT superiority over every one
+of the 65,536 open-loop calendars (joint design power 0.876; §2.6).
+
+**E2 — equivalence, not premium.** Δ_N point estimates **−0.00159 / −0.00072 / −0.00041** with
+CI95 **[−0.00627, +0.00310] / [−0.00552, +0.00408] / [−0.00268, +0.00186]**
+(`evaluation/result.json::inference.estimates.<cell>::Delta_N`): each interval lies wholly inside
+the preregistered ±0.01 indifference zone (two one-sided bounds), while the neural-premium arm
+failed its ≥ +0.01 threshold in 3/3 cells. The corrected claim, per the PI decision of 2026-08-25:
+
+> **No material neural residual is detected within the preregistered ±0.01 zone against the best
+> of the ten classical configurations *evaluated*.**
+>
+> <!-- "evaluated" is load-bearing (docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md): no universal
+> quantifier over unevaluated controllers; no tail-safe / deployment-safe reading. -->
+
+**The equity guardrail failed, and is reported as such.** The preregistered per-product
+non-inferiority gate (`worst_product_fill` at −0.02) failed in all three cells — simultaneous
+LCB95 **−0.0227 / −0.0257 / −0.0263** versus the classical comparator
+(`evaluation/result.json::guardrail_inference.estimates.<cell>::worst_product_fill::vs_classical`).
+Because that gate is a member of the preregistered composite, the terminal verdict is
+`STOP_Q_NO_REPLICATED_LEARNED_ADAPTATION` (`adjudication.json::verdict`). That label is a
+compound-gate outcome, not a statement about E1 or E2, both of which passed in 3/3 cells. The
+per-cell winning classical configurations were `min_cost_flow__2`, `min_cost_flow__2` and
+`max_pressure__0` (`::cell_summaries.<cell>.best_classical_config`): belief-MPC belongs to the
+classical family, and the primary learner arm remains RecurrentPPO.
+
+**Integrity.** Every integrity gate passes except the guardrail reported above: scheduled-resource
+deviation exactly 0.0 across learners, classical comparators and the full frontier; demand, mass
+and partition ledger residuals exactly zero; feedback and replacement-control gates green
+(`evaluation/result.json::integrity_gates`, `::integrity_diagnostics`). The independent direct
+audit replays **21,696 unique full-DES episodes with 0 failures**, maximum absolute replay error
+**7.77 × 10⁻¹⁶**, over 768 verified shards
+(`direct_audit/independent_full_des_audit.json::direct_unique_replays`, `::failure_count`,
+`::max_absolute_error_by_metric.ration_ret_visible`, `::shard_count`).
+
+A mandatory computational benchmark (per-decision latency median and p95, memory, planner cost at
+equal hardware) ships with the replication artifacts and quantifies amortization value separately
+from outcome value.
 
 ## 3.6 Where the ladder localizes the value
 

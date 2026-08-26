@@ -1,8 +1,11 @@
-# Paper 2 — Methods (draft v1, 2026-07-18)
+# Paper 2 — Methods (draft v1, 2026-07-18; narrative revision 2026-08-25)
 
 *(Companion to `01_introduction_draft.md`. Every protocol element below is frozen in a
 machine-readable contract committed before execution; file pointers are given inline so the
-section can be verified — and later compiled — directly against the repository.)*
+section can be verified — and later compiled — directly against the repository. **Revision
+note (2026-08-25):** Program Q has since been executed and adjudicated (2026-07-18); §2.5–2.6
+state the executed confirmation design. Narrative status is governed by
+`docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`.)*
 
 ## 2.1 Base simulation and primary endpoint
 
@@ -24,6 +27,11 @@ handled by a prespecified dual-semantics sensitivity analysis (both plausible or
 on burned tapes); conclusions are claimed only under the primary convention, with survival of sign
 and practical size reported. Tail behaviour (`CVaR10` of per-order ReT) is reported descriptively
 with confidence intervals and is never a promotion gate; no deployment-safety claim is made.
+The remaining admissible members of the ReT family (`ret_excel_full_ledger`,
+`ret_excel_clipped_0_1` and siblings) are declared sensitivities, never alternative primaries;
+the endpoint × block sign-inversion table is reported in §5.2
+(`results/paper_prep/endpoint_block_inversion_v1/`; PI decision:
+`docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md`).
 
 ## 2.2 Two-product extension (Program O physics)
 
@@ -79,8 +87,11 @@ forbidden and tested. Reward is the terminal canonical ReT only (no shaping). Tr
 Evaluation opens seed blocks in a one-shot ladder: burned development tapes for design, a
 48-tape calibration block (7480001–7480048) opened once, and a virgin confirmation block that
 opens only on a hash-bound authorization chain (calibration manifest → direct full-DES audit →
-adjudication → independent sign-off); in the present study calibration did not authorize
-confirmation and the virgin block remains permanently sealed. The evaluator
+adjudication → independent sign-off). In the present study calibration did not authorize the
+corrective-confirmation block; the replication's own preregistered virgin block was opened once,
+consumed exactly as reserved, and is now closed
+(<!-- status: docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md -->the reservation registry
+preceded execution and does not contradict it). The evaluator
 (`scripts/evaluate_program_o_ret_learner.py`, amendment v1.2) enforces fail-closed gates: (i)
 action-trajectory feedback audit (≥8 distinct calendars per seed, modal fraction ≤ 0.50, ≥2
 varying weeks); (ii) three information-replacement comparators executed and gated per learner
@@ -104,12 +115,18 @@ calibration on entirely new tapes with the ten policies frozen by SHA: E1 replic
 (LCB95(Δ_N) ≥ +0.01), TOST equivalence (CI95(Δ_N) ⊂ [−0.01, +0.01]; equivalence is demonstrated
 by two one-sided bounds, never inferred from non-significance), or a non-inferiority floor
 (LCB95 ≥ −0.01 with ≥8/10 seeds above −0.01). The ±0.01 margin is the program's pre-existing
-practical-effect threshold, frozen before the replication tapes exist. Sample size (128 tapes
-per cell, CRN across cells) was selected by a frozen smallest-N rule from a resampling power
-analysis of the calibration matrices (power 1.000 for E1, 0.806 for E2 at N=128), committed
-before any replication seed. A mandatory computational benchmark (per-decision latency median
-and p95, memory, parameters, planner cost, equal hardware) quantifies amortization value
-separately from outcome value.
+practical-effect threshold, frozen before the replication tapes exist. The executed replication
+design is N = 256 virgin seeds per cell (seed block `7490001–7490256`, CRN across cells), selected
+by a frozen smallest-N rule from a resampling power analysis of the calibration matrices
+(`results/program_q/power_preopen_v5_20260718/artifacts/program_q_power_v1.json::power.256`):
+power 1.000 for E1 and 0.8755 for Δ_N equivalence (joint 0.8755), committed before any replication
+seed opened; bidirectional studentized max-t inference with 10,000 resamples
+(<!-- executed design: results/program_q/confirmation_v1_20260718/artifacts/confirmation/evaluation/result.json::N,
+::bootstrap_resamples -->the earlier N = 128 / power-0.806 figures in this section described a
+superseded draft of the design and were corrected on 2026-08-25 per
+`docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md`). A mandatory computational benchmark (per-decision
+latency median and p95, memory, parameters, planner cost, equal hardware) quantifies amortization
+value separately from outcome value.
 
 ## 2.7 Governance and reproducibility
 
