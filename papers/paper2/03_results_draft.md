@@ -112,9 +112,12 @@ audit replays **21,696 unique full-DES episodes with 0 failures**, maximum absol
 (`direct_audit/independent_full_des_audit.json::direct_unique_replays`, `::failure_count`,
 `::max_absolute_error_by_metric.ration_ret_visible`, `::shard_count`).
 
-A mandatory computational benchmark (per-decision latency median and p95, memory, planner cost at
-equal hardware) ships with the replication artifacts and quantifies amortization value separately
-from outcome value.
+The replication also carries a hardware-matched computational benchmark of learner-versus-planner
+action-selection latency
+(`results/program_q/latency_benchmark_v1/result.json` at frozen commit `031d0af`,
+schema `program_q_hardware_matched_latency_v1`), declared by its own contract as descriptive and
+hardware-specific with no outcome claim; amortization value is quantified separately from outcome
+value.
 
 ## 3.6 Where the ladder localizes the value
 
