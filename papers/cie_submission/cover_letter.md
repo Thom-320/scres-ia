@@ -1,8 +1,11 @@
 # Cover letter — *Computers & Industrial Engineering*
 
-**Status:** draft v1, 2026-08-24. Not for dispatch until the checks in
-`papers/cie_submission/references_checklist.md` and the two open slots in
-`papers/paper2/05_conclusion.md` are closed.
+**Status:** draft v2, 2026-08-25. Not for dispatch until the checks in
+`papers/cie_submission/references_checklist.md` are closed and the one remaining open item in
+`papers/paper2/05_conclusion.md` (the pending CODEX CRN companion analysis, §5.2) is computed.
+Narrative conforms to the two dated PI decisions of 2026-08-25
+(`docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`,
+`docs/ENDPOINT_PRIMARY_DECISION_2026-08-25.md`).
 
 ---
 
@@ -126,8 +129,12 @@ arithmetically a superiority test, so we make no deployment-safety claim; the st
 plans with the correct model and is therefore not deployable, so the honest scope is equivalence to
 a model-aware controller; the scope questions posed to the source author are unanswered, so the
 risk-scenario envelope is labelled a researcher stress extension rather than a validated operating
-range; and the prospective frozen-policy replication is contracted but not yet executed, so Levels
-1–4 are reported as calibration evidence with the virgin block sealed. We would rather a referee
+range; and the preregistered frozen-policy replication was **executed** on virgin tapes (N = 256
+per cell) and is reported exactly as adjudicated: superiority over the open-loop frontier and
+equivalence within ±0.01 held in every cell, while the per-product equity guardrail failed in all
+three, so the preregistered composite returned a STOP verdict — a compound-gate outcome that we
+unpack rather than compress into either "replication succeeded" or "replication failed"
+(`docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`). We would rather a referee
 read these from us than find them.
 
 ## Suggested reviewer expertise
