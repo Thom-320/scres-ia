@@ -58,7 +58,7 @@ belief-MPC are an order of magnitude smaller than the learned advantage over ope
 scheduling: the network arrives at the structured controller's frontier — a single forward pass
 where the MPC runs an online planning enumeration — and stops there.
 
-## 3.5 Prospective replication (Program Q) — executed and adjudicated
+## 3.5 Preregistered replication (Program Q) — executed and adjudicated
 
 The preregistered replication contract (`program_q_frozen_policy_replication_v1`) was executed on
 2026-07-18 on entirely new tapes — N = 256 virgin seeds per cell, seed block `7490001–7490256`, the

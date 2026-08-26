@@ -62,7 +62,7 @@ We contribute: (i) a fully audited full-DES multiproduct decision benchmark with
 65,536-calendar frontier and an exact fungibility null; (ii) the four-level decomposition with
 preregistered, hash-frozen contracts and adversarial custody (sealed one-shot validations,
 information placebos, resource conservation, direct physical replay); (iii) a negative result on
-the neural premium confirmed by an executed prospective replication protocol (superiority over
+the neural premium confirmed by an executed preregistered replication protocol (superiority over
 open-loop plus TOST equivalence to the best of ten classical configurations evaluated); and (iv)
 a computational-amortization analysis:
 where the learned policy matches MPC at a fraction of the per-decision cost, its value is
