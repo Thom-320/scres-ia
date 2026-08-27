@@ -1,0 +1,108 @@
+{
+  "cells": {
+    "rho75_share90": {
+      "best_classical_mean": 0.8331448254930931,
+      "best_fixed_mean": 0.7520357778579101,
+      "brecha_fijo": -0.08110904763518301,
+      "clairvoyant_mean": 0.9122323886808814,
+      "delta_n_recomputed": -0.0015852439830280618,
+      "delta_n_sealed": -0.0015852439830280618,
+      "distinct_argmax_over_tapes": 244,
+      "learner_mean": 0.831559581510065,
+      "margen_ci95": [
+        0.07794367332639572,
+        0.08338642171070697
+      ],
+      "margen_sobre_aprendiz": 0.08067280717081637,
+      "n_calendars": 65536,
+      "n_tapes": 256,
+      "personalisation_component": 0.16019661082297132,
+      "techo_ci95": [
+        0.07575951180528574,
+        0.08248441036629892
+      ],
+      "techo_clarividente": 0.07908756318778831
+    },
+    "rho90_share75": {
+      "best_classical_mean": 0.8658699608922461,
+      "best_fixed_mean": 0.7925980217487183,
+      "brecha_fijo": -0.07327193914352781,
+      "clairvoyant_mean": 0.9187278335007625,
+      "delta_n_recomputed": -0.0007245803665938411,
+      "delta_n_sealed": -0.0007245803665938411,
+      "distinct_argmax_over_tapes": 250,
+      "learner_mean": 0.8651453805256523,
+      "margen_ci95": [
+        0.050866848197031904,
+        0.05628813076650927
+      ],
+      "margen_sobre_aprendiz": 0.05358245297511022,
+      "n_calendars": 65536,
+      "n_tapes": 256,
+      "personalisation_component": 0.12612981175204419,
+      "techo_ci95": [
+        0.04992736364455774,
+        0.055893645378447494
+      ],
+      "techo_clarividente": 0.052857872608516376
+    },
+    "rho90_share90": {
+      "best_classical_mean": 0.8384309807742834,
+      "best_fixed_mean": 0.7207805885137096,
+      "brecha_fijo": -0.11765039226057372,
+      "clairvoyant_mean": 0.9150148475348276,
+      "delta_n_recomputed": -0.00041037188947301573,
+      "delta_n_sealed": -0.00041037188947301573,
+      "distinct_argmax_over_tapes": 204,
+      "learner_mean": 0.8380206088848103,
+      "margen_ci95": [
+        0.0738060937632152,
+        0.08009789542100733
+      ],
+      "margen_sobre_aprendiz": 0.07699423865001731,
+      "n_calendars": 65536,
+      "n_tapes": 256,
+      "personalisation_component": 0.19423425902111802,
+      "techo_ci95": [
+        0.07296071937757351,
+        0.08019730296295786
+      ],
+      "techo_clarividente": 0.0765838667605443
+    }
+  },
+  "cells_closed": [],
+  "cells_learner_at_ceiling": [],
+  "contract_path": "docs/PREREGISTRO_TECHO_CLARIVIDENTE_CONTROL_2026-08-27.md",
+  "created_at": "2026-08-27T22:34:09.895628+00:00",
+  "endpoint": "ret_visible",
+  "falsifiers": {
+    "f1_anchors_reproduce_sealed_delta_n": {
+      "max_abs_error": 0.0,
+      "passed": true,
+      "tolerance": 1e-09,
+      "why_it_can_fail": "if the panel I read is not the one that produced the sealed verdict, I am not measuring this lane's ceiling"
+    },
+    "f2_clairvoyant_argmax_varies": {
+      "distinct_argmax_by_cell": {
+        "rho75_share90": 244,
+        "rho90_share75": 250,
+        "rho90_share90": 204
+      },
+      "passed": true,
+      "why_it_can_fail": "if every tape picks the same calendar, clairvoyance buys nothing beyond the best fixed calendar and the ceiling collapses to brecha_fijo"
+    },
+    "f3_inflation_disclosed": {
+      "computed": true,
+      "gate0_delta_bias_reference": [
+        0.11855,
+        0.17552
+      ],
+      "note": "mean_t[max_k] is an IN-SAMPLE maximum over 65,536 calendars and is therefore inflated. Gate-0 measured that inflation in this same physics at Delta_bias +0.119 to +0.176. This is a disclosure, not a test: it cannot fail."
+    }
+  },
+  "schema_version": "control_ceiling_v1",
+  "scope": "READ_ONLY_ON_CONSUMED_PANELS_NO_SEEDS_NO_TRAINING",
+  "sesoi": 0.01,
+  "verdict": "NOT_CLOSED",
+  "verdict_note": "NOT_CLOSED is NOT a positive: it means an inflated upper bound was not tight enough to close the lane, and deciding requires the Gate-0 style selection/evaluation split."
+}
