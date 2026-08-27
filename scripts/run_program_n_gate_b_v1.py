@@ -268,6 +268,29 @@ def main() -> int:
     arms.extend(WIDENED)
     arms.extend(WIDENED_LAGGED)
     per_fold = {m: [] for m in arms}
+    # Second resolution, added 2026-08-27. grouped_folds puts every seed in
+    # exactly one test fold, so each seed yields exactly one held-out score.
+    # Those scores are independent across seeds; CV folds are not, because
+    # their training sets overlap. The power audit showed the fold unit made
+    # every interval ~33% too narrow (Nadeau-Bengio) and left MDE80 above the
+    # SESOI in 12 of 12 architecture contrasts.
+    per_seed: dict[str, dict[int, float]] = {m: {} for m in arms}
+    seed_of_fold: dict[int, list[int]] = {}
+
+    def record(name, te_idx, pred, fold_index=None):
+        """Score one arm on one test fold at both resolutions."""
+        pred = np.asarray(pred, dtype=float)
+        value = r2(y[te_idx], pred)
+        per_fold[name].append(value)
+        gte = g[te_idx]
+        for grp in np.unique(gte):
+            mask = gte == grp
+            if int(mask.sum()) >= 2:
+                per_seed[name][int(grp)] = r2(y[te_idx][mask], pred[mask])
+        if fold_index is not None:
+            seed_of_fold.setdefault(int(fold_index),
+                                    sorted(int(v) for v in np.unique(gte)))
+        return value
     chosen = {"mlp_tuned": [], "kan_tuned": [], "recurrent": []}
     rng = np.random.default_rng(20260809)
 
@@ -310,13 +333,13 @@ def main() -> int:
             cell_mean[key] = float(y[[i for i in tr if cell_key[i] == key]].mean())
         y_cm = np.array([cell_mean.get(cell_key[i], float(y[tr].mean())) for i in te])
 
-        per_fold["constant"].append(r2(y[te], np.full(len(te), y[tr].mean())))
-        per_fold["linear_additive"].append(r2(y[te], ols(x_base[tr], y[tr], x_base[te])))
-        per_fold["linear_interactions"].append(r2(y[te], ols(x_rich[tr], y[tr], x_rich[te])))
-        per_fold["spline_buffer"].append(
-            r2(y[te], ols(spline_features(list(tr)), y[tr], spline_features(list(te)))))
-        per_fold["tree"].append(r2(y[te], tree_predict(x_base[tr], y[tr], x_base[te])))
-        per_fold["train_cell_mean_comparator"].append(r2(y[te], y_cm))
+        record("constant", te, np.full(len(te), y[tr].mean()), fi)
+        record("linear_additive", te, ols(x_base[tr], y[tr], x_base[te]))
+        record("linear_interactions", te, ols(x_rich[tr], y[tr], x_rich[te]))
+        record("spline_buffer", te,
+               ols(spline_features(list(tr)), y[tr], spline_features(list(te))))
+        record("tree", te, tree_predict(x_base[tr], y[tr], x_base[te]))
+        record("train_cell_mean_comparator", te, y_cm)
 
         # The widened non-neural class. Five reviews independently said the declared class --
         # constant, additive, interactions, spline, hand-rolled tree -- was too narrow to support
@@ -324,20 +347,21 @@ def main() -> int:
         # and the same folds, so only the model family differs. Their hyperparameters are fixed
         # here, not searched, which UNDERSTATES them and is the conservative direction.
         for name in WIDENED:
-            per_fold[name].append(r2(y[te], widened_predict(name, x_base[tr], y[tr], x_base[te])))
+            record(name, te, widened_predict(name, x_base[tr], y[tr], x_base[te]))
         for name in WIDENED_LAGGED:
             pass  # filled below, once the lagged design matrix exists
 
         pred, cfg = tuned_predict("mlp", x_base[tr], y[tr], x_base[te], 3000 + fi, rng)
-        per_fold["mlp_tuned"].append(r2(y[te], pred))
+        record("mlp_tuned", te, pred)
         chosen["mlp_tuned"].append(cfg)
         if not args.skip_kan:
             try:
                 pk, ck = tuned_predict("kan", x_base[tr], y[tr], x_base[te], 3000 + fi, rng)
-                per_fold["kan_tuned"].append(r2(y[te], pk))
+                record("kan_tuned", te, pk)
                 chosen["kan_tuned"].append(ck)
             except Exception as exc:                                   # pragma: no cover
                 per_fold["kan_tuned"].append(float("nan"))
+                # no prediction exists, so no seed can be scored
                 print(f"  KAN no disponible ({exc})", flush=True)
 
         # The lagged information set, declared: previous configuration's resilience, or the
@@ -345,12 +369,12 @@ def main() -> int:
         lag = np.array([y[prev_of[i]] if prev_of.get(i) is not None else float(y[tr].mean())
                         for i in range(len(index))]).reshape(-1, 1)
         x_lag = np.hstack([x_base, lag])
-        per_fold["linear_lagged"].append(r2(y[te], ols(x_lag[tr], y[tr], x_lag[te])))
+        record("linear_lagged", te, ols(x_lag[tr], y[tr], x_lag[te]))
         for name in WIDENED_LAGGED:
             base = name.replace("_lagged", "")
-            per_fold[name].append(r2(y[te], widened_predict(base, x_lag[tr], y[tr], x_lag[te])))
+            record(name, te, widened_predict(base, x_lag[tr], y[tr], x_lag[te]))
         pr, cr = tuned_predict("mlp", x_lag[tr], y[tr], x_lag[te], 5000 + fi, rng)
-        per_fold["recurrent"].append(r2(y[te], pr))
+        record("recurrent", te, pr)
         chosen["recurrent"].append(cr)
         print(f"  fold {fi} listo ({time.perf_counter() - started:.0f}s)", flush=True)
 
@@ -516,6 +540,17 @@ def main() -> int:
         "endpoint": ("held_out_r2_on_R_cobb_douglas" if args.endpoint == "cobb_douglas"
                      else "held_out_r2_on_ret_excel_risk_conditional__LEGACY_SENSITIVITY"),
         "seeds": seeds,
+        "per_seed": {m: {str(k): v for k, v in sorted(d.items())}
+                     for m, d in per_seed.items()},
+        "seed_of_fold": {str(k): v for k, v in sorted(seed_of_fold.items())},
+        "resampling_unit": "seed",
+        "resampling_unit_note": (
+            "per_seed is the preregistered unit of analysis: grouped_folds puts "
+            "each seed in exactly one test fold, so the scores are independent "
+            "across seeds. per_fold is retained only for comparability with the "
+            "sealed 8-seed run, whose overlapping training sets made every "
+            "interval about 33% too narrow."
+        ),
         "sesoi": SESOI, "primary_baseline": PRIMARY,
         "grid": GRID, "init_seeds": INIT_SEEDS, "max_steps": MAX_STEPS, "patience": PATIENCE,
         "held_out_r2_mean": means, "per_fold": per_fold, "chosen_hyperparameters": chosen,
