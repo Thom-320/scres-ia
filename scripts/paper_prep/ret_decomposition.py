@@ -703,9 +703,15 @@ def analyze_cell(cell: str, cell_ledgers: dict[str, Any],
     best_cl_position = cl_ids.index(best_cl_config)
 
     reference_checks = {
+        # H_OL is the learner's advantage OVER the best open-loop calendar, the
+        # same learner-minus-comparator order Delta_N uses below. Verified
+        # against the sealed evaluation artifact: this form reproduces the
+        # sealed point estimate to 0.000e+00 in all three cells, while the
+        # reverse order is off by exactly 2*H_OL.
         "h_ol_identity":
-            abs(float(scalars["open_loop__ret_visible"][:, best_ol_index].mean())
-                - float(scalars["learner__ret_visible"].mean()) - h_ol_point) <= 1e-12,
+            abs(float(scalars["learner__ret_visible"].mean())
+                - float(scalars["open_loop__ret_visible"][:, best_ol_index].mean())
+                - h_ol_point) <= 1e-12,
         "delta_n_identity":
             abs(float(scalars["learner__ret_visible"].mean())
                 - float(scalars["classical__ret_visible"][:, best_cl_position].mean())
