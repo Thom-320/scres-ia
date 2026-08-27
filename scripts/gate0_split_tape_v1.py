@@ -786,12 +786,24 @@ def run_replays_f4(seed_map: dict[str, Any]) -> dict[str, Any]:
     report["total_tapes"] = len(all_tapes)
     report["minimum_required_replays"] = minimum
     replay_seeds = [int(s) for s in seed_map["instrument"]["replay_f4_seeds"]]
+    # The frozen map draws these from `instrument_pool` and EXPLICITLY skips any
+    # seed already assigned to tapes A or B (build_seed_assignment_map), so they
+    # are disjoint from `all_tapes` by construction.  Intersecting the two -- as
+    # this function used to -- yields the empty set and a vacuous pass.  Replay
+    # the seeds the map lists.
+    cells_in_frozen_order = list(seed_map["cells"])
     chosen: list[tuple[str, dict[str, Any], int, str]] = []
-    for seed in replay_seeds:
-        for entry in all_tapes:
-            if entry[2] == seed:
-                chosen.append(entry)
-    report["replay_seed_selection"] = "frozen assignment map instrument.replay_f4_seeds"
+    for position, seed in enumerate(replay_seeds):
+        # The map fixes WHICH seeds are replayed but not in which cell's physics;
+        # we resolve that with a deterministic round robin over the frozen cell
+        # order, so every cell is exercised and the choice cannot depend on any
+        # outcome.  Declared as our disambiguation of a gap in the frozen map.
+        cell = cells_in_frozen_order[position % len(cells_in_frozen_order)]
+        chosen.append((cell["cell_id"], cell, int(seed), "instrument_pool"))
+    report["replay_seed_selection"] = (
+        "frozen assignment map instrument.replay_f4_seeds; cell assigned by "
+        "deterministic round robin over the frozen cell order"
+    )
     calendars = full_action_calendars()
     probe_indices = [0, 1, 255, FRONTIER_SIZE // 2, FRONTIER_SIZE - 1]
     for cell_id, cell, seed, arm in chosen[:minimum]:
@@ -838,6 +850,18 @@ def run_replays_f4(seed_map: dict[str, Any]) -> dict[str, Any]:
     report["fraction_of_tapes_replayed"] = (
         report["replays_run"] / len(all_tapes) if all_tapes else 0.0
     )
+    # A falsifier that reports success without evidence is not a falsifier.
+    # Running fewer replays than the preregistered minimum is itself a failure.
+    if report["replays_run"] < minimum:
+        report["passed"] = False
+        report["insufficient_replays"] = {
+            "ran": report["replays_run"],
+            "required": minimum,
+            "note": (
+                "F4 cannot pass without executing at least the preregistered "
+                "minimum number of deterministic replays"
+            ),
+        }
     return report
 
 

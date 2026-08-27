@@ -691,7 +691,7 @@ def analyze_cell(cell: str, cell_ledgers: dict[str, Any],
 
     # ---- Reference anchors --------------------------------------------------
     evaluation = json.loads(
-        (SHARDS_ROOT.parent / "confirmation/evaluation/result.json").read_text()
+        (SHARDS_ROOT.parent / "evaluation/result.json").read_text()
     )
     summaries = evaluation["cell_summaries"][cell]
     estimates = evaluation["inference"]["estimates"]
