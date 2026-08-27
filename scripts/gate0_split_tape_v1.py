@@ -792,6 +792,23 @@ def run_replays_f4(seed_map: dict[str, Any]) -> dict[str, Any]:
     # this function used to -- yields the empty set and a vacuous pass.  Replay
     # the seeds the map lists.
     cells_in_frozen_order = list(seed_map["cells"])
+    # The signed preregistration's F4 reads: "reproducir >= 10 % de los tapes
+    # (muestreados antes de correr) contra el pipeline".  The frozen map's
+    # instrument-pool seeds are NOT tapes A or B, so they do not literally
+    # satisfy that clause.  Add a supplementary pass over a deterministic >=10%
+    # sample of the real evaluation tapes, ordered by the same digest_json rule
+    # the map itself uses, so the selection is fixed before any outcome exists.
+    evaluation_minimum = int(np.ceil(0.10 * len(all_tapes)))
+    evaluation_sample = sorted(
+        all_tapes,
+        key=lambda entry: int(digest_json(["f4_evaluation_tape", entry[2]])[:12], 16),
+    )[:evaluation_minimum]
+    report["evaluation_tape_replays_required"] = evaluation_minimum
+    report["evaluation_tape_selection"] = (
+        "deterministic digest_json ordering over tapes A+B, >=10% per the signed "
+        "preregistration clause F4"
+    )
+
     chosen: list[tuple[str, dict[str, Any], int, str]] = []
     for position, seed in enumerate(replay_seeds):
         # The map fixes WHICH seeds are replayed but not in which cell's physics;
@@ -804,9 +821,10 @@ def run_replays_f4(seed_map: dict[str, Any]) -> dict[str, Any]:
         "frozen assignment map instrument.replay_f4_seeds; cell assigned by "
         "deterministic round robin over the frozen cell order"
     )
+    chosen = chosen[:minimum] + list(evaluation_sample)
     calendars = full_action_calendars()
     probe_indices = [0, 1, 255, FRONTIER_SIZE // 2, FRONTIER_SIZE - 1]
-    for cell_id, cell, seed, arm in chosen[:minimum]:
+    for cell_id, cell, seed, arm in chosen:
         sched = scheduler()
         skeleton_transducer = skeleton_for(cell, seed)
         panel = simulate_full_des_frontier(
@@ -852,6 +870,20 @@ def run_replays_f4(seed_map: dict[str, Any]) -> dict[str, Any]:
     )
     # A falsifier that reports success without evidence is not a falsifier.
     # Running fewer replays than the preregistered minimum is itself a failure.
+    on_evaluation_tapes = sum(
+        1 for r in report["replays"] if r.get("arm") in ("A", "B")
+    )
+    report["evaluation_tape_replays_run"] = on_evaluation_tapes
+    if on_evaluation_tapes < report.get("evaluation_tape_replays_required", 0):
+        report["passed"] = False
+        report["insufficient_evaluation_tape_replays"] = {
+            "ran": on_evaluation_tapes,
+            "required": report.get("evaluation_tape_replays_required"),
+            "note": (
+                "the signed preregistration requires replaying >=10% of the "
+                "evaluation tapes themselves, not only instrument-pool seeds"
+            ),
+        }
     if report["replays_run"] < minimum:
         report["passed"] = False
         report["insufficient_replays"] = {
