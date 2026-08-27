@@ -1,0 +1,28 @@
+brazos con puntuacion: 17 de 18
+sin puntuacion (instrumento): ['kan_tuned']
+n semillas pareadas: 112
+
+=== F1: MDE80 medido desde la sd POR SEMILLA ===
+  mlp_tuned    vs random_forest_lagged     sd=0.0775  MDE80=0.0205  <= SESOI OK
+  kan_tuned    SIN DATOS
+  recurrent    vs random_forest_lagged     sd=0.0316  MDE80=0.0084  <= SESOI OK
+
+=== ESTIMANDO PREREGISTRADO (comparador reseleccionado en cada remuestreo) ===
+  mlp_tuned    Delta=-0.1503  CI95=[-0.1657, -0.1362]  -> UNDETERMINED
+               comparador reseleccionado: random_forest_lagged 100%
+  kan_tuned    UNDETERMINED_NO_INSTRUMENT (el brazo no produjo prediccion)
+  recurrent    Delta=-0.0298  CI95=[-0.0356, -0.0240]  -> EQUIVALENT
+               comparador reseleccionado: random_forest_lagged 100%
+
+=== VEREDICTO GLOBAL ===
+  UNDETERMINED   {'mlp_tuned': 'UNDETERMINED', 'kan_tuned': 'UNDETERMINED_NO_INSTRUMENT', 'recurrent': 'EQUIVALENT'}
+
+=== contexto: R2 medio por brazo ===
+  random_forest_lagged         0.9509
+  gaussian_process_lagged      0.9505
+  gbdt_lagged                  0.9500
+  kernel_ridge_lagged          0.9482
+  recurrent                    0.9211 [NEURAL]
+  gaussian_process             0.8303
+  train_cell_mean_comparator   0.8299
+  random_forest                0.8298
