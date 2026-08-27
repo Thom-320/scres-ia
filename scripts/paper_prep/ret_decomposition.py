@@ -457,7 +457,7 @@ def bootstrap_max_t(cell_stats: dict[str, dict[str, np.ndarray]],
         learner = stats["learner"]        # (10 seeds, 256 tapes)
         ol_matrix = stats["open_loop"]    # (256 tapes, 65536 calendars)
         cl_matrix = stats["classical"]    # (256 tapes, 10 configs)
-        base_cl = int(np.argmax(cl_matrix.mean(axis=1)))
+        base_cl = int(np.argmax(cl_matrix.mean(axis=0)))  # axis=0: mean over tapes -> per-config means, matching ol_matrix.mean(axis=0) above. axis=1 gave a TAPE index used to index the 10-wide config axis.
         offset = 2 * cell_index
         points[offset] = learner.mean() - ol_matrix.mean(axis=0).max()
         points[offset + 1] = learner.mean() - cl_matrix[:, base_cl].mean()

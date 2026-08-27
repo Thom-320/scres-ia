@@ -1,0 +1,368 @@
+{
+  "bootstrap": {
+    "claim_limit": "inference on the Delta scale only; the decomposition itself is descriptive/mechanistic per the preregistration",
+    "estimates": {
+      "rho75_share90::learner_vs_bestclassical": {
+        "estimate": -0.0015852439830280618,
+        "lcb95": -0.006405611434831788,
+        "se": 0.0015727909211940261,
+        "ucb95_same_critical": 0.0032351234687756645
+      },
+      "rho75_share90::learner_vs_openloop": {
+        "estimate": 0.0795238036521545,
+        "lcb95": 0.06555363494948048,
+        "se": 0.004558190785827519,
+        "ucb95_same_critical": 0.09349397235482852
+      },
+      "rho90_share75::learner_vs_bestclassical": {
+        "estimate": -0.0007245803665938411,
+        "lcb95": -0.005609854095112967,
+        "se": 0.001593968560402483,
+        "ucb95_same_critical": 0.004160693361925285
+      },
+      "rho90_share75::learner_vs_openloop": {
+        "estimate": 0.07254735877693419,
+        "lcb95": 0.06195467022458179,
+        "se": 0.003456185561111475,
+        "ucb95_same_critical": 0.08314004732928659
+      },
+      "rho90_share90::learner_vs_bestclassical": {
+        "estimate": -0.00041037188947301573,
+        "lcb95": -0.002746997299649541,
+        "se": 0.0007623948315354578,
+        "ucb95_same_critical": 0.0019262535207035096
+      },
+      "rho90_share90::learner_vs_openloop": {
+        "estimate": 0.1172400203711016,
+        "lcb95": 0.10550390304014437,
+        "se": 0.003829263841969237,
+        "ucb95_same_critical": 0.12897613770205882
+      }
+    },
+    "resamples": 10000,
+    "rng_phrase": "paper-prep-ret-decomposition-v1",
+    "scheme": "two-way (learner seeds x tapes); open-loop calendar and classical configuration reselected inside every resample",
+    "simultaneous_critical_max_t_95": 3.06484948943132
+  },
+  "cells": {
+    "rho75_share90": {
+      "branch_composition": {
+        "branch_shares_equal_across_arms": true,
+        "counts": {
+          "classical_ten": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 120509,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 120399,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 667591430,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          }
+        },
+        "shares_by_arm": {
+          "classical_ten": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          }
+        }
+      },
+      "comparators": {
+        "best_classical_config": "min_cost_flow__2",
+        "best_open_loop_calendar": [
+          2,
+          1,
+          1,
+          2,
+          1,
+          1,
+          2,
+          1
+        ],
+        "best_open_loop_index": 38489
+      },
+      "decomposition": {
+        "learner_vs_bestclassical": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": -0.0015852439830281728,
+          "f3_computed_and_checked": true,
+          "intra_regimen": -0.0015852439830281728,
+          "shares_equal_across_arms": true
+        },
+        "learner_vs_openloop": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": 0.07952380365215483,
+          "f3_computed_and_checked": true,
+          "intra_regimen": 0.07952380365215483,
+          "shares_equal_across_arms": true
+        },
+        "pairing": "per-tape learner seed-mean vs comparator on shared tapes"
+      },
+      "delta_n_point": -0.0015852439830280618,
+      "f2_max_abs_recomputed_vs_shard": {
+        "classical": 0.0,
+        "learner": 0.0,
+        "open_loop": 0.0
+      },
+      "h_ol_point": 0.07952380365215495,
+      "reference_checks": {
+        "best_classical_position_found": true,
+        "best_open_loop_matches_shard_argmax_mean": true,
+        "delta_n_identity": true,
+        "h_ol_identity": true
+      }
+    },
+    "rho90_share75": {
+      "branch_composition": {
+        "branch_shares_equal_across_arms": true,
+        "counts": {
+          "classical_ten": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 121553,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 121292,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 677366631,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          }
+        },
+        "shares_by_arm": {
+          "classical_ten": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          }
+        }
+      },
+      "comparators": {
+        "best_classical_config": "min_cost_flow__2",
+        "best_open_loop_calendar": [
+          2,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "best_open_loop_index": 39252
+      },
+      "decomposition": {
+        "learner_vs_bestclassical": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": -0.0007245803665938411,
+          "f3_computed_and_checked": true,
+          "intra_regimen": -0.0007245803665938411,
+          "shares_equal_across_arms": true
+        },
+        "learner_vs_openloop": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": 0.07254735877693397,
+          "f3_computed_and_checked": true,
+          "intra_regimen": 0.07254735877693397,
+          "shares_equal_across_arms": true
+        },
+        "pairing": "per-tape learner seed-mean vs comparator on shared tapes"
+      },
+      "delta_n_point": -0.0007245803665938411,
+      "f2_max_abs_recomputed_vs_shard": {
+        "classical": 0.0,
+        "learner": 0.0,
+        "open_loop": 0.0
+      },
+      "h_ol_point": 0.07254735877693397,
+      "reference_checks": {
+        "best_classical_position_found": true,
+        "best_open_loop_matches_shard_argmax_mean": true,
+        "delta_n_identity": true,
+        "h_ol_identity": true
+      }
+    },
+    "rho90_share90": {
+      "branch_composition": {
+        "branch_shares_equal_across_arms": true,
+        "counts": {
+          "classical_ten": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 120985,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 120855,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0,
+            "excel_fill_rate": 606903783,
+            "excel_recovery": 0,
+            "excel_risk_no_recovery": 0
+          }
+        },
+        "shares_by_arm": {
+          "classical_ten": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "learner_per_seed": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          },
+          "open_loop_all_calendars": {
+            "excel_autotomy": 0.0,
+            "excel_fill_rate": 1.0,
+            "excel_recovery": 0.0,
+            "excel_risk_no_recovery": 0.0
+          }
+        }
+      },
+      "comparators": {
+        "best_classical_config": "max_pressure__0",
+        "best_open_loop_calendar": [
+          2,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "best_open_loop_index": 37120
+      },
+      "decomposition": {
+        "learner_vs_bestclassical": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": -0.00041037188947301573,
+          "f3_computed_and_checked": true,
+          "intra_regimen": -0.00041037188947301573,
+          "shares_equal_across_arms": true
+        },
+        "learner_vs_openloop": {
+          "composition": 0.0,
+          "composition_kitagawa": 0.0,
+          "composition_oaxaca": 0.0,
+          "delta": 0.1172400203711007,
+          "f3_computed_and_checked": true,
+          "intra_regimen": 0.1172400203711007,
+          "shares_equal_across_arms": true
+        },
+        "pairing": "per-tape learner seed-mean vs comparator on shared tapes"
+      },
+      "delta_n_point": -0.00041037188947301573,
+      "f2_max_abs_recomputed_vs_shard": {
+        "classical": 0.0,
+        "learner": 0.0,
+        "open_loop": 0.0
+      },
+      "h_ol_point": 0.1172400203711007,
+      "reference_checks": {
+        "best_classical_position_found": true,
+        "best_open_loop_matches_shard_argmax_mean": true,
+        "delta_n_identity": true,
+        "h_ol_identity": true
+      }
+    }
+  },
+  "created_utc": "2026-08-27T06:24:21.030649+00:00",
+  "estimand": "twofold-average Kitagawa/Oaxaca split of ReT deltas",
+  "mechanistic_finding": {
+    "consequence": "The composition component is exactly zero by construction in both pairs and all three cells (falsifier F3 satisfied); the entire Delta falls into the intra-regimen component.",
+    "falsifiers_triggered": {
+      "F1_not_computable": false,
+      "F2_scalar_mismatch": false,
+      "F3_nonzero_composition": false
+    },
+    "risk_off": true,
+    "statement": "Program Q confirmation physics carries empty skeleton.risk_events; no order of any arm on any tape is risk-active, so every visible row scores the excel_fill_rate branch and the composition share vector is identical across arms in each cell."
+  },
+  "preregistration": "contracts/paper_prep/ret_decomposition_preregistration_v1.json",
+  "schema_version": "paper_prep_ret_decomposition_results_v1",
+  "scope": {
+    "cells": [
+      "rho75_share90",
+      "rho90_share75",
+      "rho90_share90"
+    ],
+    "freight_physics_mode": "fixed_clock_physical_v1",
+    "learner_seeds": [
+      8101,
+      8102,
+      8103,
+      8104,
+      8105,
+      8106,
+      8107,
+      8108,
+      8109,
+      8110
+    ],
+    "scheduler": "centered_minority_v1",
+    "shards_root": "/home/ubuntu/program_o_runs/program-q-confirmation-v1-20260718/artifacts/confirmation/shards",
+    "tapes": [
+      7490001,
+      7490256
+    ]
+  }
+}
