@@ -1,0 +1,149 @@
+{
+  "cells": {
+    "rho75_share90": {
+      "G_naive": 0.07667411628269727,
+      "G_split": -0.08354628475104386,
+      "G_split_ci95": [
+        -0.10321153214296838,
+        -0.07448827947610723
+      ],
+      "G_split_crossfit_k8": -0.08743384617226466,
+      "bias_covers_ceiling": true,
+      "ceiling_from_control_ceiling_v1": 0.07908756318778831,
+      "delta_bias": 0.16022040103374113,
+      "delta_bias_ci95": [
+        0.150942813983846,
+        0.17944209874992736
+      ],
+      "k_star_A": 26201,
+      "n_A": 128,
+      "n_B": 128,
+      "n_tapes": 256
+    },
+    "rho90_share75": {
+      "G_naive": 0.05198212565048943,
+      "G_split": -0.07941156210535927,
+      "G_split_ci95": [
+        -0.09645209339621592,
+        -0.06809737186505044
+      ],
+      "G_split_crossfit_k8": -0.07587456944386241,
+      "bias_covers_ceiling": true,
+      "ceiling_from_control_ceiling_v1": 0.052857872608516376,
+      "delta_bias": 0.1313936877558487,
+      "delta_bias_ci95": [
+        0.12012416135702306,
+        0.14752988511040854
+      ],
+      "k_star_A": 26283,
+      "n_A": 128,
+      "n_B": 128,
+      "n_tapes": 256
+    },
+    "rho90_share90": {
+      "G_naive": 0.07657003704444942,
+      "G_split": -0.14030732825012715,
+      "G_split_ci95": [
+        -0.16317156319734494,
+        -0.11027288545218582
+      ],
+      "G_split_crossfit_k8": -0.12646256429715963,
+      "bias_covers_ceiling": true,
+      "ceiling_from_control_ceiling_v1": 0.0765838667605443,
+      "delta_bias": 0.21687736529457657,
+      "delta_bias_ci95": [
+        0.18504327461696796,
+        0.2384435610631188
+      ],
+      "k_star_A": 20480,
+      "n_A": 128,
+      "n_B": 128,
+      "n_tapes": 256
+    }
+  },
+  "contract_path": "docs/PREREGISTRO_SPLIT_PROGRAM_Q_2026-08-27.md",
+  "contract_sha256": "1821af8b2d31419ac5160af5843c3a7c849300d6c2368d5778ce3cca0b476f5a",
+  "created_at": "2026-08-27T22:39:39.565299+00:00",
+  "falsifiers": {
+    "f1_anchor_reproduces_sealed_delta_n": {
+      "max_abs_error": 5.551115123125783e-16,
+      "passed": true,
+      "tolerance": 1e-09
+    },
+    "f2_partition_is_balanced": {
+      "passed": false,
+      "per_cell": {
+        "rho75_share90": {
+          "abs_diff": 0.0036836458938998007,
+          "argmax_c_A": 5,
+          "argmax_c_B": 8,
+          "cl_A": 0.8357380270587534,
+          "cl_B": 0.8320543811648536,
+          "same_argmax": false
+        },
+        "rho90_share75": {
+          "abs_diff": 0.0011886963429219577,
+          "argmax_c_A": 5,
+          "argmax_c_B": 2,
+          "cl_A": 0.8675706908300606,
+          "cl_B": 0.8663819944871386,
+          "same_argmax": false
+        },
+        "rho90_share90": {
+          "abs_diff": 0.0002513728210400412,
+          "argmax_c_A": 5,
+          "argmax_c_B": 2,
+          "cl_A": 0.8392337121456405,
+          "cl_B": 0.8389823393246004,
+          "same_argmax": false
+        }
+      }
+    },
+    "f3_crossfit_agrees_with_single_split": {
+      "passed": true,
+      "per_cell": {
+        "rho75_share90": {
+          "abs_diff": 0.003887561421220792,
+          "g_split": -0.08354628475104386,
+          "g_split_crossfit": -0.08743384617226466
+        },
+        "rho90_share75": {
+          "abs_diff": 0.00353699266149686,
+          "g_split": -0.07941156210535927,
+          "g_split_crossfit": -0.07587456944386241
+        },
+        "rho90_share90": {
+          "abs_diff": 0.01384476395296752,
+          "g_split": -0.14030732825012715,
+          "g_split_crossfit": -0.12646256429715963
+        }
+      }
+    },
+    "f4_k_star_A_is_not_the_global_argmax": {
+      "note": "informative either way; a match would mean the split did not actually separate selection from evaluation",
+      "passed": true,
+      "per_cell": {
+        "rho75_share90": {
+          "differs": true,
+          "k_star_A": 26201,
+          "k_star_all": 38489
+        },
+        "rho90_share75": {
+          "differs": true,
+          "k_star_A": 26283,
+          "k_star_all": 39252
+        },
+        "rho90_share90": {
+          "differs": true,
+          "k_star_A": 20480,
+          "k_star_all": 37120
+        }
+      }
+    }
+  },
+  "schema_version": "q_split_bias_v1",
+  "scope": "READ_ONLY_ON_CONSUMED_PANELS_NO_SEEDS_NO_TRAINING",
+  "scope_note": "G_split bounds picking a FIXED calendar from other tapes' data. It does NOT bound a state-conditioned policy: the learner beats the best fixed calendar by H_OL +0.0795/+0.0725/+0.1172 while calendar selection loses to the best classical.",
+  "sesoi": 0.01,
+  "verdict": "CEILING_IS_BIAS"
+}
