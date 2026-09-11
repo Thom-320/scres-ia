@@ -1,167 +1,92 @@
-# SCRES-IA: Supply Chain Resilience Simulation
+# SCRES: supply-chain simulation and policy evaluation
 
-SCRES-IA rebuilds the Military Food Supply Chain (MFSC) simulation from
-Garrido-Rios (2017) and extends it with reinforcement-learning experiments. The
-repository combines a SimPy discrete-event simulation, Gymnasium-compatible
-environments, validation scripts, and benchmark training runs for studying
-supply-chain resilience as a capability that can be learned under disruption.
+**When does an apparent reinforcement-learning gain survive a fair comparison?**
 
-## Research Contribution
+SCRES contains a Python/SimPy reconstruction of a thirteen-operation supply-chain
+model, Gymnasium environments, policy experiments and evaluation tools. It is
+research by Thomas Chisica with Alexander Garrido, building on the MFSC model
+described in Garrido-Rios (2017). The reconstruction and its extensions should not
+be confused with complete behavioral replication of the source model.
 
-The project has two layers:
+The most useful entry point is the **evaluation work**, not a training curve:
+which decisions each policy is allowed to make, how calibration is separated
+from evaluation, and which conclusions remain after stronger controls.
 
-- a reproducible Python reconstruction of the original MFSC discrete-event
-  model;
-- a hybrid simulation-learning framework where policies can be trained and
-  compared under controlled disruption scenarios.
+## Read in five minutes
 
-The current manuscript lane focuses on resilience reward design, shift-control
-experiments, stochastic processing times, and benchmark comparators tied back to
-the thesis-aligned simulation outputs.
+| What to inspect | Why it matters |
+| --- | --- |
+| [Track B same-contract verdict](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md) | Across 10 PPO checkpoints and 60 held-out streams, a calibration-selected constant policy with the same decision rights outperformed canonical PPO. Earlier gains depended on a restricted comparator family. |
+| [Later Program Q evidence status](docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md) | A separate contract found feedback value over open-loop calendars, but no material neural premium over the evaluated classical controllers; the per-product guardrail failed. This is not a deployment-safety claim. |
+| [Reproducibility and artifact map](docs/REPRODUCIBILITY.md) | Maps implementations, configurations and stored artifacts. Read each artifact with its dated verdict. |
 
-## Visual Evidence
+These are **different experiments with different contracts**, not interchangeable
+estimates of a single RL effect. The results above are documented evidence, not
+new experiments performed by updating this README. Large custody bundles are
+not all included in GitHub, so this is not a complete raw-artifact replication
+package for every historical run.
 
-| Learning curve | Disruption timeline | Policy comparison |
-| --- | --- | --- |
-| <img src="docs/artifacts/control_reward/paper_ret_seq_k020_500k/proof_of_learning/learning_curve.png" alt="PPO learning curve for the paper-facing reward setting" width="280"> | <img src="docs/artifacts/control_reward/paper_ret_seq_k020_500k/proof_of_learning/shift_vs_disruption_timeline.png" alt="Shift-control policy timeline under disruption" width="280"> | <img src="docs/meeting_packages/garrido_2026-03-11/04_policy_comparison.png" alt="Policy comparison summary for Garrido meeting package" width="280"> |
+## Contribution and scope
 
-## Repository Structure
+- Simulator reconstruction and explicit environment/action interfaces.
+- Policy-comparison experiments with separate calibration and held-out streams.
+- Automated tests, source-model checks and tools for trajectory export.
+- Documentation of comparator mismatches, claim revisions and collaboration interfaces.
 
-```text
-supply_chain/          Core package: config, DES engine, Gymnasium environments
-scripts/               Diagnostic and analysis scripts
-tests/                 Pytest suite
-docs/                  Reproducibility notes, artifact maps, source references
-outputs/               Generated plots, models, logs, reports
-legacy/                Deprecated code kept for reference
-```
+There is no general claim here that PPO beats strong classical policies, that
+resilience has been universally learned, or that an intended manuscript is a
+published paper. Source attribution, physics fidelity, endpoints and decision
+rights are part of the scientific question.
 
-## Recommended Python
+## Repository map
 
-Python `3.11` is recommended for package compatibility.
+| Location | Purpose |
+| --- | --- |
+| [`supply_chain/`](supply_chain/) | DES model, configuration and Gymnasium interfaces |
+| [`scripts/`](scripts/) | Evaluation, diagnostics, export and historical experiment runners |
+| [`tests/`](tests/) | Implementation and claim-integrity checks |
+| [`contracts/`](contracts/) | Explicit experiment specifications |
+| [`results/`](results/) | Tracked result records and audit summaries |
+| [`docs/`](docs/) | Dated methods, verdicts and provenance |
 
-## Setup
+## Setup and checks
+
+Python 3.11 is the documented compatibility target. From a fresh clone:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Colab Imports
-
-For notebooks, clone the repository into a folder named `scresia` and import
-from the repository-root namespace:
-
-```python
-!git clone https://github.com/Thom-320/scres-ia.git /content/scresia
-
-import sys
-sys.path.insert(0, "/content")
-
-from scresia.supply_chain import MFSCSimulation
-from scresia.supply_chain.config import SIMULATION_HORIZON
-from scresia.supply_chain.external_env_interface import make_track_b_env
-```
-
-If the notebook is already running from inside the repository directory, the
-same `scresia.*` imports are supported by the local compatibility namespace.
-
-## Run Simulation Baselines
+Inspect the relevant test files before choosing a test scope. The full suite is
+not a promise of a quick smoke run:
 
 ```bash
-# Deterministic baseline
-python run_static.py --det-only --year-basis thesis
-
-# Stochastic baseline
-python run_static.py --sto-only --year-basis thesis --seed 42
-
-# Combined comparison
-python run_static.py --year-basis thesis
+python -m pytest tests/
 ```
 
-## Validation Report
+To inspect the static-simulation command without launching an experiment:
 
 ```bash
-python validation_report.py --official-basis thesis
+python run_static.py --help
 ```
 
-The validation table is written to:
+Simulation outputs and validation reports are written under `outputs/`; do not
+overwrite a frozen experiment directory. Training and large replay commands are
+deliberately not the default getting-started path. Their original configurations
+remain in the [artifact map](docs/REPRODUCIBILITY.md) and Git history; running them
+does not reopen a stopped scientific claim.
 
-```text
-outputs/validation/validation_table_dual_basis.csv
-```
+## Interpreting older documentation
 
-## Hybrid Model Training
+The repository retains a long experimental history. In particular:
 
-Quick smoke run with the paper-facing defaults:
+- For **Track B**, use the [same-contract verdict](docs/TRACK_B_SAME_CONTRACT_CHALLENGE_VERDICT_2026-07-10.md), not the earlier restricted-frontier wins.
+- For **Program Q**, use the [August 25 reconciliation](docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md), not an older reservation record saying its seeds were unopened.
+- The [repository source-of-truth record](docs/REPOSITORY_SOURCE_OF_TRUTH.md) describes the Program O boundary and a later addendum. It is not a substitute for the subsequent Program Q adjudication.
+- [Older claim registries](docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md), training plots and contributor handoffs remain provenance; they can contain superseded instructions or interpretations.
 
-```bash
-python train_agent.py --timesteps 20000 --n-envs 1 --seed 42 --year-basis thesis
-```
-
-Canonical Track B training (the current manuscript spine — PPO on the
-`track_b_v1` 8D contract; artifacts and checkpoints in
-`docs/REPRODUCIBILITY.md`):
-
-```bash
-python scripts/run_track_b_smoke.py \
-  --reward-mode control_v1 \
-  --observation-version v7 \
-  --risk-level adaptive_benchmark_v2 \
-  --max-steps 104 \
-  --train-timesteps 60000 \
-  --seeds 1 2 3 4 5 \
-  --eval-episodes 12
-```
-
-Historical note: the earlier `shift_control`/`ReT_seq_v1` 500k lane
-(`train_agent.py --env-variant shift_control ...`) predates the Track B era
-and is retained for provenance only --- it is NOT the manuscript lane.
-
-Artifacts are saved under `outputs/`: models, normalization statistics,
-training curves, CSV files, and JSON summaries.
-
-For the paper-facing benchmark lane and artifact map, see:
-
-- `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
-- `docs/REPRODUCIBILITY.md`
-- `docs/artifacts/control_reward/README.md`
-
-## Diagnostic Scripts
-
-```bash
-python scripts/diagnostic_doe_alpha.py
-python scripts/diagnostic_reward_spread.py
-python scripts/diagnostic_doe_decompose.py
-python scripts/diagnostic_action_impact.py
-```
-
-## Tests
-
-```bash
-pytest tests/
-```
-
-## Quality Checks
-
-```bash
-black .
-ruff check . --fix
-mypy supply_chain/
-```
-
-## Current Benchmark Defaults (Track B canonical)
-
-- Action contract: `track_b_v1` (8D) via `make_track_b_env`
-- Training reward: `control_v1`
-- Observation version: `v7`
-- Risk level: `adaptive_benchmark_v2`; horizon `h104` (weekly 168 h steps)
-- Year basis: `thesis`; stochastic processing times: on
-- Primary metric: `ret_excel` (Garrido/Excel ReT) --- never `ret_thesis`
-- Authority when documents disagree: `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`,
-  then `docs/REPOSITORY_SOURCE_OF_TRUTH.md`
-
-Historical (pre-Track-B, provenance only): the `ReT_seq_v1`/kappa 0.20/`v1`
-shift-control lane and its `increased/severe + stochastic_pt` scenarios.
+Scientific changes require an explicit question, comparable decision rights,
+defined outcomes and a documented evaluation protocol. A passing test or a
+positive learning curve is not sufficient evidence of adaptive superiority.
