@@ -179,7 +179,31 @@ q_move = min(shortfall, upstream_available, transport_capacity)
 Every transfer records origin, destination, departure, quantity, transit
 inventory, lead time, arrival, and resource use.
 
-The primary objective is Excel ReT subject to frozen resource budgets for:
+## Metric authority gate
+
+The primary endpoint is not yet authorized. The historical 2017 Excel ReT,
+the repository's full-ledger diagnostic, and a prospective port of the 2024
+Cobb--Douglas factory-resilience index have materially different populations
+and semantics.
+
+`contracts/paper_b_metric_gate_v1.json` is therefore a binding pre-freeze
+gate. Every null decision in that contract must be resolved and the gate must
+emit `PASS_PAPER_B_METRIC_PRE_FREEZE` before fresh scientific execution.
+
+In particular:
+
+- a small value above 1 in a historical ReT workbook may be clipped for a
+  range-enforcement sensitivity, but the observation may not be deleted;
+- the 2024 index may not reuse repository cost weights, a tau proxy, or a
+  comparison-set normalizer without explicit approval;
+- scale maxima must be calibrated on a frozen development library disjoint
+  from evaluation and confirmation data;
+- a metric may not be promoted because it makes an adaptive policy win.
+
+Until this gate passes, `STOP_PAPER_B_METRIC_UNRESOLVED` is binding.
+
+The eventual primary objective will maximize the approved resilience endpoint
+subject to frozen resource budgets for:
 
 - raw material ordered and received;
 - supplier-order count;
@@ -205,8 +229,8 @@ primary endpoint.
 
 ## Common SESOI
 
-One absolute Excel-ReT SESOI applies to all masks because they share one
-physical contract, population, horizon, and endpoint.
+One absolute SESOI for the approved primary endpoint applies to all masks
+because they share one physical contract, population, horizon, and endpoint.
 
 Garrido must sign the SESOI and its operational interpretation before any
 fresh data are opened. Physical companion endpoints receive separately frozen
