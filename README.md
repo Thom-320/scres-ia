@@ -12,7 +12,7 @@ The most useful entry point is the **evaluation work**, not a training curve:
 which decisions each policy is allowed to make, how calibration is separated
 from evaluation, and which conclusions remain after stronger controls.
 
-## Read in five minutes
+## Where to start
 
 | What to inspect | Why it matters |
 | --- | --- |
@@ -20,11 +20,9 @@ from evaluation, and which conclusions remain after stronger controls.
 | [Later Program Q evidence status](docs/PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md) | A separate contract found feedback value over open-loop calendars, but no material neural premium over the evaluated classical controllers; the per-product guardrail failed. This is not a deployment-safety claim. |
 | [Reproducibility and artifact map](docs/REPRODUCIBILITY.md) | Maps implementations, configurations and stored artifacts. Read each artifact with its dated verdict. |
 
-These are **different experiments with different contracts**, not interchangeable
-estimates of a single RL effect. The results above are documented evidence, not
-new experiments performed by updating this README. Large custody bundles are
-not all included in GitHub, so this is not a complete raw-artifact replication
-package for every historical run.
+These are **different experiments with different contracts**, not estimates of one
+RL effect. Large custody bundles are not all on GitHub, so this is not a complete
+raw-artifact package for every historical run.
 
 ## Contribution and scope
 
