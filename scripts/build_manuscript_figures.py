@@ -1068,7 +1068,7 @@ def fig14_dispatch_cost_sensitivity() -> None:
     # the band straddles the static line and would obscure it; clip it out.
     half = (np.array(d_hi) - np.array(d_lo)) / 2
     lam_arr = np.array(lam)
-    ppo_arr = np.array(po_c) if False else np.array(ppo_c)
+    ppo_arr = np.array(ppo_c)
     stat_arr = np.array(stat_c)
     # mask band to the region where PPO upper bound < static (band sits below static)
     mask = (ppo_arr + half) < stat_arr

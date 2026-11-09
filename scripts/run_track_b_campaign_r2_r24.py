@@ -139,6 +139,25 @@ bc_obs = np.vstack(bc_obs).astype(np.float32)
 bc_acts = np.vstack(bc_acts).astype(np.float32)
 print(f"BC data: {len(bc_obs)} samples", flush=True)
 
+def eval_policy_norm(model, seed0):
+    scores = []
+    for i, (rl, fam, phi, psi, dm) in enumerate(regimes):
+        env = build_env(rl, fam, seed0 + i)
+        obs, _ = env.reset(seed=seed0 + i)
+        done = False
+        while not done:
+            a, _ = model.predict(obs, deterministic=True)
+            obs, r, done, trunc, info = env.step(a)
+        ret = float(compute_episode_metrics(env.unwrapped.sim).get("ret_excel", 0))
+        regime_cells = [c for c in all_cells 
+                      if c['risk_level']==rl and c['family']==fam 
+                      and c['phi']=='1.0' and c['psi']=='1.0' and c['demand_mult']=='1.0']
+        best_regime_ret = max(float(c['ret_excel']) for c in regime_cells)
+        scores.append(ret / max(best_regime_ret, 1e-9))
+        env.close()
+    return float(np.mean(scores))
+
+
 # Train PPO with BC warm-start
 seeds = [1, 2]
 learned = []
@@ -180,23 +199,6 @@ for seed in seeds:
     venv.close()
     print(f"score={dyn:.4f}", flush=True)
 
-def eval_policy_norm(model, seed0):
-    scores = []
-    for i, (rl, fam, phi, psi, dm) in enumerate(regimes):
-        env = build_env(rl, fam, seed0 + i)
-        obs, _ = env.reset(seed=seed0 + i)
-        done = False
-        while not done:
-            a, _ = model.predict(obs, deterministic=True)
-            obs, r, done, trunc, info = env.step(a)
-        ret = float(compute_episode_metrics(env.unwrapped.sim).get("ret_excel", 0))
-        regime_cells = [c for c in all_cells 
-                      if c['risk_level']==rl and c['family']==fam 
-                      and c['phi']=='1.0' and c['psi']=='1.0' and c['demand_mult']=='1.0']
-        best_regime_ret = max(float(c['ret_excel']) for c in regime_cells)
-        scores.append(ret / max(best_regime_ret, 1e-9))
-        env.close()
-    return float(np.mean(scores))
 
 dyn_mean = fmean(r["excel"] for r in learned)
 dyn_med = median(r["excel"] for r in learned)

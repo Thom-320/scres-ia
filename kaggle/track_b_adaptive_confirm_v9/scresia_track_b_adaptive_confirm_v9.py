@@ -12,6 +12,7 @@ exports a per-order ledger for CTj/RPj/DPj/APj and tail-risk audit.
 
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timezone
 import json
 import os
