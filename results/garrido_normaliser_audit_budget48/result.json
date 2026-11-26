@@ -1,0 +1,799 @@
+{
+ "budget": 48,
+ "calibration_provenance": {
+  "apj_overlap_mode": "union",
+  "autotomy_apj_cap": "lt",
+  "autotomy_predicate": "le",
+  "autotomy_reachable": false,
+  "calibration_line": "historical",
+  "comparability_note": "ret_excel is comparable only across artifacts sharing fulfilment_delay_hours and lead_time_promise_hours; step cadence no longer matters after the immutable-onset RPj fix (commit 125b94f)",
+  "fulfillment_delay_distribution": "constant",
+  "fulfillment_transit_mode": "constant",
+  "fulfilment_delay_hours": 54.0,
+  "hours_per_week": 168.0,
+  "lead_time_promise_hours": 48.0,
+  "lead_time_source": "Garrido 2017 thesis \u00a76.8.2 p.111",
+  "procurement_delay_accumulation": "serial",
+  "ret_recovery_period_mode": "elapsed",
+  "rpj_onset_admission": "clamped",
+  "schema": "calibration_provenance_v1"
+ },
+ "claim_status": "HALTED_FALSIFIER_FAILED",
+ "contexts": [
+  "R1r",
+  "R2r",
+  "R1r+R2r",
+  "R1r|esc",
+  "R2r|esc",
+  "R1r+R2r|esc"
+ ],
+ "contract_path": "docs/PREREGISTRO_AUDITORIA_NORMALIZADOR_2026-08-05.md",
+ "contract_sha256": "bc9d8cf78d370e82ac05574e0d917a9b4bff07ce23e694f6b9bdf5ad8ed863f6",
+ "created_at": "2026-11-26T10:48:15.665960+00:00",
+ "elapsed_seconds": 141.94221667107195,
+ "falsifiers": {
+  "all_passed": false,
+  "f1_harness_reproduces_the_sealed_artifact": {
+   "evidence": {
+    "abs_delta": {
+     "neuron_memory": 1.6388888888888893,
+     "neuron_reset": 1.8611111111111125,
+     "ofat": 5.333333333333334,
+     "random": 13.652777777777775
+    },
+    "observed_means": {
+     "neuron_memory": 8.625,
+     "neuron_reset": 16.750000000000004,
+     "ofat": 17.75,
+     "random": 33.19444444444444
+    },
+    "sealed_artifact": "results/garrido_meta_learner_v2/result.json",
+    "sealed_means": {
+     "neuron_memory": 6.986111111111111,
+     "neuron_reset": 14.888888888888891,
+     "ofat": 12.416666666666666,
+     "random": 19.541666666666668
+    },
+    "sealed_present": true,
+    "why_it_can_fail": "any drift in the simulator, the metric, the CRN or the RNG consumption order since v2 was sealed breaks the equality -- and then the prefix number would be uninterpretable, because the difference could be physics rather than the normaliser"
+   },
+   "passed": false
+  },
+  "f2_visit_sequences_are_scale_invariant": {
+   "evidence": {
+    "by_normaliser": {
+     "oracle": true,
+     "prefix": true
+    },
+    "rescale": {
+     "R1r": [
+      3.1702753322917383,
+      -0.24825458195183203
+     ],
+     "R1r+R2r": [
+      2.7881790798952446,
+      0.16009024984072417
+     ],
+     "R1r+R2r|esc": [
+      4.528582762485506,
+      -0.9571196829692459
+     ],
+     "R1r|esc": [
+      4.541796439428486,
+      -0.07702481360787616
+     ],
+     "R2r": [
+      3.6797597602967267,
+      -0.42379923752265025
+     ],
+     "R2r|esc": [
+      3.6607004892977186,
+      0.5716616897517273
+     ]
+    },
+    "why_it_can_fail": "a positive affine rescaling of the surface leaves every legitimate decision rule unchanged; an arm whose sequence moves is reading the surface in a scale-dependent way"
+   },
+   "passed": true
+  },
+  "f3_non_neural_arms_are_untouched": {
+   "evidence": {
+    "why_it_can_fail": "ofat and random never call the normaliser, so their sequences must be byte-identical across arms; if they differ the harness changed something else"
+   },
+   "passed": true
+  },
+  "f4_censoring_is_reported": {
+   "evidence": {
+    "rates": {
+     "oracle": {
+      "neuron_memory": 0.05555555555555555,
+      "neuron_reset": 0.05555555555555555,
+      "ofat": 0.2222222222222222,
+      "random": 0.4861111111111111
+     },
+     "prefix": {
+      "neuron_memory": 0.05555555555555555,
+      "neuron_reset": 0.06944444444444445,
+      "ofat": 0.2222222222222222,
+      "random": 0.4861111111111111
+     }
+    },
+    "why_it_can_fail": "if nothing were censored the old primary would be unbiased and changing the estimand would be unjustified"
+   },
+   "passed": true
+  },
+  "f5_no_fresh_seeds": {
+   "evidence": {
+    "n_sealed_artifact_overlap": 12,
+    "n_seeds": 12,
+    "note": "deliberate re-execution of registry block 'garrido_q2_des288'; these seeds are NOT virgin and are not meant to be",
+    "registry_conflicts": [
+     {
+      "id": "garrido_q2_des288",
+      "n_overlapping": 12,
+      "range": [
+       5300001,
+       5300012
+      ],
+      "source": "results/garrido_meta_learner_v2/result.json",
+      "status": "ARTIFACT_PRESENT_PENDING_CANONICAL_CUSTODY"
+     }
+    ],
+    "registry_is_complete": false,
+    "registry_status": "BASELINE_INVENTORY_INCOMPLETE_NO_NEW_SEEDS_AUTHORIZED",
+    "replay_of": "garrido_q2_des288",
+    "sealed_artifact_overlap": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "seeds": [
+     5300001,
+     5300002,
+     5300003,
+     5300004,
+     5300005,
+     5300006,
+     5300007,
+     5300008,
+     5300009,
+     5300010,
+     5300011,
+     5300012
+    ],
+    "status": "DECLARED_REPLAY",
+    "why_it_can_fail": "it cannot: this is a declared custody replay of registry block 'garrido_q2_des288', so the seeds are used on purpose. Counted in neither column."
+   },
+   "not_applicable": true,
+   "passed": null
+  },
+  "f6_surface_twins_do_not_change_prefix_paths": {
+   "evidence": {
+    "budget": 48,
+    "by_normaliser": {
+     "oracle": {
+      "all_paths_unchanged": false,
+      "changed_cells": {
+       "R1r": {
+        "protected": 93,
+        "tail_indices": [
+         3,
+         4
+        ]
+       },
+       "R1r+R2r": {
+        "protected": 103,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R1r+R2r|esc": {
+        "protected": 100,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R1r|esc": {
+        "protected": 99,
+        "tail_indices": [
+         1,
+         6
+        ]
+       },
+       "R2r": {
+        "protected": 103,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R2r|esc": {
+        "protected": 101,
+        "tail_indices": [
+         6,
+         7
+        ]
+       }
+      },
+      "path_unchanged": {
+       "neuron_memory": {
+        "R1r": false,
+        "R1r+R2r": false,
+        "R1r+R2r|esc": false,
+        "R1r|esc": false,
+        "R2r": false,
+        "R2r|esc": false
+       },
+       "neuron_reset": {
+        "R1r": false,
+        "R1r+R2r": false,
+        "R1r+R2r|esc": false,
+        "R1r|esc": false,
+        "R2r": false,
+        "R2r|esc": false
+       },
+       "ofat": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "random": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       }
+      }
+     },
+     "prefix": {
+      "all_paths_unchanged": true,
+      "changed_cells": {
+       "R1r": {
+        "protected": 92,
+        "tail_indices": [
+         1,
+         2
+        ]
+       },
+       "R1r+R2r": {
+        "protected": 95,
+        "tail_indices": [
+         0,
+         2
+        ]
+       },
+       "R1r+R2r|esc": {
+        "protected": 99,
+        "tail_indices": [
+         2,
+         3
+        ]
+       },
+       "R1r|esc": {
+        "protected": 105,
+        "tail_indices": [
+         6,
+         7
+        ]
+       },
+       "R2r": {
+        "protected": 101,
+        "tail_indices": [
+         3,
+         6
+        ]
+       },
+       "R2r|esc": {
+        "protected": 99,
+        "tail_indices": [
+         6,
+         7
+        ]
+       }
+      },
+      "path_unchanged": {
+       "neuron_memory": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "neuron_reset": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "ofat": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       },
+       "random": {
+        "R1r": true,
+        "R1r+R2r": true,
+        "R1r+R2r|esc": true,
+        "R1r|esc": true,
+        "R2r": true,
+        "R2r|esc": true
+       }
+      }
+     }
+    },
+    "oracle_reacted": true,
+    "passed": true,
+    "prefix_passed": true,
+    "seed": 5300001,
+    "why_it_can_fail": "an affine-invariant oracle leak can leave the scale test green while changing the path when hidden tails change"
+   },
+   "passed": true
+  },
+  "not_applicable": [
+   "f5_no_fresh_seeds"
+  ]
+ },
+ "gates": {
+  "g1_optimum_moves_across_contexts": {
+   "by_context": {
+    "R1r": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 1
+     },
+     "best_mean": 0.009259259259259259
+    },
+    "R1r+R2r": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "best_mean": 0.00924979575748604
+    },
+    "R1r+R2r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.008935639615456977
+    },
+    "R1r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.009259259259259259
+    },
+    "R2r": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 24.0,
+      "op9_rop": 12.0,
+      "shifts": 3
+     },
+     "best_mean": 0.012378778432573569
+    },
+    "R2r|esc": {
+     "argmax_config": {
+      "buffer_hours": 1344.0,
+      "op12_rop": 12.0,
+      "op9_rop": 12.0,
+      "shifts": 2
+     },
+     "best_mean": 0.011360209421914033
+    }
+   },
+   "distinct_argmax": 4,
+   "moves": true,
+   "n_contexts": 6
+  },
+  "g2_surface_separability": {
+   "R1r": {
+    "additive": 0.6726189447726956,
+    "gain": 0.1623878976467783,
+    "interactions": 0.8350068424194739
+   },
+   "R1r+R2r": {
+    "additive": 0.6797901111749756,
+    "gain": 0.15751058788106898,
+    "interactions": 0.8373006990560445
+   },
+   "R1r+R2r|esc": {
+    "additive": 0.705742636648242,
+    "gain": 0.12215226536636559,
+    "interactions": 0.8278949020146076
+   },
+   "R1r|esc": {
+    "additive": 0.6412394928852426,
+    "gain": 0.1644207995039647,
+    "interactions": 0.8056602923892073
+   },
+   "R2r": {
+    "additive": 0.6386378994550077,
+    "gain": 0.13213092113881786,
+    "interactions": 0.7707688205938256
+   },
+   "R2r|esc": {
+    "additive": 0.6313523579503479,
+    "gain": 0.12338461656860122,
+    "interactions": 0.7547369745189492
+   }
+  }
+ },
+ "module_manifest": {
+  "entry_script": "scripts/run_meta_learner_normaliser_audit_v1.py",
+  "entry_script_sha256": "8c58a9c8c54b4b573127186ad35ebfb768e3bb8eb451113862ce33bf6f759012",
+  "missing": [],
+  "modules": {
+   "supply_chain/arm_runner.py": "35135c537d9260832677ab6b4e344229d6b9f4810df8bdef9efd51b58fcac68a",
+   "supply_chain/config.py": "ae702a4991966504eaa1036106fa5f4b9c11e913d376dfb67e3f3c83147904cc",
+   "supply_chain/episode_metrics.py": "e09199d48a747f67aef600e9482b812fc1be16e337167d7dfc7215bcb57fb55e",
+   "supply_chain/seed_custody.py": "3d46668e6cb62ee5383684f12b849bb0473ad8c85d9a9238a16327d4a009e2dd",
+   "supply_chain/supply_chain.py": "4f6fd069dfd80c282ea24160499df69a60a4b37311f2a43b52a864db277506d2"
+  },
+  "schema": "module_manifest_v2",
+  "scope": "declared modules and entry script only; NOT the full execution dependency set (interpreter, third-party packages and environment are not covered)"
+ },
+ "n_configurations": 288,
+ "normalisers": [
+  "oracle",
+  "prefix"
+ ],
+ "primary_metric": "auc_regret_norm",
+ "primary_rationale": "runs_to_within_1pct imputes budget+1 and is censored at very different rates per arm, so its mean is not comparable across arms. AUC of the normalised regret curve is defined in every cell and uncensored.",
+ "reference_path": "results/garrido_meta_learner_v2/result.json",
+ "reference_sha256": "efb3f067ba295990c1a04e34e669f42cb2c431d9aa92cdb0346ad07c746fb391",
+ "repeats": 12,
+ "replay_of": "garrido_q2_des288",
+ "run_role": "BURNED_REPLAY_AUDIT",
+ "schema_version": "garrido_normaliser_audit_v1",
+ "scope": "DEVELOPMENT_REPLAY_ON_BURNED_TAPES_NO_ADJUDICATION_NO_LEARNER",
+ "seeds": [
+  5300001,
+  5300002,
+  5300003,
+  5300004,
+  5300005,
+  5300006,
+  5300007,
+  5300008,
+  5300009,
+  5300010,
+  5300011,
+  5300012
+ ],
+ "self_sha256": "b16d0cbc3435ac21089c96517bec6991bcf8b761096e3b004273ea28044df839",
+ "strategies": [
+  "ofat",
+  "random",
+  "neuron_reset",
+  "neuron_memory"
+ ],
+ "summary": {
+  "oracle": {
+   "censoring_rate": {
+    "neuron_memory": 0.05555555555555555,
+    "neuron_reset": 0.05555555555555555,
+    "ofat": 0.2222222222222222,
+    "random": 0.4861111111111111
+   },
+   "contrasts": {
+    "auc_regret_norm": {
+     "memory_vs_ofat": {
+      "lcb95": 0.023029635981934547,
+      "mean": 0.03363842245140174,
+      "n": 12,
+      "ucb95": 0.04546970565895566
+     },
+     "memory_vs_random": {
+      "lcb95": 0.06015052365680336,
+      "mean": 0.08089966376028368,
+      "n": 12,
+      "ucb95": 0.10375934559373927
+     },
+     "memory_vs_reset": {
+      "lcb95": 0.03761430674189273,
+      "mean": 0.04762587109954209,
+      "n": 12,
+      "ucb95": 0.05873376815149948
+     }
+    },
+    "runs_to_within_1pct": {
+     "memory_vs_ofat": {
+      "lcb95": 5.847222222222222,
+      "mean": 9.125,
+      "n": 12,
+      "ucb95": 12.375347222222219
+     },
+     "memory_vs_random": {
+      "lcb95": 20.98611111111111,
+      "mean": 24.569444444444443,
+      "n": 12,
+      "ucb95": 28.23645833333333
+     },
+     "memory_vs_reset": {
+      "lcb95": 6.486111111111112,
+      "mean": 8.125,
+      "n": 12,
+      "ucb95": 9.792013888888885
+     }
+    }
+   },
+   "means_auc_regret_norm": {
+    "neuron_memory": 0.02872923474070718,
+    "neuron_reset": 0.07635510584024928,
+    "ofat": 0.062367657192108926,
+    "random": 0.10962889850099088
+   },
+   "means_runs_to_within_1pct": {
+    "neuron_memory": 8.625,
+    "neuron_reset": 16.750000000000004,
+    "ofat": 17.75,
+    "random": 33.19444444444444
+   }
+  },
+  "prefix": {
+   "censoring_rate": {
+    "neuron_memory": 0.05555555555555555,
+    "neuron_reset": 0.06944444444444445,
+    "ofat": 0.2222222222222222,
+    "random": 0.4861111111111111
+   },
+   "contrasts": {
+    "auc_regret_norm": {
+     "memory_vs_ofat": {
+      "lcb95": 0.021473285845024687,
+      "mean": 0.033320340743843595,
+      "n": 12,
+      "ucb95": 0.04480873323175364
+     },
+     "memory_vs_random": {
+      "lcb95": 0.059181938260047445,
+      "mean": 0.08058158205272553,
+      "n": 12,
+      "ucb95": 0.10419279639147686
+     },
+     "memory_vs_reset": {
+      "lcb95": 0.02150110180333363,
+      "mean": 0.033743672099718604,
+      "n": 12,
+      "ucb95": 0.04810506744580993
+     }
+    },
+    "runs_to_within_1pct": {
+     "memory_vs_ofat": {
+      "lcb95": 5.805555555555556,
+      "mean": 9.222222222222223,
+      "n": 12,
+      "ucb95": 12.48645833333333
+     },
+     "memory_vs_random": {
+      "lcb95": 21.208333333333336,
+      "mean": 24.666666666666668,
+      "n": 12,
+      "ucb95": 28.249999999999996
+     },
+     "memory_vs_reset": {
+      "lcb95": 4.013541666666666,
+      "mean": 6.75,
+      "n": 12,
+      "ucb95": 9.653124999999996
+     }
+    }
+   },
+   "means_auc_regret_norm": {
+    "neuron_memory": 0.02904731644826532,
+    "neuron_reset": 0.06279098854798394,
+    "ofat": 0.062367657192108926,
+    "random": 0.10962889850099088
+   },
+   "means_runs_to_within_1pct": {
+    "neuron_memory": 8.527777777777777,
+    "neuron_reset": 15.277777777777779,
+    "ofat": 17.75,
+    "random": 33.19444444444444
+   }
+  }
+ },
+ "twin_surface_falsifier": {
+  "budget": 48,
+  "by_normaliser": {
+   "oracle": {
+    "all_paths_unchanged": false,
+    "changed_cells": {
+     "R1r": {
+      "protected": 93,
+      "tail_indices": [
+       3,
+       4
+      ]
+     },
+     "R1r+R2r": {
+      "protected": 103,
+      "tail_indices": [
+       2,
+       3
+      ]
+     },
+     "R1r+R2r|esc": {
+      "protected": 100,
+      "tail_indices": [
+       2,
+       3
+      ]
+     },
+     "R1r|esc": {
+      "protected": 99,
+      "tail_indices": [
+       1,
+       6
+      ]
+     },
+     "R2r": {
+      "protected": 103,
+      "tail_indices": [
+       2,
+       3
+      ]
+     },
+     "R2r|esc": {
+      "protected": 101,
+      "tail_indices": [
+       6,
+       7
+      ]
+     }
+    },
+    "path_unchanged": {
+     "neuron_memory": {
+      "R1r": false,
+      "R1r+R2r": false,
+      "R1r+R2r|esc": false,
+      "R1r|esc": false,
+      "R2r": false,
+      "R2r|esc": false
+     },
+     "neuron_reset": {
+      "R1r": false,
+      "R1r+R2r": false,
+      "R1r+R2r|esc": false,
+      "R1r|esc": false,
+      "R2r": false,
+      "R2r|esc": false
+     },
+     "ofat": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     },
+     "random": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     }
+    }
+   },
+   "prefix": {
+    "all_paths_unchanged": true,
+    "changed_cells": {
+     "R1r": {
+      "protected": 92,
+      "tail_indices": [
+       1,
+       2
+      ]
+     },
+     "R1r+R2r": {
+      "protected": 95,
+      "tail_indices": [
+       0,
+       2
+      ]
+     },
+     "R1r+R2r|esc": {
+      "protected": 99,
+      "tail_indices": [
+       2,
+       3
+      ]
+     },
+     "R1r|esc": {
+      "protected": 105,
+      "tail_indices": [
+       6,
+       7
+      ]
+     },
+     "R2r": {
+      "protected": 101,
+      "tail_indices": [
+       3,
+       6
+      ]
+     },
+     "R2r|esc": {
+      "protected": 99,
+      "tail_indices": [
+       6,
+       7
+      ]
+     }
+    },
+    "path_unchanged": {
+     "neuron_memory": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     },
+     "neuron_reset": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     },
+     "ofat": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     },
+     "random": {
+      "R1r": true,
+      "R1r+R2r": true,
+      "R1r+R2r|esc": true,
+      "R1r|esc": true,
+      "R2r": true,
+      "R2r|esc": true
+     }
+    }
+   }
+  },
+  "oracle_reacted": true,
+  "passed": true,
+  "prefix_passed": true,
+  "seed": 5300001,
+  "why_it_can_fail": "an affine-invariant oracle leak can leave the scale test green while changing the path when hidden tails change"
+ }
+}
