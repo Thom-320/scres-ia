@@ -1,5 +1,7 @@
 # Paper 2 claim ladder — frozen 2026-07-18
 
+> **Adenda 2026-11-26: donde este documento dice N=128 para Program Q, es un borrador supersedido. Diseño ejecutado: N=256, potencia 0,8755 (`PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`, `contracts/program_q_frozen_policy_replication_v1.json`).**
+
 The decision ladder is now complete and measured end to end. Scientific commit for the learner
 stage: `821c8d8` (later commits on that branch are non-promotable sandbox).
 

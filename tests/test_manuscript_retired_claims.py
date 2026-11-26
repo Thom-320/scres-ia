@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 SECTIONS_DIR = Path("docs/manuscript_current/submission/elsevier/sections")
 
 # Mirrors docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md's "Retired Or Unsafe
@@ -86,7 +88,8 @@ def find_asserted_claims(text: str) -> dict[str, str]:
 
 
 def _manuscript_text() -> str:
-    assert SECTIONS_DIR.is_dir(), f"expected manuscript sections at {SECTIONS_DIR}"
+    if not SECTIONS_DIR.is_dir():
+        pytest.skip("manuscript sections ignored by .gitignore:71; guard runs only where submission/ exists")
     return "\n".join(
         p.read_text(encoding="utf-8") for p in sorted(SECTIONS_DIR.glob("*.tex"))
     ).lower()

@@ -1,5 +1,7 @@
 # Resultado — el **efecto Alzheimer tiene precio**, y es de 6,3 corridas
 
+> **RETIRADO 2026-07-31/08-07: cifras 7,24/12,42/13,54/+6,31 bajo fuga. No citar. Ver `CORRECCION_META_APRENDIZ_FUGA_2026-07-31.md` y titular honesto en `RESULTADOS_CIE_CONSOLIDADOS_2026-08-05.md` R1/R1b.**
+
 **Artefacto:** `results/garrido_meta_learner/result.json` (sello `230a0074a10f12ee…`,
 `ALZHEIMER_EFFECT_HAS_A_MEASURED_PRICE`) · **los seis falsadores PASAN** · 12 réplicas,
 presupuesto 24 corridas por contexto, **20.736 episodios** de superficie · preregistro

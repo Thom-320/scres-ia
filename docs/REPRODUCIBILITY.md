@@ -5,6 +5,8 @@ benchmark story: the **Track B** decision-contract audit. The claim-by-claim
 source of truth is `docs/CLAIMS_REGISTRY_Q1_DEFENSE_2026-07-01.md`; every
 headline number below traces to a dated artifact directory.
 
+> **Nota 2026-11-26: Track B es el eje histórico. Para el envío a C&IE el carril del paper es Garrido-WRAP/v0 (`docs/CIE_MANUSCRIPT_REWRITE_MAP_GARRIDO_WRAP_2026-08-01.md`); Track B es evidencia acotada (`docs/REPOSITORY_SOURCE_OF_TRUTH.md`, sección de tracks no vigentes).**
+
 > Historical note (2026-07-10): earlier versions of this guide described the
 > pre-Track-B `shift_control`/`ReT_seq_v1` lane as canonical. That lane is
 > retired as primary evidence; its bundles under `outputs/paper_benchmarks/`

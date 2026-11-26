@@ -1,5 +1,7 @@
 # Repository source of truth
 
+> **Adenda 2026-11-26: donde este documento dice N=128 para Program Q, es un borrador supersedido. Diseño ejecutado: N=256, potencia 0,8755 (`PROGRAM_Q_CANONICAL_EVIDENCE_STATUS_2026-08-25.md`, `contracts/program_q_frozen_policy_replication_v1.json`).**
+
 **Effective date:** 2026-07-17
 **Scientific status:** `CURRENT_IMPLEMENTED_PORTFOLIO_EXHAUSTED_NO_LEARNER_AUTHORIZED`
 
