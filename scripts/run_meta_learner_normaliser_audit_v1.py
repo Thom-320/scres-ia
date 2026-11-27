@@ -126,6 +126,33 @@ def cache_is_compatible(blob: dict, current_manifest: dict) -> bool:
     return cached_manifest == current_manifest
 
 
+def load_or_compute_slice(slice_path: Path, manifest: dict, compute, ctx: str, seed: int,
+                          horizon: float) -> list:
+    """Return the cells for one (context, seed) slice, computing and caching them if needed.
+
+    A sealed slice (``schema_version == garrido_surface_cache_v1``) that is not compatible with the
+    current module manifest fails closed: it is never overwritten.  On 2026-11-26 an environment
+    without torch silently replaced the sealed wrap288_v1 cache with unsealed recomputations,
+    which broke every later reader.  Point ``--cache-dir`` at a scratch directory to recompute.
+    """
+    if slice_path.is_file():
+        blob = json.loads(slice_path.read_text())
+        if cache_is_compatible(blob, manifest):
+            return blob["cells"]
+        if blob.get("schema_version") == "garrido_surface_cache_v1":
+            raise ValueError(
+                f"sealed cache slice {slice_path} is incompatible with this environment's module "
+                f"manifest; refusing to overwrite it. Pass --cache-dir <scratch dir> to recompute.")
+        print(f"  cache descartada (deriva de modulos): {slice_path}")
+    cells = compute()
+    slice_path.parent.mkdir(parents=True, exist_ok=True)
+    slice_path.write_text(json.dumps(
+        {"grid_id": "wrap288_v1", "context": ctx, "seed": seed,
+         "horizon_hours": horizon, "metric": METRIC,
+         "module_manifest": manifest, "cells": cells}, sort_keys=True))
+    return cells
+
+
 class Fig5Neuron:
     def __init__(self, dim: int, lr: float = 0.35):
         self.rho = np.zeros(dim)
@@ -363,19 +390,10 @@ def main() -> int:
     for ctx in CONTEXTS:
         for seed in seeds:
             slice_path = args.cache_dir / ctx.replace("|", "_").replace("+", "_") / f"{seed}.json"
-            if slice_path.is_file():
-                blob = json.loads(slice_path.read_text())
-                if cache_is_compatible(blob, manifest):
-                    surface[(ctx, seed)] = blob["cells"]
-                    continue
-                print(f"  cache descartada (deriva de modulos): {slice_path}")
-            cells = [evaluate(cfg, ctx, seed, horizon) for cfg in CONFIGS]
-            slice_path.parent.mkdir(parents=True, exist_ok=True)
-            slice_path.write_text(json.dumps(
-                {"grid_id": "wrap288_v1", "context": ctx, "seed": seed,
-                 "horizon_hours": horizon, "metric": METRIC,
-                 "module_manifest": manifest, "cells": cells}, sort_keys=True))
-            surface[(ctx, seed)] = cells
+            surface[(ctx, seed)] = load_or_compute_slice(
+                slice_path, manifest,
+                lambda ctx=ctx, seed=seed: [evaluate(cfg, ctx, seed, horizon) for cfg in CONFIGS],
+                ctx, seed, horizon)
         print(f"  superficie {ctx} lista ({time.perf_counter() - started:.0f}s)", flush=True)
 
     # ---- both normalisers on the identical surface ------------------------------------------
